@@ -1,12 +1,13 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform } from "react-native";
+import { Image, Platform } from "react-native";
 
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import icons from "@/constants/icons";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -31,7 +32,11 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Image
+            source={icons.homeIcon}
+            className="w-8 h-8 text-white"
+            resizeMode="contain"
+          />
           ),
         }}
       />
@@ -40,7 +45,11 @@ export default function TabLayout() {
         options={{
           title: "Explore",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <Image
+              source={icons.searchIcon}
+              className="w-8 h-8 text-white"
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -49,7 +58,11 @@ export default function TabLayout() {
         options={{
           title: "Makkah",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Image
+            source={icons.kaabaIcon}
+            className="w-10 h-10 text-white"
+            resizeMode="contain"
+          />
           ),
         }}
       />
@@ -58,7 +71,11 @@ export default function TabLayout() {
         options={{
           title: "Madinah",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Image
+            source={icons.madinaIcon}
+            className="w-10 h-10 text-white"
+            resizeMode="contain"
+          />
           ),
         }}
       />
@@ -67,7 +84,11 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <Image
+              source={icons.profileIcon}
+              className="w-9 h-9 text-white"
+              resizeMode="contain"
+            />
           ),
         }}
       />
