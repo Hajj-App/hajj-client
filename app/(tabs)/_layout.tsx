@@ -17,6 +17,7 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
+        tabBarInactiveTintColor: Colors[colorScheme ?? "light"].icon,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
@@ -30,7 +31,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
           tabBarIcon: ({ color }) => (
             <Image
             source={icons.homeIcon}
@@ -43,7 +43,6 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: "Explore",
           tabBarIcon: ({ color }) => (
             <Image
               source={icons.searchIcon}
@@ -56,11 +55,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="makkah"
         options={{
-          title: "Makkah",
           tabBarIcon: ({ color }) => (
             <Image
             source={icons.kaabaIcon}
-            className="w-10 h-10 text-white"
+            className="w-7 h-7 text-white"
             resizeMode="contain"
           />
           ),
@@ -69,26 +67,12 @@ export default function TabLayout() {
       <Tabs.Screen
         name="madinah"
         options={{
-          title: "Madinah",
           tabBarIcon: ({ color }) => (
             <Image
             source={icons.madinaIcon}
-            className="w-10 h-10 text-white"
+            className="w-8 h-8 text-white"
             resizeMode="contain"
           />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <Image
-              source={icons.profileIcon}
-              className="w-9 h-9 text-white"
-              resizeMode="contain"
-            />
           ),
         }}
       />
