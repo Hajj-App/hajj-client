@@ -20,6 +20,7 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors[colorScheme ?? "light"].icon,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
+        tabBarShowLabel: false,
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
@@ -33,10 +34,10 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color }) => (
             <Image
-            source={icons.homeIcon}
-            className="w-8 h-8 text-white"
-            resizeMode="contain"
-          />
+              source={icons.homeIcon}
+              className="w-8 h-8 text-white"
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -57,10 +58,10 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color }) => (
             <Image
-            source={icons.kaabaIcon}
-            className="w-7 h-7 text-white"
-            resizeMode="contain"
-          />
+              source={icons.kaabaIcon}
+              className="w-7 h-7 text-white"
+              resizeMode="contain"
+            />
           ),
         }}
       />
@@ -69,10 +70,10 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color }) => (
             <Image
-            source={icons.madinaIcon}
-            className="w-8 h-8 text-white"
-            resizeMode="contain"
-          />
+              source={icons.madinaIcon}
+              className="w-8 h-8 text-white"
+              resizeMode="contain"
+            />
           ),
         }}
       />
