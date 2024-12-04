@@ -5,13 +5,12 @@ import { getSevenDays } from "@/utils/getSevenDays";
 const DateSlider = () => {
   const days = getSevenDays();
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       {days.map((day, index) => (
         <Pressable
           onPress={() => setSelectedIndex(index)}
-          className={`items-center justify-center px-3 py-2 rounded-md ${
+          className={`flex-start py-3 mx-1 rounded-2xl ${
             selectedIndex === index ? "bg-green" : "bg-gray-200"
           }`}
           style={{ width: 100 }}
@@ -33,5 +32,4 @@ const DateSlider = () => {
     </ScrollView>
   );
 };
-
 export default DateSlider;

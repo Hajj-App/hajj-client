@@ -10,10 +10,9 @@ const HomeHeader = () => {
       </View>
       <Image
         source={require("@/assets/images/makkah/makkah-img.webp")}
-        className="w-10 h-10 rounded-full"
+        className="w-12 h-12 rounded-full"
       />
     </View>
   );
 };
-
 export default HomeHeader;

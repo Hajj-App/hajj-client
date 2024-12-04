@@ -1,5 +1,6 @@
 import DateSlider from "@/components/home/date-slider";
 import HomeHeader from "@/components/home/home-header";
+import PrayerList from "@/components/home/prayer-list";
 import PrayerTimeContainer from "@/components/home/prayer-time-container";
 import { ScrollView, View } from "react-native";
 import { SafeAreaView, Text } from "react-native";
@@ -18,6 +19,7 @@ export default function HomeScreen() {
         </View>
         <DateSlider />
         <PrayerTimeContainer />
+        <PrayerList />
       </View>
     </SafeAreaView>
   );
