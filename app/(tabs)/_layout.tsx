@@ -71,7 +71,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Image
               source={icons.madinaIcon}
-              className="w-8 h-8 text-white"
+              className="w-9 h-9 text-white"
               resizeMode="contain"
             />
           ),
