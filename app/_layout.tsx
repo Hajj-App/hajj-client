@@ -7,9 +7,6 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -31,6 +28,14 @@ export default function RootLayout() {
     <ThemeProvider value={DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="qiblah-finder"
+          options={{
+            title: "Qiblah Finder",
+            headerStyle: { backgroundColor: "#f4511e" },
+            headerTintColor: "#fff",
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" />

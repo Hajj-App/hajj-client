@@ -36,14 +36,12 @@ export default function HomeScreen() {
               subtitle="Direction"
               description="display the accurate Qibla direction based on the user's location"
               icon={require("@/assets/images/qiblah.png")}
-              width="1/2"
             />
             <QuickLinkBtn
               title="Dhikr"
               subtitle="Counter"
               description="display the accurate Qibla direction based on the user's location"
               icon={require("@/assets/images/counter.png")}
-              width="1/2"
             />
           </View>
           <QuickLinkBtn
