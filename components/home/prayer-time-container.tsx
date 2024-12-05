@@ -3,7 +3,7 @@ import React from "react";
 
 const PrayerTimeContainer = () => {
   return (
-    <View className="bg-black p-10 rounded-3xl mt-5">
+    <View className="bg-black p-10 rounded-3xl mt-8">
       <Text className="text-white font-bold text-xl">Zuhr</Text>
       <View className="flex-row justify-between mt-5 items-center">
         <Text className="text-gray-500 text-sm">Remaining</Text>
