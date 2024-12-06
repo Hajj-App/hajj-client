@@ -7,7 +7,8 @@ const QiblahFinder = () => {
     <View className="flex-1 items-center justify-center">
       <Image
         source={require("@/assets/images/qibliah-direction.png")}
-        className="w-80 h-80"
+        resizeMode="contain"
+        className="w-96 h-96"
       />
       <View className="flex-row items-center gap-2 p-4 bg-gray-200 rounded-3xl mt-8">
         <Entypo name="location-pin" size={24} color="red" />
