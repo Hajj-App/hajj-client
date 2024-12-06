@@ -6,6 +6,9 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import "../global.css";
+import { Pressable, View } from "react-native";
+import { router } from "expo-router";
+import Entypo from "@expo/vector-icons/Entypo";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,9 +34,52 @@ export default function RootLayout() {
         <Stack.Screen
           name="qiblah-finder"
           options={{
-            title: "Qiblah Finder",
-            headerStyle: { backgroundColor: "#f4511e" },
-            headerTintColor: "#fff",
+            headerTitle: "Qiblah Finder",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerLeft: () => {
+              return (
+                <Pressable onPress={() => router.back()}>
+                  <Entypo name="chevron-small-left" size={40} color="black" />
+                </Pressable>
+              );
+            },
+          }}
+        />
+        <Stack.Screen
+          name="dikr-counter"
+          options={{
+            headerTitle: "Dikr Counter",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerLeft: () => {
+              return (
+                <Pressable onPress={() => router.back()}>
+                  <Entypo name="chevron-small-left" size={40} color="black" />
+                </Pressable>
+              );
+            },
+          }}
+        />
+        <Stack.Screen
+          name="dikrs-and-duas"
+          options={{
+            headerTitle: "Dikrs & Duas",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerLeft: () => {
+              return (
+                <Pressable onPress={() => router.back()}>
+                  <Entypo name="chevron-small-left" size={40} color="black" />
+                </Pressable>
+              );
+            },
           }}
         />
         <Stack.Screen name="+not-found" />
