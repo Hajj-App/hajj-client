@@ -1,10 +1,12 @@
 import { View, Text } from "react-native";
 import React from "react";
 
-export default function QiblahFinder() {
+const DikrsAndDuas = () => {
   return (
     <View>
-      <Text>QiblahFinder</Text>
+      <Text>DikrsAndDuas</Text>
     </View>
   );
-}
+};
+
+export default DikrsAndDuas;

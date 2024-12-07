@@ -9,6 +9,7 @@ type QuickLinkBtnProps = {
   description: string;
   icon: any;
   width?: string;
+  route: string;
 };
 
 const QuickLinkBtn = ({
@@ -17,9 +18,22 @@ const QuickLinkBtn = ({
   description,
   icon,
   width,
+  route,
 }: QuickLinkBtnProps) => {
   return (
-    <Link href="/qiblah-finder" asChild>
+    <Link
+      href={{
+        pathname:
+          route === "/dikrs-and-duas"
+            ? "/dikrs-and-duas"
+            : route === "/qiblah-finder"
+            ? "/qiblah-finder"
+            : route === "/dikr-counter"
+            ? "/dikr-counter"
+            : "/+not-found",
+        params: {},
+      }}
+      asChild>
       <Pressable
         className={`bg-white p-5 rounded-3xl ${width ? width : "w-1/2"}`}
         onPress={() => {}}>
