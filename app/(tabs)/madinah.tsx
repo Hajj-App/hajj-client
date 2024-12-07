@@ -1,11 +1,37 @@
-import React from "react";
-import { Text, View } from "react-native";
+import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
+import Rituals from "@/components/makkah/rituals";
+import React, { useState } from "react";
+import { ImageBackground, Pressable, ScrollView, Text, View } from "react-native";
 
 const Madinah = () => {
+  const [selected, setSelected] = useState(0);
   return (
-    <View>
-      <Text>Madinah</Text>
+    <View className="flex-1">
+    <ImageBackground
+      source={require("@/assets/images/makkah/makkah-img.webp")}
+      resizeMode="cover"
+      className="w-full h-[350px] items-center justify-start pt-14"
+    >
+      <View className="w-full flex-row items-center justify-between px-10">
+        <Text className="text-3xl text-white">Madeena</Text>
+        <View className="w-10 h-10 bg-white rounded-full"></View>
+      </View>
+    </ImageBackground>
+
+    <View className="flex-1 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center pt-10">
+    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-white">
+      <View className="gap-5 pt-5">
+        <Text className="text-2xl font-bold ml-5">Historic places</Text>
+        <HistoricPlacesSlider data={[1,2,3,4,5,6,7]} />
+      </View>
+      <View className="gap-5 mt-5">
+        <Text className="text-2xl font-bold ml-5">Historic places</Text>
+        <Rituals data={[1,2,3,4,5,6,7]} />
+      </View>
+    </ScrollView>
     </View>
+   
+  </View>
   );
 };
 

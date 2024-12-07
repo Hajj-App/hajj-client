@@ -1,7 +1,10 @@
+import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
+import Rituals from "@/components/makkah/rituals";
 import { useState } from "react";
 import {
   ImageBackground,
   Pressable,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -47,6 +50,16 @@ const Makkah = () => {
           </Pressable>
         </View>
       </View>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-white">
+        <View className="gap-5">
+          <Text className="text-2xl font-bold ml-5">Historic places</Text>
+          <HistoricPlacesSlider data={[1,2,3,4,5,6,7]} />
+        </View>
+        <View className="gap-5 mt-5">
+          <Text className="text-2xl font-bold ml-5">Historic places</Text>
+          <Rituals data={[1,2,3,4,5,6,7]} />
+        </View>
+      </ScrollView>
     </View>
   );
 };
