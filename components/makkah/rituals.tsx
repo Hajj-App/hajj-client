@@ -1,16 +1,22 @@
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, Pressable } from "react-native";
 import React from "react";
+import { useNavigation } from "expo-router";
 
 type Props = {
   data: number[];
 };
 
 const Rituals = ({ data }: Props) => {
+    const navigation = useNavigation();
+    const handleNavigation = () => {
+        // navigation.navigate("/ritual-detail"); 
+      };
   return (
     <View className="flex-1 mx-5">
       {data.map((item, i) => (
-        <View
+        <Pressable
           key={i}
+          onPress={() => handleNavigation()}
           className="w-full h-28 bg-gray-200 items-center justify-start my-2 rounded-xl flex-row p-5 gap-3"
         >
           <Image
@@ -25,7 +31,7 @@ const Rituals = ({ data }: Props) => {
               Ensure you meet the eligibility criteria, Prepare ..
             </Text>
           </View>
-        </View>
+        </Pressable>
       ))}
     </View>
   );

@@ -82,6 +82,40 @@ export default function RootLayout() {
             },
           }}
         />
+        <Stack.Screen
+          name="historic-place"
+          options={{
+            headerTitle: "Dikrs & Duas",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerLeft: () => {
+              return (
+                <Pressable onPress={() => router.back()}>
+                  <Entypo name="chevron-small-left" size={40} color="black" />
+                </Pressable>
+              );
+            },
+          }}
+        />
+        <Stack.Screen
+          name="ritual-detail"
+          options={{
+            headerTitle: "Ritual Detail",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerLeft: () => {
+              return (
+                <Pressable onPress={() => router.back()}>
+                  <Entypo name="chevron-small-left" size={40} color="black" />
+                </Pressable>
+              );
+            },
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="dark" />
