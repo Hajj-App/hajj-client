@@ -1,18 +1,17 @@
 import { View, Text, Image, Pressable } from "react-native";
 import React from "react";
-import { useNavigation } from "expo-router";
+import { router, useNavigation } from "expo-router";
 
 type Props = {
   data: number[];
 };
 
 const Rituals = ({ data }: Props) => {
-    const navigation = useNavigation();
     const handleNavigation = () => {
-        // navigation.navigate("/ritual-detail"); 
+           router.push("/ritual-detail");
       };
   return (
-    <View className="flex-1 mx-5">
+    <View className="flex-1 mx-5 pb-5">
       {data.map((item, i) => (
         <Pressable
           key={i}

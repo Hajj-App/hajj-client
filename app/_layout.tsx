@@ -1,5 +1,15 @@
 import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { useFonts } from "expo-font";
+import {
+  Montserrat_100Thin,
+  Montserrat_200ExtraLight,
+  Montserrat_300Light,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+  Montserrat_800ExtraBold,
+  useFonts,
+} from "@expo-google-fonts/montserrat";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -14,7 +24,14 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    Montserrat_100Thin,
+    Montserrat_200ExtraLight,
+    Montserrat_300Light,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Montserrat_800ExtraBold
   });
 
   useEffect(() => {
@@ -90,13 +107,14 @@ export default function RootLayout() {
               fontWeight: "bold",
               fontSize: 18,
             },
-            headerLeft: () => {
-              return (
-                <Pressable onPress={() => router.back()}>
-                  <Entypo name="chevron-small-left" size={40} color="black" />
-                </Pressable>
-              );
-            },
+            headerShown: false,
+            // headerLeft: () => {
+            //   return (
+            //     <Pressable onPress={() => router.back()}>
+            //       <Entypo name="chevron-small-left" size={40} color="black" />
+            //     </Pressable>
+            //   );
+            // },
           }}
         />
         <Stack.Screen
@@ -107,13 +125,14 @@ export default function RootLayout() {
               fontWeight: "bold",
               fontSize: 18,
             },
-            headerLeft: () => {
-              return (
-                <Pressable onPress={() => router.back()}>
-                  <Entypo name="chevron-small-left" size={40} color="black" />
-                </Pressable>
-              );
-            },
+            headerShown: false,
+            // headerLeft: () => {
+            //   return (
+            //     <Pressable onPress={() => router.back()}>
+            //       <Entypo name="chevron-small-left" size={40} color="black" />
+            //     </Pressable>
+            //   );
+            // },
           }}
         />
         <Stack.Screen name="+not-found" />
