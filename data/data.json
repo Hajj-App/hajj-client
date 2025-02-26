@@ -2,6 +2,10 @@
   "rituals": [
     {
       "id": 1,
+      "card":{
+        "name": "വാഹന സൌകര്യം.",
+        "description": "Ihram is the state "
+      },
       "name": "വാഹന സൌകര്യം.",
       "description": ["Ihram is the state of readiness for Hajj and Umrah."],
       "paragraphs": [
@@ -16,6 +20,10 @@
     },
     {
       "id": 2,
+      "card":{
+        "name": "വഴിസ്വാതന്ത്യ്രം.",
+        "description": "Ihram is the state"
+      },
       "name": "വഴിസ്വാതന്ത്യ്രം.",
       "description": "Ihram is the state of readiness for Hajj and Umrah.",
       "paragraphs": [
@@ -27,6 +35,10 @@
     },
     {
       "id": 3,
+      "card":{
+        "name": "ശാരീരികാരോഗ്യം",
+        "description": "Ihram is the state"
+      },
       "name": "ശാരീരികാരോഗ്യം",
       "description": ["Ihram is the state of readiness for Hajj and Umrah."],
       "paragraphs": [
@@ -38,12 +50,16 @@
     },
     {
       "id": 4,
+      "card":{
+        "name": "നിബന്ധനക",
+        "description": "Ihram is the state"
+      },
       "name": "നിബന്ധനക",
       "description": ["Ihram is the state of readiness for Hajj and Umrah."],
       "paragraphs": [
         {
           "title": "Ihram",
-          "description": [["Ihram is the state of readiness for Hajj and Umrah."]]
+          "description": ["Ihram is the state of readiness for Hajj and Umrah."]
         }
       ]
     }

@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import ritualData from "@/data/data.json";
 
 const Makkah = () => {
   const params = useLocalSearchParams();
@@ -67,7 +68,7 @@ const Makkah = () => {
         </View>
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <Rituals data={[1,2,3,4]} />
+          <Rituals data={ritualData.rituals} />
         </View>
       </ScrollView>
     </View>
