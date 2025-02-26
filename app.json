@@ -9,13 +9,25 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images to Firebase Storage.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos for Firebase Storage."
+      },
+      "bundleIdentifier": "com.anonymous.hajjclient"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.hajjclient"
     },
     "web": {
       "bundler": "metro",
@@ -27,7 +39,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -47,7 +59,8 @@
             "node_modules/@expo-google-fonts/montserrat/Montserrat_800ExtraBold.ttf"
           ]
         }
-      ]
+      ],
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true

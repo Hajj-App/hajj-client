@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Pressable } from "react-native";
 import React, { useState } from "react";
-import { getSevenDays } from "@/utils/getSevenDays";
+import { getSevenDays } from "../../utils/getSevenDays";
 
 const DateSlider = () => {
   const days = getSevenDays();
