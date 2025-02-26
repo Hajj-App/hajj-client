@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Modal,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Entypo, FontAwesome5, AntDesign } from "@expo/vector-icons";
@@ -340,20 +341,35 @@ const RitualDetail = (props: Props) => {
                   </TouchableOpacity>
                 ))}
                 
-                {/* PDF Viewer */}
+                {/* PDF Viewer Modal */}
                 {selectedPdf && (
-                  <View className="absolute top-0 left-0 right-0 bottom-0 bg-white z-10">
-                    <View className="flex-row items-center justify-between p-3 bg-gray-100">
-                      <Text className="font-bold">Document Viewer</Text>
-                      <TouchableOpacity onPress={() => setSelectedPdf(null)}>
-                        <AntDesign name="close" size={24} color="black" />
-                      </TouchableOpacity>
+                  <Modal
+                    transparent={true}
+                    visible={!!selectedPdf}
+                    onRequestClose={() => setSelectedPdf(null)}
+                    animationType="slide"
+                  >
+                    <View className="flex-1 bg-black/50">
+                      <View className="flex-1 bg-white m-5 mt-10 rounded-xl overflow-hidden">
+                        <View className="flex-row items-center justify-between p-3 bg-gray-100">
+                          <Text className="font-bold">Document Viewer</Text>
+                          <TouchableOpacity onPress={() => setSelectedPdf(null)}>
+                            <AntDesign name="close" size={24} color="black" />
+                          </TouchableOpacity>
+                        </View>
+                        <WebView
+                          source={{ uri: selectedPdf }}
+                          style={{ flex: 1 }}
+                          startInLoadingState
+                          renderLoading={() => (
+                            <View className="absolute inset-0 justify-center items-center bg-white">
+                              <ActivityIndicator size="large" color="#34D399" />
+                            </View>
+                          )}
+                        />
+                      </View>
                     </View>
-                    <WebView
-                      source={{ uri: selectedPdf }}
-                      style={{ flex: 1 }}
-                    />
-                  </View>
+                  </Modal>
                 )}
               </View>
             )}
