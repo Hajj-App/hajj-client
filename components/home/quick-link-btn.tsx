@@ -6,10 +6,10 @@ import { Link } from "expo-router";
 type QuickLinkBtnProps = {
   title: string;
   subtitle?: string;
-  description: string;
+  description?: string;
   icon: any;
   width?: string;
-  route: string;
+  route?: string;
 };
 
 const QuickLinkBtn = ({

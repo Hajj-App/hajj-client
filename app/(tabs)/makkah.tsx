@@ -1,6 +1,7 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
 import Rituals from "@/components/makkah/rituals";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ImageBackground,
   Pressable,
@@ -12,7 +13,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Makkah = () => {
+  const params = useLocalSearchParams();
   const [selected, setSelected] = useState(0);
+  
+  useEffect(() => {
+    // Set the initial selection based on the route parameter
+    if (params.selected) {
+      setSelected(Number(params.selected));
+    }
+  }, [params]);
+
   return (
     <View className="flex-1">
       <ImageBackground

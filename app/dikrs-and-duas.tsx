@@ -1,12 +1,9 @@
 import { View, Text } from "react-native";
 import React from "react";
+import DikrBtns from "@/components/dikr-btns";
 
 const DikrsAndDuas = () => {
-  return (
-    <View>
-      <Text>DikrsAndDuas</Text>
-    </View>
-  );
+  return <DikrBtns />;
 };
 
 export default DikrsAndDuas;
