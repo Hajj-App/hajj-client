@@ -1,128 +1,423 @@
-import { StyleSheet, Image, Platform } from "react-native";
+import { 
+  StyleSheet, 
+  Image, 
+  ScrollView, 
+  View, 
+  Text, 
+  Dimensions, 
+  FlatList, 
+  TouchableOpacity,
+  useWindowDimensions
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useState, useRef, useEffect } from "react";
+import Feather from "@expo/vector-icons/Feather";
 
-import { Collapsible } from "@/components/Collapsible";
-import { ExternalLink } from "@/components/ExternalLink";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
+// Define types for our data
+type NewsItem = {
+  id: number;
+  title: string;
+  image: any;
+  date: string;
+  description: string;
+};
 
-export default function TabTwoScreen() {
+type EventItem = {
+  id: number;
+  title: string;
+  date: string;
+  location: string;
+};
+
+type AdvisoryItem = {
+  id: number;
+  country: string;
+  update: string;
+  date: string;
+};
+
+// Sample data for news updates
+const newsUpdates: NewsItem[] = [
+  {
+    id: 1,
+    title: "Hajj 2024 Registration Opens",
+    image: require("@/assets/images/makkah/makkah-img.webp"),
+    date: "May 15, 2024",
+    description: "The Ministry of Hajj and Umrah has announced the opening of registration for Hajj 2024."
+  },
+  {
+    id: 2,
+    title: "New Facilities at Masjid Al Haram",
+    image: require("@/assets/images/madinah.png"),
+    date: "May 10, 2024",
+    description: "New cooling systems and facilities have been installed at Masjid Al Haram for pilgrims."
+  },
+  {
+    id: 3,
+    title: "Health Guidelines for Pilgrims",
+    image: require("@/assets/images/umrah.png"),
+    date: "May 5, 2024",
+    description: "Health authorities have issued new guidelines for pilgrims traveling for Hajj and Umrah."
+  }
+];
+
+// Sample data for upcoming events
+const upcomingEvents: EventItem[] = [
+  {
+    id: 1,
+    title: "Pre-Hajj Orientation",
+    date: "June 1, 2024",
+    location: "Online Webinar"
+  },
+  {
+    id: 2,
+    title: "Hajj Preparation Workshop",
+    date: "June 10, 2024",
+    location: "Islamic Center"
+  },
+  {
+    id: 3,
+    title: "Hajj Rituals Seminar",
+    date: "June 15, 2024",
+    location: "Community Hall"
+  }
+];
+
+// Sample data for travel advisories
+const travelAdvisories: AdvisoryItem[] = [
+  {
+    id: 1,
+    country: "Saudi Arabia",
+    update: "Visa processing times have been reduced for Hajj pilgrims.",
+    date: "May 12, 2024"
+  },
+  {
+    id: 2,
+    country: "International",
+    update: "New flight routes added for Hajj season from major cities.",
+    date: "May 8, 2024"
+  },
+  {
+    id: 3,
+    country: "Health Advisory",
+    update: "Vaccination requirements updated for Hajj 2024.",
+    date: "May 3, 2024"
+  }
+];
+
+export default function ExploreScreen() {
+  const { width: screenWidth } = useWindowDimensions();
+  const [activeSlide, setActiveSlide] = useState(0);
+  const newsCarouselRef = useRef<FlatList>(null);
+  
+  // Auto-scroll for news carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (newsCarouselRef.current && newsUpdates.length > 0) {
+        const nextIndex = (activeSlide + 1) % newsUpdates.length;
+        newsCarouselRef.current.scrollToIndex({
+          index: nextIndex,
+          animated: true
+        });
+        setActiveSlide(nextIndex);
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [activeSlide]);
+
+  const renderNewsItem = ({ item }: { item: NewsItem }) => {
+    return (
+      <View style={[styles.carouselItem, { width: screenWidth - 60 }]}>
+        <Image source={item.image} style={styles.carouselImage} />
+        <View style={styles.carouselContent}>
+          <Text style={styles.carouselTitle}>{item.title}</Text>
+          <Text style={styles.carouselDate}>{item.date}</Text>
+          <Text style={styles.carouselDescription}>{item.description}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderEventItem = ({ item }: { item: EventItem }) => {
+    return (
+      <View style={[styles.eventItem, { width: screenWidth - 80 }]}>
+        <View style={styles.eventIconContainer}>
+          <Feather name="calendar" size={24} color="#31C462" />
+        </View>
+        <View style={styles.eventContent}>
+          <Text style={styles.eventTitle}>{item.title}</Text>
+          <Text style={styles.eventDate}>{item.date}</Text>
+          <Text style={styles.eventLocation}>{item.location}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const handleNewsScroll = (event: any) => {
+    const slideSize = screenWidth - 60;
+    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+    if (index !== activeSlide) {
+      setActiveSlide(index);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>
-        This app includes example code to help you get started.
-      </ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          and{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{" "}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the
-          web version, press <ThemedText type="defaultSemiBold">w</ThemedText>{" "}
-          in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the{" "}
-          <ThemedText type="defaultSemiBold">@2x</ThemedText> and{" "}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to
-          provide files for different screen densities
-        </ThemedText>
-        <Image
-          source={require("@/assets/images/react-logo.png")}
-          style={{ alignSelf: "center" }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText>{" "}
-          to see how to load{" "}
-          <ThemedText style={{ fontFamily: "SpaceMono" }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{" "}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook
-          lets you inspect what the user's current color scheme is, and so you
-          can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{" "}
-          <ThemedText type="defaultSemiBold">
-            components/HelloWave.tsx
-          </ThemedText>{" "}
-          component uses the powerful{" "}
-          <ThemedText type="defaultSemiBold">
-            react-native-reanimated
-          </ThemedText>{" "}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The{" "}
-              <ThemedText type="defaultSemiBold">
-                components/ParallaxScrollView.tsx
-              </ThemedText>{" "}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Explore</Text>
+          <Text style={styles.headerSubtitle}>Stay updated with the latest news and events</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Latest Updates</Text>
+          <FlatList
+            ref={newsCarouselRef}
+            data={newsUpdates}
+            renderItem={renderNewsItem}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={screenWidth - 60}
+            snapToAlignment="center"
+            decelerationRate="fast"
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            onMomentumScrollEnd={handleNewsScroll}
+          />
+          <View style={styles.paginationContainer}>
+            {newsUpdates.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  { backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9' }
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Upcoming Events</Text>
+          <FlatList
+            data={upcomingEvents}
+            renderItem={renderEventItem}
+            keyExtractor={(item) => item.id.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Travel Advisories</Text>
+          {travelAdvisories.map(advisory => (
+            <View key={advisory.id} style={styles.advisoryItem}>
+              <View style={styles.advisoryHeader}>
+                <Text style={styles.advisoryCountry}>{advisory.country}</Text>
+                <Text style={styles.advisoryDate}>{advisory.date}</Text>
+              </View>
+              <Text style={styles.advisoryUpdate}>{advisory.update}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Weather Updates</Text>
+          <View style={styles.weatherContainer}>
+            <View style={styles.weatherCity}>
+              <Text style={styles.weatherCityName}>Makkah</Text>
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherTemp}>38°C</Text>
+                <Text style={styles.weatherDesc}>Sunny</Text>
+              </View>
+            </View>
+            <View style={styles.weatherCity}>
+              <Text style={styles.weatherCityName}>Madinah</Text>
+              <View style={styles.weatherInfo}>
+                <Text style={styles.weatherTemp}>36°C</Text>
+                <Text style={styles.weatherDesc}>Clear</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
   },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
+  header: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  section: {
+    marginBottom: 25,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  carouselItem: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  carouselImage: {
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
+  },
+  carouselContent: {
+    padding: 15,
+  },
+  carouselTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  carouselDate: {
+    fontSize: 14,
+    color: '#31C462',
+    marginBottom: 8,
+  },
+  carouselDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 15,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  eventItem: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  eventIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(49, 196, 98, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  eventContent: {
+    flex: 1,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  eventDate: {
+    fontSize: 14,
+    color: '#31C462',
+    marginBottom: 3,
+  },
+  eventLocation: {
+    fontSize: 14,
+    color: '#666',
+  },
+  advisoryItem: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  advisoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  advisoryCountry: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  advisoryDate: {
+    fontSize: 14,
+    color: '#666',
+  },
+  advisoryUpdate: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  weatherContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  weatherCity: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    width: '48%',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  weatherCityName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  weatherInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  weatherTemp: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  weatherDesc: {
+    fontSize: 14,
+    color: '#666',
   },
 });
