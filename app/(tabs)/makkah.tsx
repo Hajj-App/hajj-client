@@ -56,8 +56,8 @@ const Makkah = () => {
           <HistoricPlacesSlider data={[1,2,3,4,5,6,7]} />
         </View>
         <View className="gap-5 mt-5">
-          <Text className="text-2xl font-bold ml-5">Historic places</Text>
-          <Rituals data={[1,2,3,4,5,6,7]} />
+          <Text className="text-2xl font-bold ml-5">Rituals</Text>
+          <Rituals data={[1,2,3,4]} />
         </View>
       </ScrollView>
     </View>

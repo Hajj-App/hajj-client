@@ -7,15 +7,12 @@ type Props = {
 };
 
 const Rituals = ({ data }: Props) => {
-    const handleNavigation = () => {
-           router.push("/ritual-detail");
-      };
   return (
     <View className="flex-1 mx-5 pb-5">
       {data.map((item, i) => (
         <Pressable
           key={i}
-          onPress={() => handleNavigation()}
+          onPress={() => router.push(`/ritual-details/${item}`)}
           className="w-full h-28 bg-gray-200 items-center justify-start my-2 rounded-xl flex-row p-5 gap-3"
         >
           <Image

@@ -1,0 +1,51 @@
+{
+  "rituals": [
+    {
+      "id": 1,
+      "name": "വാഹന സൌകര്യം.",
+      "description": ["Ihram is the state of readiness for Hajj and Umrah."],
+      "paragraphs": [
+        {
+          "title": "ഹജ്ജ് യാത്ര എപ്പോഴാകണം.",
+          "description": [
+            "ഹജ്ജ് നിര്‍ബന്ധമാകുന്ന കഴിവുകള്‍ ഒത്തുചേര്‍ന്നാല്‍ ആ വര്‍ഷം തന്നെ ഹജ്ജ് ചെയ്യല്‍ ശാഫിഈ മദ്ഹബ് പ്രകാരം നിര്‍ബന്ധമാകുന്നില്ല. അടുത്ത കൊല്ലം ചെയ്യാമെന്ന ദൃഢനിശ്ചയമുണ്ടാവുകയും വാര്‍ധക്യം, സാമ്പത്തിക നഷ്ടം, മാര്‍ഗതടസ്സം മുതലായവ കാരണം അടുത്ത കൊല്ലത്തെ യാത്രക്ക് മുടക്കം വരികയുമില്ലെന്ന് ഉറപ്പുമുണ്ടെങ്കില്‍ യാത്ര പിന്തിക്കുന്നതിന് വി രോധമില്ല. എങ്കിലും പിന്നീട് കഴിവുകള്‍ നഷ്ടപ്പെട്ടതിന്റെ പേരില്‍ ഹജ്ജ് ചെയ്യാന്‍ സാധിക്കാതെ വന്നുപോയാല്‍ അവന്‍ കുറ്റക്കാരനാകുന്നതാണ്.",
+            "ഹജ്ജ് നിര്‍ബന്ധമായാല്‍ കഴിയുംവേഗം ആ പുണ്യകൃത്യം നിര്‍വ്വഹിക്കുന്നതാണ് ഉത്തമം. ആരോഗ്യകാലഘട്ടത്തില്‍ നിര്‍വ്വഹിച്ചാല്‍ മാത്രമേ ഹജ്ജിന്റെ എല്ലാ പുണ്യങ്ങളും വാരിക്കൂട്ടാന്‍ സാധ്യമാവുകയുള്ളൂ."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "വഴിസ്വാതന്ത്യ്രം.",
+      "description": "Ihram is the state of readiness for Hajj and Umrah.",
+      "paragraphs": [
+        {
+          "title": "Ihram",
+          "description": [["Ihram is the state of readiness for Hajj and Umrah."]]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "ശാരീരികാരോഗ്യം",
+      "description": ["Ihram is the state of readiness for Hajj and Umrah."],
+      "paragraphs": [
+        {
+          "title": "Ihram",
+          "description": ["Ihram is the state of readiness for Hajj and Umrah."]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "നിബന്ധനക",
+      "description": ["Ihram is the state of readiness for Hajj and Umrah."],
+      "paragraphs": [
+        {
+          "title": "Ihram",
+          "description": [["Ihram is the state of readiness for Hajj and Umrah."]]
+        }
+      ]
+    }
+  ]
+}

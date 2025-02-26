@@ -14,9 +14,10 @@ import { Entypo, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { WebView } from "react-native-webview";
-import { getFilesWithUrls, listFiles } from "../utils/storageUtils";
-import { StorageFile } from "../utils/storageTypes";
-import { signInAnonymousUser } from "../utils/firebase";
+import { getFilesWithUrls, listFiles } from "../../utils/storageUtils";
+import { StorageFile } from "../../utils/storageTypes";
+import { signInAnonymousUser } from "../../utils/firebase";
+import ritualData from "../../data/data.json";
 
 type Props = {};
 
@@ -24,6 +25,16 @@ interface RitualMedia {
   images: StorageFile[];
   audio: StorageFile[];
   documents: StorageFile[];
+}
+
+interface RitualContent {
+  id: number;
+  name: string;
+  description: string[] | string;
+  paragraphs: {
+    title: string;
+    description: string[] | string[][] | string;
+  }[];
 }
 
 // const detailData =[
@@ -37,7 +48,8 @@ interface RitualMedia {
 const RitualDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const ritualId = params.id || "ihram"; // Default to ihram if no ID is provided
+  const ritualIdStr = params.id as string;
+  const ritualId = parseInt(ritualIdStr) || 1;
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +63,19 @@ const RitualDetail = (props: Props) => {
   const [currentAudioIndex, setCurrentAudioIndex] = useState<number>(-1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+  const [ritualContent, setRitualContent] = useState<RitualContent | null>(null);
 
   useEffect(() => {
     const initializeAndFetch = async () => {
       // Sign in anonymously to Firebase before fetching media
       await signInAnonymousUser();
+      
+      // Find ritual content from data.json
+      const ritual = ritualData.rituals.find(r => r.id === ritualId);
+      if (ritual) {
+        setRitualContent(ritual);
+      }
+      
       await fetchRitualMedia();
     };
     
@@ -87,7 +107,7 @@ const RitualDetail = (props: Props) => {
       }
       
       // Fetch media from the specific ritual folder in Firebase Storage
-      const storagePath = `demo`;
+      const storagePath = `demo/${ritualId}`;
       console.log(`Attempting to access path: ${storagePath}`);
       
       try {
@@ -123,7 +143,7 @@ const RitualDetail = (props: Props) => {
             [{ text: "OK" }]
           );
         } else if (storageError.code === 'storage/object-not-found') {
-          setError(`No media files found for ${ritualId}`);
+          setError(`No media files found for ritual ${ritualId}`);
         } else {
           setError(`Error: ${storageError.message || 'Unknown error occurred'}`);
         }
@@ -195,14 +215,18 @@ const RitualDetail = (props: Props) => {
       </ImageBackground>
       <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end">
         <View className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full">
-          <Image source={require('../assets/icons/share.png')} resizeMode="cover" className="w-10 h-10"/>
+          <Image source={require('@/assets/icons/share.png')} resizeMode="cover" className="w-10 h-10"/>
         </View>
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white px-5"
       >
-        <Text className="font-bold text-[28px] text-green">Ihram</Text>
+        {ritualContent ? (
+          <Text className="font-bold text-[28px] text-green">{ritualContent.name}</Text>
+        ) : (
+          <Text className="font-bold text-[28px] text-green">Ritual Details</Text>
+        )}
         
         {loading ? (
           <View className="items-center justify-center py-10">
@@ -336,39 +360,40 @@ const RitualDetail = (props: Props) => {
           </>
         )}
         
-        {/* Ritual content sections */}
-        {[1, 2, 3].map((item, index) => (
-          <View key={index} className="gap-y-5 pt-5 pb-5">
-            <Text className="text-2xl font-bold">What is Ihram?</Text>
-            <Text className="">
-              Ihram is the sacred state you enter before starting the rituals of
-              Hajj or Umrah. It's more than just wearing specific clothes; it's
-              a spiritual transformation where you focus solely on worship and
-              humility before Allah.
-            </Text>
-            <Text className="text-xl font-bold">How to Enter Ihram</Text>
-            <Text className="text-lg leading-tight ">
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-              Ihram is the sacred state you enter before starting the rituals
-              of Hajj or Umrah. It's more than just wearing specific clothes;
-              it's a spiritual
-            </Text>
+        {/* Ritual content sections from data.json */}
+        {ritualContent && (
+          <View className="gap-y-5 pt-5 pb-5">
+            <Text className="text-2xl font-bold">About {ritualContent.name}</Text>
+            {typeof ritualContent.description === 'string' ? (
+              <Text className="text-lg leading-tight mb-2">
+                {ritualContent.description}
+              </Text>
+            ) : (
+              ritualContent.description.map((desc: string, index: number) => (
+                <Text key={index} className="text-lg leading-tight mb-2">
+                  {desc}
+                </Text>
+              ))
+            )}
+            
+            {ritualContent.paragraphs.map((paragraph, pIndex) => (
+              <View key={pIndex} className="mt-4 mb-6">
+                <Text className="text-xl font-bold mb-2">{paragraph.title}</Text>
+                {typeof paragraph.description === 'string' ? (
+                  <Text className="text-lg leading-tight mb-2">
+                    {paragraph.description}
+                  </Text>
+                ) : Array.isArray(paragraph.description) && 
+                  paragraph.description.map((desc: string | string[], dIndex: number) => (
+                    <Text key={dIndex} className="text-lg leading-tight mb-2">
+                      {Array.isArray(desc) ? desc.join(' ') : desc}
+                    </Text>
+                  ))
+                }
+              </View>
+            ))}
           </View>
-        ))}
+        )}
       </ScrollView>
     </View>
   );

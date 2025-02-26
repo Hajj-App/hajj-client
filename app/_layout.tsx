@@ -118,7 +118,7 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="ritual-detail"
+          name="ritual-details/[id]"
           options={{
             headerTitle: "Ritual Detail",
             headerTitleStyle: {
