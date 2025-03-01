@@ -132,7 +132,7 @@ export default function ExploreScreen() {
         <Image source={item.image} style={styles.carouselImage} />
         <View style={styles.carouselContent}>
           <Text style={styles.carouselTitle}>{item.title}</Text>
-          <Text style={styles.carouselDate}>{item.date}</Text>
+          <Text style={styles.carouselDate}>{item.date} |  شعبان 1446 29 </Text>
           <Text style={styles.carouselDescription}>{item.description}</Text>
         </View>
       </View>
@@ -147,7 +147,7 @@ export default function ExploreScreen() {
         </View>
         <View style={styles.eventContent}>
           <Text style={styles.eventTitle}>{item.title}</Text>
-          <Text style={styles.eventDate}>{item.date}</Text>
+          <Text style={styles.eventDate}>{item.date} | شعبان 1446 29 </Text>
           <Text style={styles.eventLocation}>{item.location}</Text>
         </View>
       </View>
@@ -170,6 +170,7 @@ export default function ExploreScreen() {
           <Text style={styles.headerSubtitle}>Stay updated with the latest news and events</Text>
         </View>
 
+    {/* Latest Updates */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Latest Updates</Text>
           <FlatList
@@ -199,6 +200,7 @@ export default function ExploreScreen() {
           </View>
         </View>
 
+            {/* Upcoming Events */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming Events</Text>
           <FlatList
@@ -212,19 +214,21 @@ export default function ExploreScreen() {
           />
         </View>
 
+            {/* Travel Advisories */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Travel Advisories</Text>
           {travelAdvisories.map(advisory => (
             <View key={advisory.id} style={styles.advisoryItem}>
               <View style={styles.advisoryHeader}>
                 <Text style={styles.advisoryCountry}>{advisory.country}</Text>
-                <Text style={styles.advisoryDate}>{advisory.date}</Text>
+                <Text style={styles.advisoryDate}>شعبان 1446 29  | {advisory.date}</Text>
               </View>
               <Text style={styles.advisoryUpdate}>{advisory.update}</Text>
             </View>
           ))}
         </View>
 
+          {/* Weather Updates */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Weather Updates</Text>
           <View style={styles.weatherContainer}>

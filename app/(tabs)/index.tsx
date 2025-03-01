@@ -73,6 +73,8 @@ export default function HomeScreen() {
             </View>
             <Text className="text-lg font-bold">Madina Ziyarat</Text>
           </Pressable>
+
+          {/* Prayer Time */}
           <View className="py-8 flex-row items-center justify-between">
             <View>
               <Text className="text-3xl">Prayer time in</Text>
@@ -91,6 +93,8 @@ export default function HomeScreen() {
           <DateSlider />
           <PrayerTimeContainer />
           <PrayerList />
+
+          {/* Qibla, Dhikr Counter */}
           <View className="flex-row gap-4 my-8">
             <QuickLinkBtn
               title="Qiblah"
