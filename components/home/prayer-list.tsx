@@ -37,6 +37,7 @@ export default function App() {
                 );
                 const data = await response.json();
 
+                console.log("API Response:", data);
                 setTimings(data.data[date.getDate() - 1]?.timings || {});
             } catch (error) {
                 setError('Error fetching prayer timings.');
@@ -46,29 +47,38 @@ export default function App() {
         })();
     }, [apiUrl, date]);
 
-    const changeDate = useCallback((days: number) => {
-        setDate((prevDate) => {
-            const newDate = new Date(prevDate);
-            newDate.setDate(prevDate.getDate() + days);
-            return newDate;
-        });
-    }, []);
+    
+    console.log("Timings Data:", timings);
+
+
+
 
     const getNextPrayer = () => {
-        if (!timings) return null;
-        const currentTime = new Date();
-        for (let prayer of PRAYER_NAMES) {
-            const prayerTime = new Date(date);
-            const [hours, minutes] = timings[prayer].split(':').map(Number);
-            prayerTime.setHours(hours, minutes, 0);
-            if (prayerTime > currentTime) {
-                return prayer;
-            }
-        }
-        return null;
+      if (!timings || Object.keys(timings).length === 0) return null;
+    
+      const currentTime = new Date();
+      const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+    
+      for (let prayer of PRAYER_NAMES) {
+          if (!timings[prayer]) continue;
+    
+          const cleanedTime = timings[prayer].split(' ')[0];
+          const [hours, minutes] = cleanedTime.split(':').map(Number);
+    
+          const prayerMinutes = hours * 60 + minutes;
+    
+          if (prayerMinutes > currentMinutes) {
+              return prayer;
+          }
+      }
+      
+      return PRAYER_NAMES[0];
     };
+    const nextPrayer = getNextPrayer()
 
-    const nextPrayer = getNextPrayer();
+
+
+  
 
     return (
         <View className="flex-1 bg-gray-100 justify-start items-start">
@@ -81,8 +91,11 @@ export default function App() {
                     {PRAYER_NAMES.map((prayer) => (
                         <Pressable
                             key={prayer}
-                            className={`p-3 rounded-lg shadow-md mx-2 items-start ${prayer === nextPrayer ? 'border-2 border-green-500 bg-white' : 'bg-gray-100'}`}
-                        >
+                            className={`p-3 rounded-lg shadow-md mx-2 items-start ${
+                              prayer === nextPrayer
+                                  ? 'border-2 border-green bg-white'
+                                  : 'bg-gray-100'
+                          }`}                        >
                             <Text className="text-base font-bold text-left">{prayer}</Text>
                             <Text className="text-gray-600 text-left">Start at</Text>
                             <Text className="text-base font-bold text-left">{timings?.[prayer]}</Text>
