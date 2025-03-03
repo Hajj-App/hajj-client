@@ -1,8 +1,9 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
 import Rituals from "@/components/makkah/rituals";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
+  Button,
   ImageBackground,
   Pressable,
   ScrollView,
@@ -69,6 +70,15 @@ const Makkah = () => {
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
           <Rituals data={ritualData.rituals} />
+
+          <TouchableOpacity className="absolute w-16 h-16 bg-blue-400 rounded-full flex items-center
+                                        justify-center bottom-0 right-0 mb-12 mr-8  shadow-lg"
+                            onPress={() => router.push('/file-upload') }            
+                                        >
+             <Text className="text-white text-2xl font-bold">+</Text>
+          </TouchableOpacity>
+
+          
         </View>
       </ScrollView>
     </View>
