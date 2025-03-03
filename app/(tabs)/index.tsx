@@ -91,8 +91,8 @@ export default function HomeScreen() {
             </View>
           </View>
           <DateSlider />
-          <PrayerTimeContainer />
-          <PrayerList />
+          {/* <PrayerTimeContainer /> */}
+          <PrayerList /> 
 
           {/* Qibla, Dhikr Counter */}
           <View className="flex-row gap-4 my-8">
