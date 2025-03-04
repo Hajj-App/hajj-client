@@ -5,15 +5,17 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import icons from "@/constants/icons";
 
 const FileUploadScreen = () => {
   const [fileName, setFileName] = useState("");
   const [description, setDescription] = useState("");
-  const [pdf, setPdf] = useState<string | null>(null);
+  const [pdf, setPdf] = useState<{ name: string; uri: string } | null>(null);
   const [voiceMessage, setVoiceMessage] = useState(null);
   const [image, setImage] = useState<string | null>(null);
   const router = useRouter();
@@ -25,7 +27,10 @@ const FileUploadScreen = () => {
     });
 
     if (!result.canceled) {
-      setPdf(result.assets[0].uri);
+      setPdf({
+        name: result.assets[0].name,
+        uri: result.assets[0].uri,
+      });
     }
   };
 
@@ -44,12 +49,12 @@ const FileUploadScreen = () => {
 
   return (
     <ScrollView className="flex-1 bg-white p-5">
-      <Text className="text-2xl font-bold mb-5">Upload File</Text>
+      <Text className="text-3xl text-center font-bold mb-5">Upload File</Text>
 
       {/* File Name Input */}
       <Text className="text-lg font-semibold">File Name</Text>
       <TextInput
-        className="border border-gray-300 p-2 rounded-lg mb-4"
+        className="border border-gray-300 p-2 rounded-lg mb-4 "
         placeholder="Enter file name"
         value={fileName}
         onChangeText={setFileName}
@@ -58,7 +63,7 @@ const FileUploadScreen = () => {
       {/* Description Input */}
       <Text className="text-lg font-semibold">Description</Text>
       <TextInput
-        className="border border-gray-300 p-2 rounded-lg mb-4"
+        className="border border-gray-300 p-2 rounded-lg mb-4 h-72 "
         placeholder="Enter description"
         value={description}
         onChangeText={setDescription}
@@ -67,21 +72,41 @@ const FileUploadScreen = () => {
 
       {/* PDF Upload */}
       <TouchableOpacity
-        className="bg-blue-500 p-3 rounded-lg mb-4"
+        className="mb-4 flex justify-center items-center gap-3 mt-4"
         onPress={pickPDF}
       >
-        <Text className="text-white text-center">Select PDF</Text>
+        {pdf ? 
+        <Text className="text-green-500 text-lg">
+          📄 {pdf.name}
+        </Text> :<Image
+          source={require("@/assets/icons/share.png")}
+          className="w-8 h-8"
+          resizeMode="contain"
+        />
+      }
+        <Text className="text-white text-center bg-blue-500 p-3 rounded-lg w-1/2">
+          Select PDF
+        </Text>
+       
       </TouchableOpacity>
-      {pdf && <Text className="text-green-500">PDF Selected</Text>}
-
+     
       {/* Image Upload */}
       <TouchableOpacity
-        className="bg-green-500 p-3 rounded-lg mb-4"
+        className="bg-green-500 p-3 rounded-lg mb-4 flex items-center justify-center "
         onPress={pickImage}
       >
-        <Text className="text-white text-center">Select Image</Text>
+         {image ?
+         <Image 
+             source={{uri:image}}
+             className="w-40 h-40 rounded-lg mb-4"
+             resizeMode="cover"/> 
+             : 
+             <Image 
+             source={require("@/assets/icons/add-image.png")}
+             className="w-10 h-10 mb-4"/>}
+        <Text className="text-white bg-blue-500 text-center p-3 rounded-lg w-1/2">Select Image</Text>
       </TouchableOpacity>
-      {image && <Text className="text-green-500">Image Selected</Text>}
+     
 
       {/* Submit Button */}
       <TouchableOpacity
