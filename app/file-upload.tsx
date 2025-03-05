@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,7 +9,8 @@ import {
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import icons from "@/constants/icons";
+import { uploadFile } from "@/utils/storageUtils";
+
 
 const FileUploadScreen = () => {
   const [fileName, setFileName] = useState("");
@@ -18,6 +18,7 @@ const FileUploadScreen = () => {
   const [pdf, setPdf] = useState<{ name: string; uri: string } | null>(null);
   const [voiceMessage, setVoiceMessage] = useState(null);
   const [image, setImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const router = useRouter();
 
   // Function to pick a PDF file
@@ -47,23 +48,45 @@ const FileUploadScreen = () => {
     }
   };
 
+  const handleUpload = async () => {
+    if (!image) return;
+    
+    // setUploading(true);
+    // const storagePath = `uploads/${Date.now()}.jpg`;
+    
+    // const downloadURL = await uploadFile(image, storagePath, (progress) => {
+    //   console.log(`Upload Progress: ${progress.toFixed(2)}%`);
+    // });
+
+    // setUploading(false);
+    
+    // if (downloadURL) {
+    //   console.log("File uploaded successfully:", downloadURL);
+    // } else {
+    //   console.error("File upload failed.");
+    // }
+
+    console.log({ fileName, description, pdf, image });
+    router.back(); // Go back to the previous screen after submission
+  };
+
   return (
-    <ScrollView className="flex-1 bg-white p-5">
+    <ScrollView className="flex-1 bg-white p-10">
       <Text className="text-3xl text-center font-bold mb-5">Upload File</Text>
 
       {/* File Name Input */}
-      <Text className="text-lg font-semibold">File Name</Text>
+      <Text className="text-lg font-semibold mb-1">File Name</Text>
       <TextInput
-        className="border border-gray-300 p-2 rounded-lg mb-4 "
+        className="border border-gray-300 p-3 rounded-lg mb-4 "
         placeholder="Enter file name"
         value={fileName}
         onChangeText={setFileName}
       />
 
       {/* Description Input */}
-      <Text className="text-lg font-semibold">Description</Text>
+      <Text className="text-lg font-semibold mb-1">Description</Text>
       <TextInput
-        className="border border-gray-300 p-2 rounded-lg mb-4 h-72 "
+        className="border border-gray-300 p-3 rounded-lg mb-4 h-64  text-wrap "
         placeholder="Enter description"
         value={description}
         onChangeText={setDescription}
@@ -111,10 +134,7 @@ const FileUploadScreen = () => {
       {/* Submit Button */}
       <TouchableOpacity
         className="bg-purple-500 p-3 rounded-lg mt-5"
-        onPress={() => {
-          console.log({ fileName, description, pdf, image });
-          router.back(); // Go back to the previous screen after submission
-        }}
+        onPress={handleUpload}
       >
         <Text className="text-white text-center">Upload</Text>
       </TouchableOpacity>

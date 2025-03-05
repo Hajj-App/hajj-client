@@ -104,13 +104,13 @@ export default function PrayerList() {
             {PRAYER_NAMES.map((prayer) => (
               <Pressable
                 key={prayer}
-                className={`p-3 rounded-lg shadow-md mx-2 items-start ${
+                className={`p-3 rounded-xl shadow-md mx-2 items-start ${
                   prayer === nextPrayerInfo?.name ? "border-2 border-green bg-white" : "bg-gray-200"
                 }`}
               >
                 <Text className="text-base font-bold text-left">{prayer}</Text>
                 <Text className="text-gray-600 text-left">Start at</Text>
-                <Text className="text-base font-bold text-left">{timings?.[prayer]}</Text>
+                <Text className="text-base font-bold text-left text-gray-800">{timings?.[prayer]}</Text>
               </Pressable>
             ))}
           </ScrollView>

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect } from "react";
 import Feather from "@expo/vector-icons/Feather";
+import axios from "axios";
 
 // Define types for our data
 type NewsItem = {
@@ -109,6 +110,41 @@ export default function ExploreScreen() {
   const { width: screenWidth } = useWindowDimensions();
   const [activeSlide, setActiveSlide] = useState(0);
   const newsCarouselRef = useRef<FlatList>(null);
+  const [weather, setWeather] = useState<{ [key: string]: { temp: number; description: string } }>({});
+
+  // const weatherEndpoint = 
+
+  
+  // Weather Updates 
+  
+  const cities = ["Makka", "Madinah"];
+  const apiKey = process.env.EXPO_PUBLIC_WEATHER_API_KEY
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        const weatherData: { [key: string]: { temp: number; description: string } } = {};
+        
+        for (const city of cities) {
+          const apiUrl = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+          const response = await axios.get(apiUrl);
+          const data = response.data;
+  
+          weatherData[city] = {
+            temp: Math.round(data.main.temp),
+            description: data.weather[0].description,
+          };
+        }
+  
+        setWeather(weatherData);
+      } catch (err) {
+        console.error("Weather not fetching", err);
+      }
+    };
+  
+    fetchWeather();
+  }, []);
+
   
   // Auto-scroll for news carousel
   useEffect(() => {
@@ -137,7 +173,7 @@ export default function ExploreScreen() {
         </View>
       </View>
     );
-  };
+  }; 
 
   const renderEventItem = ({ item }: { item: EventItem }) => {
     return (
@@ -229,25 +265,20 @@ export default function ExploreScreen() {
         </View>
 
           {/* Weather Updates */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Weather Updates</Text>
-          <View style={styles.weatherContainer}>
-            <View style={styles.weatherCity}>
-              <Text style={styles.weatherCityName}>Makkah</Text>
-              <View style={styles.weatherInfo}>
-                <Text style={styles.weatherTemp}>38°C</Text>
-                <Text style={styles.weatherDesc}>Sunny</Text>
-              </View>
-            </View>
-            <View style={styles.weatherCity}>
-              <Text style={styles.weatherCityName}>Madinah</Text>
-              <View style={styles.weatherInfo}>
-                <Text style={styles.weatherTemp}>36°C</Text>
-                <Text style={styles.weatherDesc}>Clear</Text>
-              </View>
-            </View>
-          </View>
+          <View style={styles.section}>
+  <Text style={styles.sectionTitle}>Weather Updates</Text>
+  <View style={styles.weatherContainer}>
+    {cities.map((city) => (
+      <View key={city} style={styles.weatherCity}>
+        <Text style={styles.weatherCityName}>{city}</Text>
+        <View style={styles.weatherInfo}>
+          <Text style={styles.weatherTemp}>{weather[city] ? `${weather[city].temp}°C` : "Loading..."}</Text>
+          <Text style={styles.weatherDesc}>{weather[city] ? weather[city].description : ""}</Text>
         </View>
+      </View>
+    ))}
+  </View>
+</View>
       </ScrollView>
     </SafeAreaView>
   );

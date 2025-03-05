@@ -17,6 +17,9 @@ type Props = {
 };
 
 const Rituals = ({ data }: Props) => {
+
+
+  
   return (
     <View className="flex-1 mx-5 pb-5">
       {data.map((ritual, i) => (
