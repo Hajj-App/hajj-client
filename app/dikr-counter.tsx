@@ -4,9 +4,12 @@ import React, { useState } from "react";
 const DikrCounter = () => {
 
   const [count, setCount] = useState(0)
+  const [isVibrationOn, setIsVibrationOn] = useState(true);
 
   const vibrate = () => {
-    Vibration.vibrate(50)
+    if (isVibrationOn) {
+      Vibration.vibrate(50);
+    }
   }
 
 
@@ -31,6 +34,19 @@ const DikrCounter = () => {
       </Pressable>
       <Pressable onPress={reset} className="bg-gray-300 py-4 px-10 rounded-3xl">
         <Text className="text-lg font-bold">Reset</Text>       
+      </Pressable>
+
+      <Pressable
+        onPress={() => setIsVibrationOn(!isVibrationOn)}
+        className={` absolute top-8 right-12 p-4  rounded-xl bg-gray-200`}
+      >    
+          {isVibrationOn
+           ? <Image 
+                  source={require("@/assets/icons/sound.png")}
+                  className="w-6 h-6 opacity-60" />
+           : <Image 
+           source={require("@/assets/icons/mute.png")}
+           className="w-6 h-6 " />}    
       </Pressable>
     </View>
   );

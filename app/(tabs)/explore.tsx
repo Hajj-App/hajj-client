@@ -116,7 +116,7 @@ export default function ExploreScreen() {
 
   
   // Weather Updates 
-  
+
   const cities = ["Makka", "Madinah"];
   const apiKey = process.env.EXPO_PUBLIC_WEATHER_API_KEY
 
