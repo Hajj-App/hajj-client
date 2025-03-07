@@ -9,7 +9,7 @@ export interface Timings {
 
 const METHOD = 15;
 const TUNE = "0,2,0,5,1,3,0,-1";
-const PRAYER_NAMES = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Sunset", "Maghrib", "Isha"];
+const PRAYER_NAMES = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"];
 
 const formatPrayerTime = (rawTime: string | undefined) => {
   if (!rawTime) return "N/A";
@@ -130,13 +130,13 @@ export default function PrayerList() {
             {PRAYER_NAMES.map((prayer) => (
               <Pressable
                 key={prayer}
-                className={`p-3 rounded-xl shadow-md mx-2 items-start ${
-                  prayer === nextPrayerInfo?.name ? "border-2 border-green bg-white" : "bg-gray-100"
+                className={`px-3 py-4 rounded-2xl shadow-md mx-2 items-start mt-3 ${
+                  prayer === nextPrayerInfo?.name ? "border-[1px] border-green bg-white" : "bg-gray-100"
                 }`}
               >
-                <Text className="text-base font-bold w-20 text-left">{prayer}</Text>
+                <Text className="text-base font-bold w-20 text-left text-gray-700">{prayer}</Text>
                 <Text className="text-gray-600 text-left">Start at</Text>
-                <Text className="text-base font-bold text-left text-gray-800">
+                <Text className="text-sm font-bold text-left">
                   {formatPrayerTime(timings?.[prayer])}
                 </Text>
               </Pressable>
