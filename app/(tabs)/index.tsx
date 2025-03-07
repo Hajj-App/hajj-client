@@ -1,7 +1,6 @@
 import DateSlider from "@/components/home/date-slider";
 import HomeHeader from "@/components/home/home-header";
 import PrayerList from "@/components/home/prayer-list";
-import PrayerTimeContainer from "@/components/home/prayer-time-container";
 import QuickLinkBtn from "@/components/home/quick-link-btn";
 import { getCurrentCity } from "@/hooks/useUserLocation";
 import Ionicons from "@expo/vector-icons/build/Ionicons";
@@ -23,7 +22,7 @@ export default function HomeScreen() {
   const [city, setCity] = useState("Fetching...");
 
   useEffect(() => {
-    getCurrentCity().then(setCity); // Call function and update state
+    getCurrentCity().then(setCity); 
   }, []);
 
   return (
@@ -100,6 +99,7 @@ export default function HomeScreen() {
             </View>
           </View>
           <DateSlider />
+
           {/* <PrayerTimeContainer /> */}
           <PrayerList /> 
 

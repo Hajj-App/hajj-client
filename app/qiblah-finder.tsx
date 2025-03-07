@@ -90,13 +90,7 @@ const QiblahFinder = () => {
         />
         
         {/* 🔹 Kaaba Image at the Center */}
-        <View className="absolute inset-0 flex items-center justify-center">
-          <Image
-            source={require("@/assets/icons/makkah.png")} // Place an image of the Kaaba
-            resizeMode="contain"
-            className="w-20 h-20"
-          />
-        </View>
+       
       </Animated.View>
 
       {location && (

@@ -2,6 +2,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import * as Location from "expo-location";
 import PrayerTimeContainer from "./prayer-time-container";
+import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
+import LinearGradient from 'expo-linear-gradient';
+
+const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
 export interface Timings {
   [key: string]: string;
@@ -116,7 +120,32 @@ export default function PrayerList() {
       {error ? (
         <Text className="text-red-500 text-lg">{error}</Text>
       ) : loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <>
+          {/* Shimmer for PrayerTimeContainer */}
+          <View className="w-full">
+            <Shimmer
+              style={{ height: 200,width: 350, borderRadius: 30, marginBottom: 16, marginTop: 10 }}
+              shimmerColors={['#e0e0e0', '#c6c6c6', '#f2f0f0']}
+            />
+            
+            {/* Shimmer for prayer list */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="my-4">
+              {[1, 2, 3, 4, 5, 6].map((_, index) => (
+                <Shimmer
+                  key={index}
+                  style={{
+                    width: 100,
+                    height: 80,
+                    borderRadius: 16,
+                    marginHorizontal: 8,
+                    padding: 2
+                  }}
+                  shimmerColors={['#e0e0e0', '#c6c6c6', '#f2f0f0']}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        </>
       ) : (
         <>
           <PrayerTimeContainer

@@ -1,26 +1,13 @@
-interface Day {
-  day: string;
-  month: string;
-  date: Date;
-}
+import moment from "moment-hijri"
 
-export const getSevenDays = (): Day[] => {
-  const days: Day[] = [];
-  const today = new Date();
-  
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
+export const getSevenDays = () => {
+  return Array.from({ length: 7 }, (_, i) => {
+    const hijriDate = moment().add(i, "days").format("iD iMMMM"); // Hijri Day and Month
+    const [day, month] = hijriDate.split(" ");
     
-    const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-    const month = date.toLocaleDateString('en-US', { month: 'short' });
-    
-    days.push({
-      day,
-      month,
-      date
-    });
-  }
-  
-  return days;
-}; 
+    return {
+      day, // 21
+      month, // Dhul-Hijjah
+    };
+  });
+};
