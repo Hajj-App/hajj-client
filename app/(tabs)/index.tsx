@@ -3,9 +3,11 @@ import HomeHeader from "@/components/home/home-header";
 import PrayerList from "@/components/home/prayer-list";
 import PrayerTimeContainer from "@/components/home/prayer-time-container";
 import QuickLinkBtn from "@/components/home/quick-link-btn";
+import { getCurrentCity } from "@/hooks/useUserLocation";
 import Ionicons from "@expo/vector-icons/build/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -17,12 +19,19 @@ import {
 import { SafeAreaView, Text } from "react-native";
 
 export default function HomeScreen() {
+
+  const [city, setCity] = useState("Fetching...");
+
+  useEffect(() => {
+    getCurrentCity().then(setCity); // Call function and update state
+  }, []);
+
   return (
     <SafeAreaView className="flex-1">
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="p-10 mb-8">
           <HomeHeader />
-          <View className="flex-row gap-4 my-8">
+          <View className="flex-row gap-4 my-4">
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"
               onPress={() =>
@@ -78,9 +87,9 @@ export default function HomeScreen() {
           <View className="py-8 flex-row items-center justify-between">
             <View>
               <Text className="text-3xl">Prayer time in</Text>
-              <Text className="text-3xl font-bold">Malappuram</Text>
+              <Text className="text-3xl font-bold">{city}</Text>
               <Text className="text-lg text-green font-medium">
-                Wrong Location?
+                Current Location?
               </Text>
             </View>
             <View>

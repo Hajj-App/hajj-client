@@ -11,6 +11,15 @@ const METHOD = 15;
 const TUNE = "0,2,0,5,1,3,0,-1";
 const PRAYER_NAMES = ["Fajr", "Sunrise", "Dhuhr", "Asr", "Sunset", "Maghrib", "Isha"];
 
+const formatPrayerTime = (rawTime: string | undefined) => {
+  if (!rawTime) return "N/A";
+  const cleanedTime = rawTime.split(" ")[0];
+  const [hours, minutes] = cleanedTime.split(':').map(Number);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const adjustedHours = hours % 12 || 12;
+  return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+};
+
 export default function PrayerList() {
   const [error, setError] = useState("");
   const [date, setDate] = useState(new Date());
@@ -29,7 +38,7 @@ export default function PrayerList() {
           setError("Location permission denied.");
           setLoading(false);
           return;
-        }
+        } 
 
         let location = await Location.getCurrentPositionAsync({});
         const response = await fetch(
@@ -56,22 +65,39 @@ export default function PrayerList() {
       let prayer = PRAYER_NAMES[i];
       if (!timings[prayer]) continue;
 
-      const cleanedTime = timings[prayer].split(" ")[0];
+      const rawTime = timings[prayer];
+      const cleanedTime = rawTime.split(" ")[0];
       const [hours, minutes] = cleanedTime.split(":").map(Number);
       const prayerMinutes = hours * 60 + minutes;
 
       if (prayerMinutes > currentMinutes) {
-        return { name: prayer, startTime: timings[prayer], endTime: timings[PRAYER_NAMES[i + 1]] || "" };
+        const nextPrayer = PRAYER_NAMES[i + 1];
+        const rawEndTime = timings[nextPrayer] || "";
+        const cleanedEndTime = rawEndTime.split(" ")[0];
+        return { 
+          name: prayer, 
+          startTime: cleanedTime, 
+          endTime: cleanedEndTime 
+        };
       }
     }
 
-    return { name: PRAYER_NAMES[0], startTime: timings[PRAYER_NAMES[0]], endTime: timings[PRAYER_NAMES[1]] || "" };
+    const firstPrayer = PRAYER_NAMES[0];
+    const rawFirstTime = timings[firstPrayer];
+    const cleanedFirstTime = rawFirstTime.split(" ")[0];
+    const rawEndTime = timings[PRAYER_NAMES[1]] || "";
+    const cleanedEndTime = rawEndTime.split(" ")[0];
+    return { 
+      name: firstPrayer, 
+      startTime: cleanedFirstTime, 
+      endTime: cleanedEndTime 
+    };
   };
 
   const getRemainingTime = (prayerTime: string | undefined) => {
     if (!prayerTime) return "N/A";
 
-    const [hours, minutes] = prayerTime.split(" ")[0].split(":").map(Number);
+    const [hours, minutes] = prayerTime.split(":").map(Number);
     const prayerDate = new Date();
     prayerDate.setHours(hours);
     prayerDate.setMinutes(minutes);
@@ -95,22 +121,24 @@ export default function PrayerList() {
         <>
           <PrayerTimeContainer
             prayerName={nextPrayerInfo?.name}
-            startTime={nextPrayerInfo?.startTime}
-            endTime={nextPrayerInfo?.endTime}
+            startTime={formatPrayerTime(nextPrayerInfo?.startTime)}
+            endTime={formatPrayerTime(nextPrayerInfo?.endTime)}
             remainingTime={remainingTime}
           />
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="my-4">
             {PRAYER_NAMES.map((prayer) => (
               <Pressable
                 key={prayer}
                 className={`p-3 rounded-xl shadow-md mx-2 items-start ${
-                  prayer === nextPrayerInfo?.name ? "border-2 border-green bg-white" : "bg-gray-200"
+                  prayer === nextPrayerInfo?.name ? "border-2 border-green bg-white" : "bg-gray-100"
                 }`}
               >
-                <Text className="text-base font-bold text-left">{prayer}</Text>
+                <Text className="text-base font-bold w-20 text-left">{prayer}</Text>
                 <Text className="text-gray-600 text-left">Start at</Text>
-                <Text className="text-base font-bold text-left text-gray-800">{timings?.[prayer]}</Text>
+                <Text className="text-base font-bold text-left text-gray-800">
+                  {formatPrayerTime(timings?.[prayer])}
+                </Text>
               </Pressable>
             ))}
           </ScrollView>

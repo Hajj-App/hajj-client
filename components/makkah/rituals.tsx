@@ -19,7 +19,7 @@ type Props = {
 const Rituals = ({ data }: Props) => {
 
 
-  
+
   return (
     <View className="flex-1 mx-5 pb-5">
       {data.map((ritual, i) => (
@@ -32,11 +32,14 @@ const Rituals = ({ data }: Props) => {
             source={require("@/assets/images/makkah/rituals.png")}
             className="w-20 h-20 rounded-xl"
           />
-          <View className="w-full">
+          <View className="flex-1">
             <Text className="text-lg font-bold">
               {ritual.card.name}
             </Text>
-            <Text className="text-sm text-wrap mr-5 text-gray-500">
+            <Text 
+                className="text-sm text-wrap mr-5 text-gray-500"
+                numberOfLines={3} 
+                ellipsizeMode="tail">
               {ritual.card.description}
             </Text>
           </View>

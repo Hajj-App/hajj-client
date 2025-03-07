@@ -1,24 +1,39 @@
-import * as Location from 'expo-location';
-import { useState, useEffect } from 'react';
+import * as Location from "expo-location";
 
-const useUserLocation = () => {
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
+export const getCurrentCity = async () => {
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      return "Permission Denied";
+    }
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;
-      }
+    let location = await Location.getCurrentPositionAsync({});
+    let reverseGeocode = await Location.reverseGeocodeAsync({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    });
 
-      let loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc.coords);
-    })();
-  }, []);
-
-  return { location, errorMsg };
+    return reverseGeocode.length > 0 ? reverseGeocode[0].city || "Unknown Location" : "Location Not Found";
+  } catch (error) {
+    return "Error Fetching Location";
+  }
 };
 
-export default useUserLocation;
+
+
+export const getCurrentLocation = async () => {
+  try {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      throw new Error("Location permission denied.");
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+  } catch (error) {
+    throw new Error("Error fetching location.");
+  }
+};
