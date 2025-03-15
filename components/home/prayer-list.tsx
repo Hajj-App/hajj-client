@@ -98,7 +98,7 @@ export default function PrayerList() {
     };
   };
 
-  const getRemainingTime = (prayerTime: string | undefined) => {
+  const getRemainingTime = (prayerTime: string | undefined,  isFirstPrayer: boolean = false) => {
     if (!prayerTime) return "N/A";
 
     const [hours, minutes] = prayerTime.split(":").map(Number);
@@ -108,12 +108,18 @@ export default function PrayerList() {
     prayerDate.setSeconds(0);
 
     const now = new Date();
+
+    if (prayerDate < now && isFirstPrayer) {
+      prayerDate.setDate(prayerDate.getDate() + 1); // Move to the next day
+    }
+
     const diffInMinutes = Math.max(0, Math.floor((prayerDate.getTime() - now.getTime()) / 60000));
     return `${Math.floor(diffInMinutes / 60)}h ${diffInMinutes % 60}m`;
   };
 
   const nextPrayerInfo = getNextPrayer();
-  const remainingTime = nextPrayerInfo ? getRemainingTime(nextPrayerInfo.startTime) : "N/A";
+  const isFirstPrayer = nextPrayerInfo?.name === "Fajr";
+  const remainingTime = nextPrayerInfo ? getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer) : "N/A";
 
   return (
     <View className="flex-1 bg-gray-100 justify-start items-start ">
