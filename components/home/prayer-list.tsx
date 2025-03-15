@@ -75,7 +75,7 @@ export default function PrayerList() {
       const prayerMinutes = hours * 60 + minutes;
 
       if (prayerMinutes > currentMinutes) {
-        const nextPrayer = PRAYER_NAMES[i + 1];
+        const nextPrayer = PRAYER_NAMES[i + 1] || PRAYER_NAMES[0];
         const rawEndTime = timings[nextPrayer] || "";
         const cleanedEndTime = rawEndTime.split(" ")[0];
         return { 
@@ -124,8 +124,8 @@ export default function PrayerList() {
           {/* Shimmer for PrayerTimeContainer */}
           <View className="w-full">
             <Shimmer
-              style={{ height: 200,width: 350, borderRadius: 30, marginBottom: 16, marginTop: 10 }}
-              shimmerColors={['#e0e0e0', '#c6c6c6', '#f2f0f0']}
+              style={{ height: 200,width: 350, borderRadius: 30, marginBottom: 16, marginTop: 12 }}
+              shimmerColors={['#e0e0e0', '#3d0404', '#e0e0e0']}
             />
             
             {/* Shimmer for prayer list */}
@@ -140,7 +140,7 @@ export default function PrayerList() {
                     marginHorizontal: 8,
                     padding: 2
                   }}
-                  shimmerColors={['#e0e0e0', '#c6c6c6', '#f2f0f0']}
+                  shimmerColors={['#e0e0e0', '#310404', '#e0e0e0']}
                 />
               ))}
             </ScrollView>

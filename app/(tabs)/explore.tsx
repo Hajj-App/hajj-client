@@ -119,6 +119,7 @@ export default function ExploreScreen() {
 
   const cities = ["Makka", "Madinah"];
   const apiKey = process.env.EXPO_PUBLIC_WEATHER_API_KEY
+  // console.log("API Key:", apiKey);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -265,20 +266,20 @@ export default function ExploreScreen() {
         </View>
 
           {/* Weather Updates */}
-          <View style={styles.section}>
-  <Text style={styles.sectionTitle}>Weather Updates</Text>
-  <View style={styles.weatherContainer}>
-    {cities.map((city) => (
-      <View key={city} style={styles.weatherCity}>
-        <Text style={styles.weatherCityName}>{city}</Text>
-        <View style={styles.weatherInfo}>
-          <Text style={styles.weatherTemp}>{weather[city] ? `${weather[city].temp}°C` : "Loading..."}</Text>
-          <Text style={styles.weatherDesc}>{weather[city] ? weather[city].description : ""}</Text>
+       <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Weather Updates</Text>
+          <View style={styles.weatherContainer}>
+            {cities.map((city) => (
+              <View key={city} style={styles.weatherCity}>
+                <Text style={styles.weatherCityName}>{city}</Text>
+                <View style={styles.weatherInfo}>
+                  <Text style={styles.weatherTemp}>{weather[city] ? `${weather[city].temp}°C` : "Loading..."}</Text>
+                  <Text style={styles.weatherDesc}>{weather[city] ? weather[city].description : ""}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
-      </View>
-    ))}
-  </View>
-</View>
       </ScrollView>
     </SafeAreaView>
   );

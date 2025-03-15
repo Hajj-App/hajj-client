@@ -11,7 +11,7 @@ interface PrayerTimeProps {
 const PrayerTimeContainer: React.FC<PrayerTimeProps> = ({ prayerName, startTime, endTime, remainingTime }) => {
 
   return (
-    <View className="bg-black p-10 rounded-[45px] mt-8 w-full">
+    <View className="bg-black px-10 py-12 rounded-[45px] mt-8 w-full">
       <Text className="text-white font-bold text-xl">{prayerName || 'Dhuhr'}</Text>
       <View className="flex-row justify-between mt-5 items-center">
         <Text className="text-gray-500 text-sm">Remaining</Text>

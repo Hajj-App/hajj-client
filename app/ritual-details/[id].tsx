@@ -49,7 +49,10 @@ interface RitualContent {
 const RitualDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  console.log("params:", params)
   const ritualIdStr = params.id as string;
+  console.log("ritula id",ritualIdStr)
+  console.log("params id",params.id)
   const ritualId = parseInt(ritualIdStr) || 1;
   
   const [loading, setLoading] = useState<boolean>(true);
@@ -57,7 +60,7 @@ const RitualDetail = (props: Props) => {
   const [media, setMedia] = useState<RitualMedia>({
     images: [],
     audio: [],
-    documents: []
+    documents: [] 
   });
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -247,7 +250,7 @@ const RitualDetail = (props: Props) => {
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
-                  className="flex-row"
+                  className="flex-row" 
                 >
                   {media.images.map((image, index) => (
                     <TouchableOpacity 
