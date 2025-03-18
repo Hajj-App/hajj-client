@@ -29,7 +29,7 @@ export default function HomeScreen() {
     <SafeAreaView className="flex-1">
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="p-10 mb-8">
-          <HomeHeader />
+          {/* <HomeHeader /> */}
           <View className="flex-row gap-4 my-4">
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"

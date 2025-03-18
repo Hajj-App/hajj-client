@@ -169,7 +169,7 @@ export default function ExploreScreen() {
         <Image source={item.image} style={styles.carouselImage} />
         <View style={styles.carouselContent}>
           <Text style={styles.carouselTitle}>{item.title}</Text>
-          <Text style={styles.carouselDate}>{item.date} |  شعبان 1446 29 </Text>
+          <Text style={styles.carouselDate}>{item.date}</Text>
           <Text style={styles.carouselDescription}>{item.description}</Text>
         </View>
       </View>
@@ -184,7 +184,7 @@ export default function ExploreScreen() {
         </View>
         <View style={styles.eventContent}>
           <Text style={styles.eventTitle}>{item.title}</Text>
-          <Text style={styles.eventDate}>{item.date} | شعبان 1446 29 </Text>
+          <Text style={styles.eventDate}>{item.date}</Text>
           <Text style={styles.eventLocation}>{item.location}</Text>
         </View>
       </View>
@@ -258,7 +258,7 @@ export default function ExploreScreen() {
             <View key={advisory.id} style={styles.advisoryItem}>
               <View style={styles.advisoryHeader}>
                 <Text style={styles.advisoryCountry}>{advisory.country}</Text>
-                <Text style={styles.advisoryDate}>شعبان 1446 29  | {advisory.date}</Text>
+                <Text style={styles.advisoryDate}> {advisory.date}</Text>
               </View>
               <Text style={styles.advisoryUpdate}>{advisory.update}</Text>
             </View>
