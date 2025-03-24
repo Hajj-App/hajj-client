@@ -4,6 +4,7 @@ import * as Location from "expo-location";
 import PrayerTimeContainer from "./prayer-time-container";
 import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
 import LinearGradient from 'expo-linear-gradient';
+import { locationPermission } from "@/hooks/useUserLocation";
 
 const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
@@ -37,12 +38,14 @@ export default function PrayerList() {
   useEffect(() => {
     (async () => {
       try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setError("Location permission denied.");
-          setLoading(false);
-          return;
-        } 
+        setLoading(true);
+
+       const permissionGranted = await locationPermission();
+    if (!permissionGranted) {
+      setError("Location permission denied.");
+      setLoading(false);
+      return;
+    }
 
         let location = await Location.getCurrentPositionAsync({});
         const response = await fetch(

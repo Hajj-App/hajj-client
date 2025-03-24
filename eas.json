@@ -1,0 +1,23 @@
+{
+    "build": {
+      "development": {
+        "distribution": "internal",
+        "android": {
+          "buildType": "apk"
+        },
+        "ios": {
+          "simulator": true
+        }
+      },
+      "production": {
+        "android": {
+          "buildType": "app-bundle",
+           "gradleCommand": ":app:assembleRelease"
+        },
+        "ios": {
+          "enterpriseProvisioning": "universal"
+        }
+      }
+    }
+  }
+  
