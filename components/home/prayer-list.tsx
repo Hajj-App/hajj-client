@@ -30,6 +30,7 @@ export default function PrayerList() {
   const [date, setDate] = useState(new Date());
   const [timings, setTimings] = useState<Timings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [remainingTime, setRemainingTime] = useState<string>("N/A");
 
   const apiUrl = useMemo(() => {
     return `http://api.aladhan.com/v1/calendar/${date.getFullYear()}/${date.getMonth() + 1}?method=${METHOD}&tune=${TUNE}`;
@@ -120,9 +121,30 @@ export default function PrayerList() {
     return `${Math.floor(diffInMinutes / 60)}h ${diffInMinutes % 60}m`;
   };
 
+  // Function to calculate remaining time
+  const calculateRemainingTime = () => {
+    const nextPrayerInfo = getNextPrayer();
+    const isFirstPrayer = nextPrayerInfo?.name === "Fajr";
+    if (nextPrayerInfo) {
+      setRemainingTime(getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer));
+    }
+  };
+
+  useEffect(() => {
+    // Update remaining time every minute
+    const interval = setInterval(() => {
+      calculateRemainingTime();
+    }, 60000); // 60000ms = 1 minute
+
+    // Initial calculation
+    calculateRemainingTime();
+
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, [timings]);
+
   const nextPrayerInfo = getNextPrayer();
   const isFirstPrayer = nextPrayerInfo?.name === "Fajr";
-  const remainingTime = nextPrayerInfo ? getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer) : "N/A";
+  // const remainingTime = nextPrayerInfo ? getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer) : "N/A";
 
   return (
     <View className="flex-1 bg-gray-100 justify-start items-start ">

@@ -17,7 +17,7 @@ const PrayerTimeContainer: React.FC<PrayerTimeProps> = ({ prayerName, startTime,
         <Text className="text-gray-500 text-sm">Remaining</Text>
         <Text className="text-white font-bold text-2xl">{remainingTime}</Text>
       </View>
-      <View className="flex-row gap-10 mt-5 items-center gap-5">
+      <View className="flex-row mt-5 items-center gap-5">
         <View className="rounded-full bg-green w-3 h-3 mt-1"></View>
         <View className="gap-1">
           <Text className="text-gray-500 text-sm">Start at</Text>

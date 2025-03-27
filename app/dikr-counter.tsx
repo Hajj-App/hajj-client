@@ -22,6 +22,10 @@ const DikrCounter = () => {
     vibrate()
   }
 
+  const manage = () => {
+
+  }
+
   return (
     <View className="flex-1 items-center justify-center">
       <Pressable onPress={incrementCount}>
@@ -32,9 +36,21 @@ const DikrCounter = () => {
       />
        <Text className="absolute mr-32 mt-20 right-0 text-5xl font-bold">{count}</Text>
       </Pressable>
+
+
+{/*  Reset  */}
+
+      <View className="flex flex-row gap-4">
+      {/* <Pressable onPress={manage} className="bg-gray-300 py-4 px-10 rounded-3xl">
+        <Text className="text-lg font-bold">Manage</Text>       
+      </Pressable> */}
+
       <Pressable onPress={reset} className="bg-gray-300 py-4 px-10 rounded-3xl">
         <Text className="text-lg font-bold">Reset</Text>       
       </Pressable>
+
+      </View>
+
 
       <Pressable
         onPress={() => setIsVibrationOn(!isVibrationOn)}

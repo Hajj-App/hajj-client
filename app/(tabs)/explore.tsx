@@ -112,7 +112,7 @@ export default function ExploreScreen() {
   const newsCarouselRef = useRef<FlatList>(null);
   const [weather, setWeather] = useState<{ [key: string]: { temp: number; description: string } }>({});
 
-  // const weatherEndpoint = 
+
 
   
   // Weather Updates 
