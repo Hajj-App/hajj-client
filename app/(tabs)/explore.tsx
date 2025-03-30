@@ -14,6 +14,8 @@ import { useState, useRef, useEffect } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
 import TravelAdvisories from "@/components/TravelAdvisories";
+import UpcomingEvents from "@/components/UpcomingEvents";
+import LatestUpdates from "@/components/LatestUpdates";
 
 
 // Define types for our data
@@ -210,7 +212,8 @@ export default function ExploreScreen() {
         </View>
 
     {/* Latest Updates */}
-        <View style={styles.section}>
+    <LatestUpdates />
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Latest Updates</Text>
           <FlatList
             ref={newsCarouselRef}
@@ -237,10 +240,10 @@ export default function ExploreScreen() {
               />
             ))}
           </View>
-        </View>
+        </View> */}
 
             {/* Upcoming Events */}
-        <View style={styles.section}>
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Upcoming Events</Text>
           <FlatList
             data={upcomingEvents}
@@ -251,7 +254,9 @@ export default function ExploreScreen() {
             contentContainerStyle={{ paddingHorizontal: 20 }}
             ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
           />
-        </View>
+        </View> */}
+        <UpcomingEvents />
+
 
             {/* Travel Advisories */}
             <TravelAdvisories />
