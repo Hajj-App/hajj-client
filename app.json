@@ -8,6 +8,11 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -70,7 +75,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "e5830dc4-0895-4a32-a4d1-ace3ff64938d"
+        "projectId": "f6f3d303-d244-44db-8564-6a8f622835f5"
       }
     }
   }

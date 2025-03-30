@@ -20,7 +20,7 @@ import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
 import ritualData from "../../data/data.json";
 
-type Props = {};
+type Props = {} ;
 
 interface RitualMedia {
   images: StorageFile[];
@@ -44,7 +44,7 @@ interface RitualContent {
 //     desc:''
 
 //   }
-// ]
+// ]      
 
 const RitualDetail = (props: Props) => {
   const router = useRouter();

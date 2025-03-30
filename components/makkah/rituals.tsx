@@ -12,7 +12,7 @@ interface Ritual {
 }
 
 type Props = {
-  data: Ritual[];
+  data: Ritual[] ;
 };
 
 const Rituals = ({ data }: Props) => {
