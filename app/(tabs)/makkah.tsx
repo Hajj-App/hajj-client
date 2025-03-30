@@ -1,22 +1,32 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
 import Rituals from "@/components/makkah/rituals";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   ImageBackground,
   Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import ritualData from "@/data/data.json";
+import { collection, getDocs } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
+
+interface HajjUpload {
+  id: string;
+  name: string;
+  description: string;
+  content_image: string;
+}
 
 const Makkah = () => {
   const params = useLocalSearchParams();
   const [selected, setSelected] = useState(0);
+  const [uploads, setUploads] = useState<HajjUpload[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     // Set the initial selection based on the route parameter
@@ -24,6 +34,46 @@ const Makkah = () => {
       setSelected(Number(params.selected));
     }
   }, [params]);
+
+  useEffect(() => {
+    const fetchHajjUploads = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        if (!firestore) {
+          throw new Error("Firestore is not initialized");
+        }
+        
+        const uploadsCollectionRef = collection(firestore, "hajj_uploads");
+        
+        const querySnapshot = await getDocs(uploadsCollectionRef);
+        
+        const uploadsData: HajjUpload[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          uploadsData.push({
+            id: doc.id,
+            name: data.name || 'Untitled',
+            description: Array.isArray(data.description) && data.description.length > 0 
+              ? data.description[0] 
+              : (typeof data.description === 'string' ? data.description : ''),
+            content_image: data.content_image || '',
+          });
+        });
+        
+        console.log("Fetched uploads:", uploadsData.length);
+        setUploads(uploadsData);
+      } catch (err) {
+        console.error("Error fetching hajj uploads:", err);
+        setError("Failed to fetch data from Firestore");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchHajjUploads();
+  }, []);
 
   return (
     <View className="flex-1">
@@ -69,7 +119,7 @@ const Makkah = () => {
         </View>
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <Rituals data={ritualData.rituals} />          
+          <Rituals data={uploads} />          
         </View>
       </ScrollView>
     </View>
