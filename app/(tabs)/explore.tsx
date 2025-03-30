@@ -13,6 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
+import TravelAdvisories from "@/components/TravelAdvisories";
+
 
 // Define types for our data
 type NewsItem = {
@@ -252,7 +254,8 @@ export default function ExploreScreen() {
         </View>
 
             {/* Travel Advisories */}
-        <View style={styles.section}>
+            <TravelAdvisories />
+        {/* <View style={styles.section}>
           <Text style={styles.sectionTitle}>Travel Advisories</Text>
           {travelAdvisories.map(advisory => (
             <View key={advisory.id} style={styles.advisoryItem}>
@@ -263,7 +266,7 @@ export default function ExploreScreen() {
               <Text style={styles.advisoryUpdate}>{advisory.update}</Text>
             </View>
           ))}
-        </View>
+        </View> */}
 
           {/* Weather Updates */}
        <View style={styles.section}>
