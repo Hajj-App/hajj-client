@@ -1,75 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  View, 
+  Text, 
+  FlatList, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  StyleSheet, 
+  Dimensions
 } from 'react-native';
-import { ref, listAll, getDownloadURL, StorageReference } from 'firebase/storage';
-import { storage } from '@/utils/firebase'; // Ensure this utility initializes `storage`
-import { signInAnonymousUser } from '@/utils/firebase'; // Anonymous authentication utility
+import { ref, listAll, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/utils/firebase';
+import { MaterialIcons } from '@expo/vector-icons';
+
+const { width: screenWidth } = Dimensions.get('window');
 
 type Event = {
   id: string;
   title: string;
   date: string;
+  location: string;
   description: string;
+  lastModified?: string;
 };
 
 const UpcomingEvents = () => {
-  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef<FlatList>(null);
 
-  const fetchUpcomingEvents = async () => {
+  const fetchEvents = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Ensure Firebase storage is initialized
       if (!storage) {
-        throw new Error('Firebase Storage is not initialized.');
+        throw new Error('Firebase Storage is not initialized');
       }
 
-      // Sign in anonymously
-      await signInAnonymousUser();
-
-      // Reference to the upcoming events folder in Firebase Storage
-      const eventsRef: StorageReference = ref(storage, 'upcoming_events/');
+      const eventsRef = ref(storage, 'upcoming_events/');
       const result = await listAll(eventsRef);
 
-      // Fetch all events
-      const eventPromises = result.items.map(async (itemRef) => {
+      const eventPromises = result.prefixes.map(async (folderRef) => {
         try {
-          const url = await getDownloadURL(itemRef); // Get the event file URL
-          const response = await fetch(url); // Fetch the file content
-          const data = await response.json();
+          const folderItems = await listAll(folderRef);
+          const eventFile = folderItems.items.find(item => 
+            item.name === 'event_data.json'
+          );
 
-          // Use the file name (without extension) as a unique ID
-          return {
-            id: itemRef.name.split('.')[0],
-            ...data,
-          };
+          if (eventFile) {
+            const downloadURL = await getDownloadURL(eventFile);
+            const response = await fetch(downloadURL);
+            const data = await response.json();
+            return {
+              ...data,
+              id: folderRef.name
+            };
+          }
         } catch (err) {
-          console.error(`Error processing event ${itemRef.name}:`, err);
+          console.error(`Error processing folder ${folderRef.name}:`, err);
           return null;
         }
+        return null;
       });
 
-      // Resolve all promises and filter out any null results
-      const loadedEvents = (await Promise.all(eventPromises)).filter(
-        (event): event is Event => event !== null
-      );
+      const loadedEvents = (await Promise.all(eventPromises))
+        .filter((event): event is Event => event !== null)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      setUpcomingEvents(loadedEvents);
+      setEvents(loadedEvents);
     } catch (err) {
-      console.error('Error fetching upcoming events:', err);
+      console.error('Error fetching events:', err);
       setError(
-        err instanceof Error
-          ? err.message
-          : 'Failed to load upcoming events.'
+        err instanceof Error 
+          ? err.message 
+          : 'Failed to load upcoming events'
       );
     } finally {
       setLoading(false);
@@ -77,21 +83,32 @@ const UpcomingEvents = () => {
   };
 
   useEffect(() => {
-    fetchUpcomingEvents();
+    fetchEvents();
   }, []);
 
-  const renderEventItem = ({ item }: { item: Event }) => (
+  const handleScroll = (event: any) => {
+    const contentOffset = event.nativeEvent.contentOffset.x;
+    const currentIndex = Math.round(contentOffset / (screenWidth - 60));
+    setActiveSlide(currentIndex);
+  };
+
+  const renderEvent = ({ item }: { item: Event }) => (
     <View style={styles.eventItem}>
-      <Text style={styles.eventTitle}>{item.title}</Text>
-      <Text style={styles.eventDate}>{item.date}</Text>
-      <Text style={styles.eventDescription}>{item.description}</Text>
+      <View style={styles.eventIconContainer}>
+        <MaterialIcons name="event" size={24} color="#31C462" />
+      </View>
+      <View style={styles.eventContent}>
+        <Text style={styles.eventTitle}>{item.title}</Text>
+        <Text style={styles.eventDate}>{item.date}</Text>
+        <Text style={styles.eventLocation}>{item.description}</Text>
+      </View>
     </View>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#34D399" />
+        <ActivityIndicator size="small" color="#31C462" />
         <Text style={styles.loadingText}>Loading upcoming events...</Text>
       </View>
     );
@@ -101,7 +118,10 @@ const UpcomingEvents = () => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchUpcomingEvents}>
+        <TouchableOpacity 
+          style={styles.retryButton} 
+          onPress={fetchEvents}
+        >
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -111,18 +131,40 @@ const UpcomingEvents = () => {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Upcoming Events</Text>
-      {upcomingEvents.length > 0 ? (
-        <FlatList
-          data={upcomingEvents}
-          renderItem={renderEventItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          ItemSeparatorComponent={() => <View style={{ width: 15 }} />}
-        />
+
+      {events.length > 0 ? (
+        <>
+          <FlatList
+            ref={carouselRef}
+            data={events}
+            renderItem={renderEvent}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={screenWidth - 60}
+            snapToAlignment="center"
+            decelerationRate="fast"
+            contentContainerStyle={styles.carouselContent}
+            onMomentumScrollEnd={handleScroll}
+          />
+          <View style={styles.pagination}>
+            {events.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.paginationDot,
+                  { 
+                    backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9',
+                    width: index === activeSlide ? 12 : 8,
+                  }
+                ]}
+              />
+            ))}
+          </View>
+        </>
       ) : (
-        <Text style={styles.noEventsText}>No upcoming events available.</Text>
+        <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
       )}
     </View>
   );
@@ -131,78 +173,106 @@ const UpcomingEvents = () => {
 const styles = StyleSheet.create({
   section: {
     marginVertical: 20,
-    paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#2c3e50',
+    marginBottom: 15,
+    paddingHorizontal: 20,
+    color: '#333',
+  },
+  carouselContent: {
+    paddingHorizontal: 20,
   },
   eventItem: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 12,
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 2,
+    width: screenWidth - 60,
+  },
+  eventIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(49, 196, 98, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  eventContent: {
+    flex: 1,
   },
   eventTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
   },
   eventDate: {
     fontSize: 14,
-    color: '#7f8c8d',
-    marginTop: 4,
+    color: '#31C462',
+    marginBottom: 3,
   },
-  eventDescription: {
+  eventLocation: {
     fontSize: 14,
-    color: '#34495e',
-    marginTop: 6,
+    color: '#666',
   },
-  loadingContainer: {
-    flex: 1,
+  pagination: {
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 12,
+  },
+  paginationDot: {
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  loadingContainer: {
     padding: 20,
+    alignItems: 'center',
   },
   loadingText: {
-    fontSize: 16,
-    color: '#7f8c8d',
-    marginTop: 12,
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
   },
   errorContainer: {
     padding: 16,
     backgroundColor: '#ffeeee',
     borderRadius: 8,
-    margin: 16,
+    marginHorizontal: 20,
     alignItems: 'center',
   },
   errorText: {
     color: '#e74c3c',
     textAlign: 'center',
     marginBottom: 12,
+    fontSize: 14,
   },
   retryButton: {
-    backgroundColor: '#e74c3c',
-    paddingVertical: 10,
+    backgroundColor: '#31C462',
+    paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 5,
   },
   retryButtonText: {
-    color: '#ffffff',
+    color: 'white',
     fontWeight: '600',
+    fontSize: 14,
   },
   noEventsText: {
     textAlign: 'center',
-    color: '#95a5a6',
+    color: '#666',
     fontStyle: 'italic',
-    marginVertical: 20,
+    paddingHorizontal: 20,
   },
 });
 
