@@ -148,20 +148,7 @@ const UpcomingEvents = () => {
             contentContainerStyle={styles.carouselContent}
             onMomentumScrollEnd={handleScroll}
           />
-          <View style={styles.pagination}>
-            {events.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.paginationDot,
-                  { 
-                    backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9',
-                    width: index === activeSlide ? 12 : 8,
-                  }
-                ]}
-              />
-            ))}
-          </View>
+          
         </>
       ) : (
         <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
@@ -224,17 +211,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  pagination: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  paginationDot: {
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
+
   loadingContainer: {
     padding: 20,
     alignItems: 'center',

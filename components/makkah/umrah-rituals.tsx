@@ -1,0 +1,51 @@
+import { View, Text, Image, Pressable } from "react-native";
+import React from "react";
+import { router } from "expo-router";
+import ritualData from "@/data/data.json";
+
+// Define the Ritual interface
+interface Ritual {
+  id: string;
+  name: string;
+  description: string;
+  content_image: string;
+}
+
+type Props = {
+  data: Ritual[] ;
+};
+
+const Rituals = ({ data }: Props) => {
+
+
+
+  return (
+    <View className="flex-1 mx-5 pb-5">
+      {data.map((ritual, i) => (
+        <Pressable
+          key={ritual.id}
+          onPress={() => router.push(`/ritual-details/${ritual.id}`)}
+          className="w-full h-28 bg-gray-200 items-center justify-start my-2 rounded-xl flex-row p-5 gap-3"
+        >
+          <Image
+            source={{ uri: ritual.content_image }}
+            className="w-20 h-20 rounded-xl"
+          />
+          <View className="flex-1">
+            <Text className="text-lg font-bold">
+              {ritual.name}
+            </Text>
+            <Text 
+                className="text-sm text-wrap mr-5 text-gray-500"
+                numberOfLines={3} 
+                ellipsizeMode="tail">
+              {ritual.description}
+            </Text>
+          </View>
+        </Pressable>
+      ))}
+    </View>
+  );
+};
+
+export default Rituals;

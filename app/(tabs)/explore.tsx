@@ -4,14 +4,11 @@ import {
   ScrollView, 
   View, 
   Text, 
-  Dimensions, 
   FlatList, 
-  TouchableOpacity,
   useWindowDimensions
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect } from "react";
-import Feather from "@expo/vector-icons/Feather";
 import axios from "axios";
 import TravelAdvisories from "@/components/TravelAdvisories";
 import UpcomingEvents from "@/components/UpcomingEvents";
@@ -167,41 +164,41 @@ export default function ExploreScreen() {
     return () => clearInterval(interval);
   }, [activeSlide]);
 
-  const renderNewsItem = ({ item }: { item: NewsItem }) => {
-    return (
-      <View style={[styles.carouselItem, { width: screenWidth - 60 }]}>
-        <Image source={item.image} style={styles.carouselImage} />
-        <View style={styles.carouselContent}>
-          <Text style={styles.carouselTitle}>{item.title}</Text>
-          <Text style={styles.carouselDate}>{item.date}</Text>
-          <Text style={styles.carouselDescription}>{item.description}</Text>
-        </View>
-      </View>
-    );
-  }; 
+  // const renderNewsItem = ({ item }: { item: NewsItem }) => {
+  //   return (
+  //     <View style={[styles.carouselItem, { width: screenWidth - 60 }]}>
+  //       <Image source={item.image} style={styles.carouselImage} />
+  //       <View style={styles.carouselContent}>
+  //         <Text style={styles.carouselTitle}>{item.title}</Text>
+  //         <Text style={styles.carouselDate}>{item.date}</Text>
+  //         <Text style={styles.carouselDescription}>{item.description}</Text>
+  //       </View>
+  //     </View>
+  //   );
+  // }; 
 
-  const renderEventItem = ({ item }: { item: EventItem }) => {
-    return (
-      <View style={[styles.eventItem, { width: screenWidth - 80 }]}>
-        <View style={styles.eventIconContainer}>
-          <Feather name="calendar" size={24} color="#31C462" />
-        </View>
-        <View style={styles.eventContent}>
-          <Text style={styles.eventTitle}>{item.title}</Text>
-          <Text style={styles.eventDate}>{item.date}</Text>
-          <Text style={styles.eventLocation}>{item.location}</Text>
-        </View>
-      </View>
-    );
-  };
+  // const renderEventItem = ({ item }: { item: EventItem }) => {
+  //   return (
+  //     <View style={[styles.eventItem, { width: screenWidth - 80 }]}>
+  //       <View style={styles.eventIconContainer}>
+  //         <Feather name="calendar" size={24} color="#31C462" />
+  //       </View>
+  //       <View style={styles.eventContent}>
+  //         <Text style={styles.eventTitle}>{item.title}</Text>
+  //         <Text style={styles.eventDate}>{item.date}</Text>
+  //         <Text style={styles.eventLocation}>{item.location}</Text>
+  //       </View>
+  //     </View>
+  //   );
+  // };
 
-  const handleNewsScroll = (event: any) => {
-    const slideSize = screenWidth - 60;
-    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
-    if (index !== activeSlide) {
-      setActiveSlide(index);
-    }
-  };
+  // const handleNewsScroll = (event: any) => {
+  //   const slideSize = screenWidth - 60;
+  //   const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+  //   if (index !== activeSlide) {
+  //     setActiveSlide(index);
+  //   }
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -320,117 +317,117 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 15,
   },
-  carouselItem: {
-    backgroundColor: 'white',
-    borderRadius: 15,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  carouselImage: {
-    width: '100%',
-    height: 180,
-    resizeMode: 'cover',
-  },
-  carouselContent: {
-    padding: 15,
-  },
-  carouselTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  carouselDate: {
-    fontSize: 14,
-    color: '#31C462',
-    marginBottom: 8,
-  },
-  carouselDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 15,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
-  eventItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginRight: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  eventIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(49, 196, 98, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  eventContent: {
-    flex: 1,
-  },
-  eventTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  eventDate: {
-    fontSize: 14,
-    color: '#31C462',
-    marginBottom: 3,
-  },
-  eventLocation: {
-    fontSize: 14,
-    color: '#666',
-  },
-  advisoryItem: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  advisoryHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  advisoryCountry: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  advisoryDate: {
-    fontSize: 14,
-    color: '#666',
-  },
-  advisoryUpdate: {
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
+  // carouselItem: {
+  //   backgroundColor: 'white',
+  //   borderRadius: 15,
+  //   overflow: 'hidden',
+  //   elevation: 3,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 3,
+  // },
+  // carouselImage: {
+  //   width: '100%',
+  //   height: 180,
+  //   resizeMode: 'cover',
+  // },
+  // carouselContent: {
+  //   padding: 15,
+  // },
+  // carouselTitle: {
+  //   fontSize: 18,
+  //   fontWeight: 'bold',
+  //   marginBottom: 5,
+  // },
+  // carouselDate: {
+  //   fontSize: 14,
+  //   color: '#31C462',
+  //   marginBottom: 8,
+  // },
+  // carouselDescription: {
+  //   fontSize: 14,
+  //   color: '#666',
+  //   lineHeight: 20,
+  // },
+  // paginationContainer: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'center',
+  //   marginTop: 15,
+  // },
+  // paginationDot: {
+  //   width: 8,
+  //   height: 8,
+  //   borderRadius: 4,
+  //   marginHorizontal: 4,
+  // },
+  // eventItem: {
+  //   flexDirection: 'row',
+  //   backgroundColor: 'white',
+  //   borderRadius: 12,
+  //   padding: 15,
+  //   marginRight: 15,
+  //   elevation: 2,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 1 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 2,
+  // },
+  // eventIconContainer: {
+  //   width: 50,
+  //   height: 50,
+  //   borderRadius: 25,
+  //   backgroundColor: 'rgba(49, 196, 98, 0.1)',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   marginRight: 15,
+  // },
+  // eventContent: {
+  //   flex: 1,
+  // },
+  // eventTitle: {
+  //   fontSize: 16,
+  //   fontWeight: 'bold',
+  //   marginBottom: 5,
+  // },
+  // eventDate: {
+  //   fontSize: 14,
+  //   color: '#31C462',
+  //   marginBottom: 3,
+  // },
+  // eventLocation: {
+  //   fontSize: 14,
+  //   color: '#666',
+  // },
+  // advisoryItem: {
+  //   backgroundColor: 'white',
+  //   borderRadius: 12,
+  //   padding: 15,
+  //   marginBottom: 10,
+  //   elevation: 2,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 1 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 2,
+  // },
+  // advisoryHeader: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   marginBottom: 8,
+  // },
+  // advisoryCountry: {
+  //   fontSize: 16,
+  //   fontWeight: 'bold',
+  // },
+  // advisoryDate: {
+  //   fontSize: 14,
+  //   color: '#666',
+  // },
+  // advisoryUpdate: {
+  //   fontSize: 14,
+  //   color: '#333',
+  //   lineHeight: 20,
+  // },
   weatherContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -30,6 +30,7 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
+  const scrollInterval = useRef<NodeJS.Timeout>();
 
   const fetchUpdates = async () => {
     try {
@@ -49,7 +50,6 @@ const LatestUpdates = () => {
         try {
           const folderItems = await listAll(folderRef);
           
-          // Find both the JSON data file and any image
           const updateFile = folderItems.items.find(item => 
             item.name === 'update_data.json'
           );
@@ -99,6 +99,28 @@ const LatestUpdates = () => {
     }
   };
 
+  // Auto-scroll functionality
+  useEffect(() => {
+    if (updates.length > 1) {
+      scrollInterval.current = setInterval(() => {
+        setActiveSlide(prev => {
+          const nextSlide = prev === updates.length - 1 ? 0 : prev + 1;
+          carouselRef.current?.scrollToIndex({
+            index: nextSlide,
+            animated: true
+          });
+          return nextSlide;
+        });
+      }, 3000); // Change slide every 3 seconds
+    }
+    
+    return () => {
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
+  }, [updates.length]);
+
   useEffect(() => {
     fetchUpdates();
   }, []);
@@ -110,25 +132,18 @@ const LatestUpdates = () => {
   };
 
   const renderUpdate = ({ item }: { item: UpdateItem }) => (
-    <View style={styles.updateItem}>
+    <View style={styles.carouselItem}>
       {item.imageUrl && (
         <Image 
           source={{ uri: item.imageUrl }} 
-          style={styles.updateImage}
+          style={styles.carouselImage}
           resizeMode="cover"
         />
       )}
-      <View style={styles.updateContent}>
-        <View style={styles.updateHeader}>
-          <Text style={styles.updateTitle}>{item.title}</Text>
-          <Text style={styles.updateDate}>{item.date}</Text>
-        </View>
-        <Text style={styles.updateDescription}>{item.description}</Text>
-        {item.lastModified && (
-          <Text style={styles.lastUpdated}>
-            Last updated: {new Date(item.lastModified).toLocaleDateString()}
-          </Text>
-        )}
+      <View style={styles.carouselContent}>
+        <Text style={styles.carouselTitle}>{item.title}</Text>
+        <Text style={styles.carouselDate}>{item.date}</Text>
+        <Text style={styles.carouselDescription}>{item.description}</Text>
       </View>
     </View>
   );
@@ -173,19 +188,22 @@ const LatestUpdates = () => {
             snapToInterval={screenWidth - 60}
             snapToAlignment="center"
             decelerationRate="fast"
-            contentContainerStyle={styles.carouselContent}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
             onMomentumScrollEnd={handleScroll}
+            initialScrollIndex={0}
+            getItemLayout={(_, index) => ({
+              length: screenWidth - 60,
+              offset: (screenWidth - 60) * index,
+              index,
+            })}
           />
-          <View style={styles.pagination}>
+          <View style={styles.paginationContainer}>
             {updates.map((_, index) => (
               <View
                 key={index}
                 style={[
                   styles.paginationDot,
-                  { 
-                    backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9',
-                    width: index === activeSlide ? 12 : 8,
-                  }
+                  { backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9' }
                 ]}
               />
             ))}
@@ -200,72 +218,56 @@ const LatestUpdates = () => {
 
 const styles = StyleSheet.create({
   section: {
-    marginVertical: 20,
+    marginBottom: 25,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
-    paddingHorizontal: 20,
-    color: '#2c3e50',
+    marginBottom: 15,
   },
-  carouselContent: {
-    paddingHorizontal: 20,
-  },
-  updateItem: {
-    width: screenWidth - 60,
-    marginRight: 20,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
+  carouselItem: {
+    backgroundColor: 'white',
+    borderRadius: 15,
     overflow: 'hidden',
-    elevation: 2,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+    width: screenWidth - 60,
+    marginRight: 20,
   },
-  updateImage: {
+  carouselImage: {
     width: '100%',
-    height: 150,
+    height: 180,
+    resizeMode: 'cover',
   },
-  updateContent: {
-    padding: 16,
+  carouselContent: {
+    padding: 15,
   },
-  updateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  carouselTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  carouselDate: {
+    fontSize: 14,
+    color: '#31C462',
     marginBottom: 8,
   },
-  updateTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
-    flex: 1,
-  },
-  updateDate: {
+  carouselDescription: {
     fontSize: 14,
-    color: '#7f8c8d',
-    marginLeft: 10,
-  },
-  updateDescription: {
-    fontSize: 14,
-    color: '#34495e',
+    color: '#666',
     lineHeight: 20,
-    marginTop: 6,
   },
-  lastUpdated: {
-    fontSize: 12,
-    color: '#95a5a6',
-    marginTop: 8,
-    fontStyle: 'italic',
-  },
-  pagination: {
+  paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 12,
+    marginTop: 15,
   },
   paginationDot: {
+    width: 8,
     height: 8,
     borderRadius: 4,
     marginHorizontal: 4,
@@ -308,7 +310,6 @@ const styles = StyleSheet.create({
     color: '#95a5a6',
     fontStyle: 'italic',
     marginVertical: 20,
-    paddingHorizontal: 20,
   },
 });
 

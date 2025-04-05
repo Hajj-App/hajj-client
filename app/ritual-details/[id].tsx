@@ -111,7 +111,7 @@ const RitualDetail = (props: Props) => {
       }
       
       // Fetch media from the specific ritual folder in Firebase Storage
-      const storagePath = `demo/${ritualId}`;
+      const storagePath = `hajj/${ritualId}`;
       console.log(`Attempting to access path: ${storagePath}`);
       
       try {

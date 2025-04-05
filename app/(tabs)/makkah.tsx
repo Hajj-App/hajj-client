@@ -1,6 +1,6 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
-import Rituals from "@/components/makkah/rituals";
 import { router, useLocalSearchParams } from "expo-router";
+import HajjRituals from "@/components/makkah/hajj-rituals";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -117,9 +117,10 @@ const Makkah = () => {
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
           <HistoricPlacesSlider data={[1,2,3,4,5,6,7]} />
         </View>
+
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <Rituals data={uploads} />          
+          <HajjRituals data={uploads} />          
         </View>
       </ScrollView>
     </View>

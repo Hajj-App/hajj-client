@@ -1,5 +1,5 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
-import Rituals from "@/components/makkah/rituals";
+import Rituals from "@/components/makkah/hajj-rituals";
 import React, { useState } from "react";
 import { ImageBackground, ScrollView, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
