@@ -1,11 +1,67 @@
 import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
 import Rituals from "@/components/makkah/hajj-rituals";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ImageBackground, ScrollView, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
+import { collection, getDocs } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
+
+interface Upload {
+  id: string;
+  name: string;
+  description: string;
+  content_image: string;
+}
+
 const Madinah = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploads, setUploads] = useState<Upload[]>([]);
   const [selected, setSelected] = useState(0);
   const rituals = ritualData.rituals;
+
+  useEffect(() => {
+    const fetchHajjUploads = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        if (!firestore) {
+          throw new Error("Firestore is not initialized");
+        }
+
+        const uploadsCollectionRef = collection(firestore, "madina_uploads");
+
+        const querySnapshot = await getDocs(uploadsCollectionRef);
+
+        const uploadsData: Upload[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          uploadsData.push({
+            id: doc.id,
+            name: data.name || "Untitled",
+            description:
+              Array.isArray(data.description) && data.description.length > 0
+                ? data.description[0]
+                : typeof data.description === "string"
+                ? data.description
+                : "",
+            content_image: data.content_image || "",
+          });
+        });
+
+        console.log("Fetched uploads:", uploadsData.length);
+        setUploads(uploadsData);
+      } catch (err) {
+        console.error("Error fetching hajj uploads:", err);
+        setError("Failed to fetch data from Firestore");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHajjUploads();
+  }, [selected]);
   return (
     <View className="flex-1">
       <ImageBackground
@@ -30,7 +86,7 @@ const Madinah = () => {
         </View>
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <Rituals data={rituals} />
+          <Rituals data={uploads} />
         </View>
       </ScrollView>
     </View>

@@ -27,7 +27,7 @@ const Makkah = () => {
   const [uploads, setUploads] = useState<HajjUpload[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   useEffect(() => {
     // Set the initial selection based on the route parameter
     if (params.selected) {
@@ -40,28 +40,34 @@ const Makkah = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         if (!firestore) {
           throw new Error("Firestore is not initialized");
         }
-        
-        const uploadsCollectionRef = collection(firestore, "hajj_uploads");
-        
+
+        const uploadsCollectionRef = collection(
+          firestore,
+          selected === 0 ? "hajj_uploads" : "umrah_uploads"
+        );
+
         const querySnapshot = await getDocs(uploadsCollectionRef);
-        
+
         const uploadsData: HajjUpload[] = [];
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           uploadsData.push({
             id: doc.id,
-            name: data.name || 'Untitled',
-            description: Array.isArray(data.description) && data.description.length > 0 
-              ? data.description[0] 
-              : (typeof data.description === 'string' ? data.description : ''),
-            content_image: data.content_image || '',
+            name: data.name || "Untitled",
+            description:
+              Array.isArray(data.description) && data.description.length > 0
+                ? data.description[0]
+                : typeof data.description === "string"
+                ? data.description
+                : "",
+            content_image: data.content_image || "",
           });
         });
-        
+
         console.log("Fetched uploads:", uploadsData.length);
         setUploads(uploadsData);
       } catch (err) {
@@ -71,9 +77,9 @@ const Makkah = () => {
         setLoading(false);
       }
     };
-    
+
     fetchHajjUploads();
-  }, []);
+  }, [selected]);
 
   return (
     <View className="flex-1">
@@ -112,15 +118,18 @@ const Makkah = () => {
           </Pressable>
         </View>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-white">
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1 bg-white"
+      >
         <View className="gap-5">
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
-          <HistoricPlacesSlider data={[1,2,3,4,5,6,7]} />
+          <HistoricPlacesSlider data={[1, 2, 3, 4, 5, 6, 7]} />
         </View>
 
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <HajjRituals data={uploads} />          
+          <HajjRituals data={uploads} />
         </View>
       </ScrollView>
     </View>
