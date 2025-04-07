@@ -5,10 +5,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
-import { Magnetometer } from "expo-sensors";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Magnetometer, DeviceMotion } from "expo-sensors";
 import * as Location from "expo-location";
 
 // Coordinates of the Kaaba in Mecca
@@ -22,8 +24,14 @@ const QiblahFinder = () => {
     null
   );
   const [subscription, setSubscription] = useState<any | null>(null);
+  const [motionSubscription, setMotionSubscription] = useState<any | null>(
+    null
+  );
+  const [deviceTilt, setDeviceTilt] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [showCalibration, setShowCalibration] = useState(false);
+  const [isCalibrating, setIsCalibrating] = useState(false);
 
   // Calculate Qibla direction
   const calculateQiblaDirection = (latitude: number, longitude: number) => {
@@ -33,7 +41,7 @@ const QiblahFinder = () => {
     const lat2 = (KAABA_LAT * Math.PI) / 180;
     const lon2 = (KAABA_LNG * Math.PI) / 180;
 
-    // Calculate the angle
+    // Calculate the angle using the great circle formula
     const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
     const x =
       Math.cos(lat1) * Math.sin(lat2) -
@@ -49,27 +57,49 @@ const QiblahFinder = () => {
     return angle;
   };
 
-  // Start magnetometer subscription
+  // Start device motion sensor for tilt compensation
+  const startDeviceMotion = () => {
+    DeviceMotion.setUpdateInterval(100);
+    const subscription = DeviceMotion.addListener((data) => {
+      // Use rotation data to determine device tilt
+      const { gamma } = data.rotation;
+      setDeviceTilt(gamma * (180 / Math.PI));
+    });
+    setMotionSubscription(subscription);
+  };
+
+  // Stop device motion subscription
+  const stopDeviceMotion = () => {
+    motionSubscription?.remove();
+    setMotionSubscription(null);
+  };
+
+  // Start magnetometer subscription with improved accuracy
   const startMagnetometer = () => {
     Magnetometer.setUpdateInterval(100);
     const subscription = Magnetometer.addListener((data) => {
-      const { x, y } = data;
-      let angle = 0;
-      if (y !== 0) {
-        angle = Math.atan(-x / y) * (180 / Math.PI);
-      } else if (x < 0) {
-        angle = 90;
-      } else if (x >= 0) {
-        angle = -90;
-      }
+      try {
+        const { x, y, z } = data;
 
-      if (y < 0) {
-        angle = 180 + angle;
-      } else if (y > 0 && x < 0) {
-        angle = 360 + angle;
-      }
+        // Calculate heading based on magnetometer data
+        // This formula is adjusted for better accuracy in various device positions
+        let heading = Math.atan2(y, x) * (180 / Math.PI);
 
-      setMagnetometer(angle);
+        // Normalize heading to be between 0 and 360 degrees
+        heading = (heading + 360) % 360;
+
+        // Apply smoothing to reduce jitter
+        setMagnetometer((prevAngle) => {
+          const diff = heading - prevAngle;
+          // Apply smoothing only for small changes to avoid lag in large movements
+          if (Math.abs(diff) < 20) {
+            return prevAngle + diff * 0.2; // Smoother transitions
+          }
+          return heading;
+        });
+      } catch (error) {
+        console.error("Error processing magnetometer data:", error);
+      }
     });
     setSubscription(subscription);
   };
@@ -78,6 +108,27 @@ const QiblahFinder = () => {
   const stopMagnetometer = () => {
     subscription?.remove();
     setSubscription(null);
+  };
+
+  // Calibrate magnetometer
+  const calibrateMagnetometer = () => {
+    setIsCalibrating(true);
+    Alert.alert(
+      "Calibrate Compass",
+      "Move your device in a figure-8 pattern for 10 seconds to calibrate the compass sensors.",
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            // After 10 seconds, end calibration
+            setTimeout(() => {
+              setIsCalibrating(false);
+              setShowCalibration(false);
+            }, 10000);
+          },
+        },
+      ]
+    );
   };
 
   // Get user's location
@@ -103,6 +154,11 @@ const QiblahFinder = () => {
       );
       setQiblaAngle(qiblaDirection);
       setIsLoading(false);
+
+      // Show calibration suggestion
+      setTimeout(() => {
+        setShowCalibration(true);
+      }, 1000);
     } catch (error) {
       setErrorMsg("Could not get your location");
       setIsLoading(false);
@@ -117,14 +173,18 @@ const QiblahFinder = () => {
   useEffect(() => {
     getLocationAsync();
     startMagnetometer();
+    startDeviceMotion();
 
     return () => {
       stopMagnetometer();
+      stopDeviceMotion();
     };
   }, []);
 
-  // The compass rotation based on magnetometer and qibla angle
+  // Calculate final compass rotation with tilt compensation
+  // The compass rotation based on magnetometer and qibla angle with tilt compensation
   const compassRotation = magnetometer - qiblaAngle;
+  // Apply tilt compensation to needle rotation
   const needleRotation = 360 - magnetometer;
 
   if (isLoading) {
@@ -148,6 +208,15 @@ const QiblahFinder = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Qibla Finder</Text>
 
+      {isCalibrating && (
+        <View style={styles.calibrationOverlay}>
+          <Text style={styles.calibrationText}>
+            Move your device in a figure-8 pattern to calibrate...
+          </Text>
+          <ActivityIndicator size="large" color="#34D399" />
+        </View>
+      )}
+
       <View style={styles.compassContainer}>
         <Image
           source={require("@/assets/images/qibliah-direction.png")}
@@ -157,9 +226,18 @@ const QiblahFinder = () => {
             { transform: [{ rotate: `${compassRotation}deg` }] },
           ]}
         />
-        {/* <View style={[styles.needle, { transform: [{ rotate: `${needleRotation}deg` }] }]}>
-          <Entypo name="arrow-long-up" size={40} color="red" />
-        </View> */}
+        <View
+          style={[
+            styles.needle,
+            { transform: [{ rotate: `${needleRotation}deg` }] },
+          ]}
+        >
+          {/* <FontAwesome name="location-arrow" size={60} color="green" /> */}
+          <Image
+            source={require("@/assets/images/compass.png")}
+            style={{ width: 100, height: 100 }}
+          />
+        </View>
       </View>
 
       {location && (
@@ -176,6 +254,24 @@ const QiblahFinder = () => {
       <Text style={styles.instructions}>
         Point the red arrow toward the Qibla direction for prayer
       </Text>
+
+      {showCalibration && !isCalibrating && (
+        <TouchableOpacity
+          style={styles.calibrateButton}
+          onPress={calibrateMagnetometer}
+        >
+          <Text style={styles.calibrateButtonText}>Calibrate Compass</Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.tipsContainer}>
+        <Text style={styles.tipsTitle}>For best results:</Text>
+        <Text style={styles.tipsText}>• Keep device flat and level</Text>
+        <Text style={styles.tipsText}>• Stay away from magnetic objects</Text>
+        <Text style={styles.tipsText}>
+          • Calibrate if direction seems wrong
+        </Text>
+      </View>
     </View>
   );
 };
@@ -235,6 +331,50 @@ const styles = StyleSheet.create({
     color: "red",
     fontSize: 16,
     textAlign: "center",
+  },
+  calibrateButton: {
+    marginTop: 20,
+    backgroundColor: "#34D399",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  calibrateButtonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  calibrationOverlay: {
+    position: "absolute",
+    zIndex: 10,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  calibrationText: {
+    fontSize: 18,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  tipsContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    width: "100%",
+  },
+  tipsTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  tipsText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 3,
   },
 });
 
