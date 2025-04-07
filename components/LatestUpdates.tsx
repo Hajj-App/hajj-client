@@ -12,8 +12,12 @@ import {
 import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import { storage } from '@/utils/firebase';
 import { signInAnonymousUser } from '@/utils/firebase';
+import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import LinearGradient from 'expo-linear-gradient';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
 type UpdateItem = {
   id: string;
@@ -148,11 +152,69 @@ const LatestUpdates = () => {
     </View>
   );
 
+  const renderShimmerItem = () => (
+    <View style={styles.carouselItem}>
+      <Shimmer 
+        style={styles.carouselImage} 
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      />
+      <View style={styles.carouselContent}>
+        <Shimmer 
+          style={{ width: '70%', height: 20, marginBottom: 8 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '40%', height: 16, marginBottom: 12 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '100%', height: 14, marginBottom: 4 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '90%', height: 14, marginBottom: 4 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '80%', height: 14 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#34D399" />
-        <Text style={styles.loadingText}>Loading updates...</Text>
+      <View style={styles.section}>
+        {/* Title is shown normally while content loads */}
+        <Text style={styles.sectionTitle}>Latest Updates</Text>
+        
+        {/* Only the content has shimmer effect */}
+        <FlatList
+          data={[1, 2, 3]} // Render 3 shimmer items
+          renderItem={renderShimmerItem}
+          keyExtractor={(item) => item.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          snapToInterval={screenWidth - 60}
+          snapToAlignment="center"
+          contentContainerStyle={{ paddingHorizontal: 20 }}
+          getItemLayout={(_, index) => ({
+            length: screenWidth - 60,
+            offset: (screenWidth - 60) * index,
+            index,
+          })}
+        />
+        <View style={styles.paginationContainer}>
+          {[1, 2, 3].map((_, index) => (
+            <Shimmer
+              key={index}
+              style={styles.paginationDot}
+              shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+            />
+          ))}
+        </View>
       </View>
     );
   }
@@ -272,17 +334,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginHorizontal: 4,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#7f8c8d',
-  },
   errorContainer: {
     padding: 16,
     backgroundColor: '#ffeeee',
@@ -310,7 +361,7 @@ const styles = StyleSheet.create({
     color: '#95a5a6',
     fontStyle: 'italic',
     marginVertical: 20,
-  },
+  }, 
 });
 
 export default LatestUpdates;

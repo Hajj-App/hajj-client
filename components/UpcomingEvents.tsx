@@ -11,8 +11,12 @@ import {
 import { ref, listAll, getDownloadURL } from 'firebase/storage';
 import { storage } from '@/utils/firebase';
 import { MaterialIcons } from '@expo/vector-icons';
+import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import LinearGradient from 'expo-linear-gradient';
 
 const { width: screenWidth } = Dimensions.get('window');
+
+const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
 type Event = {
   id: string;
@@ -105,11 +109,51 @@ const UpcomingEvents = () => {
     </View>
   );
 
+  const renderShimmerItem = () => (
+    <View style={styles.eventItem}>
+      <Shimmer 
+        style={styles.eventIconContainer} 
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      >
+        <View style={{ width: 24, height: 24 }} />
+      </Shimmer>
+      <View style={styles.eventContent}>
+        <Shimmer 
+          style={{ width: '70%', height: 18, marginBottom: 8 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '50%', height: 14, marginBottom: 6 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '90%', height: 14 }} 
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+      </View>
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="small" color="#31C462" />
-        <Text style={styles.loadingText}>Loading upcoming events...</Text>
+      <View style={styles.section}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Upcoming Events</Text>
+        <FlatList
+          data={[1, 2, 3]} // Render 3 shimmer items
+          renderItem={renderShimmerItem}
+          keyExtractor={(item) => item.toString()}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          snapToInterval={screenWidth - 60}
+          snapToAlignment="center"
+          contentContainerStyle={styles.carouselContent}
+          getItemLayout={(_, index) => ({
+            length: screenWidth - 60,
+            offset: (screenWidth - 60) * index,
+            index,
+          })}
+        />
       </View>
     );
   }
@@ -148,7 +192,6 @@ const UpcomingEvents = () => {
             contentContainerStyle={styles.carouselContent}
             onMomentumScrollEnd={handleScroll}
           />
-          
         </>
       ) : (
         <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
@@ -167,6 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 20,
     color: '#333',
+    height: 24, // Added height for shimmer
   },
   carouselContent: {
     paddingHorizontal: 20,
@@ -182,7 +226,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    width: screenWidth - 60,
+    width: screenWidth - 80,
   },
   eventIconContainer: {
     width: 50,
@@ -211,7 +255,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-
   loadingContainer: {
     padding: 20,
     alignItems: 'center',

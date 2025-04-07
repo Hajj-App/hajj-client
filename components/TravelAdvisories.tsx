@@ -3,6 +3,10 @@ import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'rea
 import { ref, listAll, getDownloadURL, getMetadata, StorageReference } from 'firebase/storage';
 import { storage } from '@/utils/firebase';
 import { signInAnonymousUser } from '@/utils/firebase';
+import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
+import LinearGradient from 'expo-linear-gradient';
+
+const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
 type Advisory = {
   id: string;
@@ -46,10 +50,9 @@ const TravelAdvisories = () => {
             const response = await fetch(url);
             const data = await response.json();
 
-            // Create unique ID using folder name and file name
             return {
               ...data,
-              id: `${folderRef.name}-${metadata.name}`, // Unique key
+              id: `${folderRef.name}-${metadata.name}`,
               lastModified: metadata.updated,
             };
           }
@@ -80,11 +83,47 @@ const TravelAdvisories = () => {
     fetchAdvisories();
   }, []);
 
+  const renderShimmerAdvisory = () => (
+    <View style={styles.advisoryItem}>
+      <View style={styles.advisoryHeader}>
+        <Shimmer 
+          style={{ width: '60%', height: 20, marginBottom: 8 }}
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+        <Shimmer 
+          style={{ width: '30%', height: 16 }}
+          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        />
+      </View>
+      <Shimmer 
+        style={{ width: '100%', height: 16, marginBottom: 4 }}
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      />
+      <Shimmer 
+        style={{ width: '90%', height: 16, marginBottom: 4 }}
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      />
+      <Shimmer 
+        style={{ width: '80%', height: 16, marginBottom: 4 }}
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      />
+      <Shimmer 
+        style={{ width: '40%', height: 14, marginTop: 8 }}
+        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      />
+    </View>
+  );
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#34D399" />
-        <Text style={styles.loadingText}>Loading travel advisories...</Text>
+      <View style={styles.section}>
+         <Text style={{ fontSize: 22, fontWeight: 'bold' }}>Travel Advisories</Text>
+      
+        {[1, 2, 3].map((_, index) => (
+          <React.Fragment key={index}>
+            {renderShimmerAdvisory()}
+          </React.Fragment>
+        ))}
       </View>
     );
   }
@@ -139,6 +178,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     color: '#2c3e50',
+    height: 28, // Added for shimmer
   },
   advisoryItem: {
     backgroundColor: '#ffffff',
