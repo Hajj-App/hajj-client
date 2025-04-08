@@ -1,10 +1,11 @@
-import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
-import Rituals from "@/components/makkah/hajj-rituals";
+
 import React, { useEffect, useState } from "react";
 import { ImageBackground, ScrollView, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
 import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
+import HajjRituals from "@/components/common/hajj-rituals";
+import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 
 interface Upload {
   id: string;
@@ -78,7 +79,7 @@ const Madinah = () => {
       <View className="h-20 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center pt-10 overflow-hidden" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1 bg-white"
+        className="flex-1 bg-white mb-20"
       >
         <View className="gap-5 pt-5">
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
@@ -86,7 +87,7 @@ const Madinah = () => {
         </View>
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <Rituals data={uploads} />
+          <HajjRituals data={uploads} route="madina-rituals" />
         </View>
       </ScrollView>
     </View>

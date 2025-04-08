@@ -1,6 +1,5 @@
-import HistoricPlacesSlider from "@/components/makkah/historic-places-slider";
 import { router, useLocalSearchParams } from "expo-router";
-import HajjRituals from "@/components/makkah/hajj-rituals";
+import HajjRituals from "@/components/common/hajj-rituals";
 import React, { useEffect, useState } from "react";
 import {
   Button,
@@ -13,6 +12,7 @@ import {
 import ritualData from "@/data/data.json";
 import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
+import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 
 interface HajjUpload {
   id: string;
@@ -120,7 +120,7 @@ const Makkah = () => {
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1 bg-white"
+        className="flex-1 bg-white mb-20"
       >
         <View className="gap-5">
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
@@ -129,7 +129,7 @@ const Makkah = () => {
 
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <HajjRituals data={uploads} />
+          <HajjRituals data={uploads} route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} />
         </View>
       </ScrollView>
     </View>

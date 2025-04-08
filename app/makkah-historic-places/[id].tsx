@@ -18,7 +18,10 @@ import { WebView } from "react-native-webview";
 import { getFilesWithUrls, listFiles } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
-import ritualData from "../../data/data.json";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
+import AudioPlayerModal from '@/components/AudioPlayerModal';
+import ImageModal from '@/components/ImageModal';
 
 type Props = {} ;
 
@@ -29,12 +32,12 @@ interface RitualMedia {
 }
 
 interface RitualContent {
-  id: number;
+  id: string;
   name: string;
-  description: string[] | string;
-  paragraphs: {
+  description: string | string[];
+  paragraphs?: {
     title: string;
-    description: string[] | string[][] | string;
+    description: string | string[];
   }[];
 }
 
@@ -46,14 +49,11 @@ interface RitualContent {
 //   }
 // ]      
 
-const RitualDetail = (props: Props) => {
+const MadinaHistoricPlaceDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
   console.log("params:", params)
-  const ritualIdStr = params.id as string;
-  console.log("ritula id",ritualIdStr)
-  console.log("params id",params.id)
-  const ritualId = parseInt(ritualIdStr) || 1;
+  const ritualId = params.id as string;
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -62,35 +62,67 @@ const RitualDetail = (props: Props) => {
     audio: [],
     documents: [] 
   });
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [currentAudioIndex, setCurrentAudioIndex] = useState<number>(-1);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
   const [ritualContent, setRitualContent] = useState<RitualContent | null>(null);
+  const [selectedAudio, setSelectedAudio] = useState<StorageFile | null>(null);
+
+  useEffect(() => {
+    const setupAudio = async () => {
+      try {
+        // Configure audio to play in background
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (error) {
+        console.error("Error setting up audio mode:", error);
+      }
+    };
+
+    setupAudio();
+  }, []);
 
   useEffect(() => {
     const initializeAndFetch = async () => {
-      // Sign in anonymously to Firebase before fetching media
-      await signInAnonymousUser();
-      
-      // Find ritual content from data.json
-      const ritual = ritualData.rituals.find(r => r.id === ritualId);
-      if (ritual) {
-        setRitualContent(ritual);
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Sign in anonymously to Firebase
+        await signInAnonymousUser();
+        
+        // Fetch ritual data from Firestore
+        if (!firestore) {
+          throw new Error("Firestore is not initialized");
+        }
+
+        const ritualDoc = await getDoc(doc(firestore, "historic_places_makkah", ritualId));
+        
+        if (!ritualDoc.exists()) {
+          throw new Error("Ritual not found");
+        }
+
+        const data = ritualDoc.data();
+        setRitualContent({
+          id: ritualDoc.id,
+          name: data.name || "Untitled",
+          description: data.description || "",
+          paragraphs: data.paragraphs || []
+        });
+        
+        await fetchRitualMedia();
+      } catch (err) {
+        console.error("Error fetching ritual:", err);
+        setError("Failed to load ritual data");
+      } finally {
+        setLoading(false);
       }
-      
-      await fetchRitualMedia();
     };
     
     initializeAndFetch();
-    
-    // Clean up audio when component unmounts
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
   }, [ritualId]);
   
   const fetchRitualMedia = async () => {
@@ -111,7 +143,7 @@ const RitualDetail = (props: Props) => {
       }
       
       // Fetch media from the specific ritual folder in Firebase Storage
-      const storagePath = `hajj/${ritualId}`;
+      const storagePath = `historic_places_makkah/${ritualId}`;
       console.log(`Attempting to access path: ${storagePath}`);
       
       try {
@@ -157,46 +189,6 @@ const RitualDetail = (props: Props) => {
       setError('Failed to load media files. Please try again later.');
     } finally {
       setLoading(false);
-    }
-  };
-  
-  const playSound = async (audioFile: StorageFile, index: number) => {
-    try {
-      // If already playing this audio, toggle play/pause
-      if (sound && index === currentAudioIndex) {
-        if (isPlaying) {
-          await sound.pauseAsync();
-          setIsPlaying(false);
-        } else {
-          await sound.playAsync();
-          setIsPlaying(true);
-        }
-        return;
-      }
-      
-      // If playing a different audio, unload the current one
-      if (sound) {
-        await sound.unloadAsync();
-      }
-      
-      // Load and play the new audio
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioFile.downloadURL },
-        { shouldPlay: true }
-      );
-      
-      setSound(newSound);
-      setIsPlaying(true);
-      setCurrentAudioIndex(index);
-      
-      // When audio finishes playing
-      newSound.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-        if (status.isLoaded && status.didJustFinish) {
-          setIsPlaying(false);
-        }
-      });
-    } catch (error) {
-      console.error('Error playing audio:', error);
     }
   };
   
@@ -266,29 +258,15 @@ const RitualDetail = (props: Props) => {
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                
-                {/* Image Preview Modal */}
-                {selectedImage && (
-                  <Pressable 
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-black/80 z-10 items-center justify-center"
-                    style={{ height: 500, width: '100%' }}
-                    onPress={() => setSelectedImage(null)}
-                  >
-                    <Image 
-                      source={{ uri: selectedImage }} 
-                      className="w-full h-full"
-                      resizeMode="contain"
-                    />
-                    <TouchableOpacity 
-                      className="absolute top-4 right-4"
-                      onPress={() => setSelectedImage(null)}
-                    >
-                      <AntDesign name="closecircle" size={24} color="white" />
-                    </TouchableOpacity>
-                  </Pressable>
-                )}
               </View>
             )}
+            
+            {/* Image Modal */}
+            <ImageModal
+              visible={!!selectedImage}
+              imageUrl={selectedImage}
+              onClose={() => setSelectedImage(null)}
+            />
             
             {/* Audio Section */}
             {media.audio.length > 0 && (
@@ -297,15 +275,11 @@ const RitualDetail = (props: Props) => {
                 {media.audio.map((audioFile, index) => (
                   <TouchableOpacity 
                     key={index}
-                    onPress={() => playSound(audioFile, index)}
+                    onPress={() => setSelectedAudio(audioFile)}
                     className="flex-row items-center p-3 bg-gray-100 rounded-lg mb-2"
                   >
                     <View className="w-10 h-10 bg-green rounded-full items-center justify-center mr-3">
-                      <FontAwesome5 
-                        name={isPlaying && currentAudioIndex === index ? "pause" : "play"} 
-                        size={16} 
-                        color="white" 
-                      />
+                      <FontAwesome5 name="play" size={16} color="white" />
                     </View>
                     <View className="flex-1">
                       <Text className="font-semibold">{audioFile.name}</Text>
@@ -395,7 +369,7 @@ const RitualDetail = (props: Props) => {
               ))
             )}
             
-            {ritualContent.paragraphs.map((paragraph, pIndex) => (
+            {ritualContent.paragraphs?.map((paragraph, pIndex) => (
               <View key={pIndex} className="mt-4 mb-6">
                 <Text className="text-xl font-bold mb-2">{paragraph.title}</Text>
                 {typeof paragraph.description === 'string' ? (
@@ -414,8 +388,15 @@ const RitualDetail = (props: Props) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Audio Player Modal */}
+      <AudioPlayerModal
+        visible={!!selectedAudio}
+        audioFile={selectedAudio}
+        onClose={() => setSelectedAudio(null)}
+      />
     </View>
   );
 };
 
-export default RitualDetail;
+export default MadinaHistoricPlaceDetail;

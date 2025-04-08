@@ -100,9 +100,9 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="historic-place"
+          name="makkah-historic-places/[id]"
           options={{
-            headerTitle: "Dikrs & Duas",
+            headerTitle: "Makkah Historic Places",
             headerTitleStyle: {
               fontWeight: "bold",
               fontSize: 18,
@@ -118,9 +118,63 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="ritual-details/[id]"
+          name="madina-historic-places/[id]"
           options={{
-            headerTitle: "Ritual Detail",
+            headerTitle: "Madina Historic Places",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerShown: false,
+            // headerLeft: () => {
+            //   return (
+            //     <Pressable onPress={() => router.back()}>
+            //       <Entypo name="chevron-small-left" size={40} color="black" />
+            //     </Pressable>
+            //   );
+            // },
+          }}
+        />
+        <Stack.Screen
+          name="hajj-rituals/[id]"
+          options={{
+            headerTitle: "Hajj Ritual",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerShown: false,
+            // headerLeft: () => {
+            //   return (
+            //     <Pressable onPress={() => router.back()}>
+            //       <Entypo name="chevron-small-left" size={40} color="black" />
+            //     </Pressable>
+            //   );
+            // },
+          }}
+        />
+        <Stack.Screen
+          name="umrah-rituals/[id]"
+          options={{
+            headerTitle: "Umrah Ritual",
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+            },
+            headerShown: false,
+            // headerLeft: () => {
+            //   return (
+            //     <Pressable onPress={() => router.back()}>
+            //       <Entypo name="chevron-small-left" size={40} color="black" />
+            //     </Pressable>
+            //   );
+            // },
+          }}
+        />
+        <Stack.Screen
+          name="madina-rituals/[id]"
+          options={{
+            headerTitle: "Madina Ritual",
             headerTitleStyle: {
               fontWeight: "bold",
               fontSize: 18,
