@@ -128,6 +128,16 @@ export default function HomeScreen() {
             width="full"
           />
           <TouchableOpacity
+            className="my-4 bg-cyan-600 rounded-lg p-4 gap-2 flex-row items-center justify-center"
+            onPress={() =>
+              Linking.openURL("https://www.hajcommittee.gov.in/")
+            }
+          >
+            <Text className="text-white font-bold text-lg">
+            Search Your Cover Number
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             className="my-4 bg-green rounded-lg p-4 gap-2 flex-row items-center justify-center"
             onPress={() =>
               Linking.openURL("https://chat.whatsapp.com/yourGroupLink")
