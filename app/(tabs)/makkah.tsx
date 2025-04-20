@@ -82,7 +82,7 @@ const Makkah = () => {
   }, [selected]);
 
   return (
-    <View className="flex-1">
+    <View className="flex-1 w-full h-full">
       <ImageBackground
         source={require("@/assets/images/makkah/makkah-img.webp")}
         resizeMode="cover"
@@ -124,7 +124,7 @@ const Makkah = () => {
       >
         <View className="gap-5">
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
-          <HistoricPlacesSlider data={[1, 2, 3, 4, 5, 6, 7]} />
+          <HistoricPlacesSlider route={'makkah-historic-places'} data={[1, 2, 3, 4, 5, 6, 7]} />
         </View>
 
         <View className="gap-5 mt-5">

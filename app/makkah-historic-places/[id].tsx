@@ -221,7 +221,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
         {ritualContent ? (
           <Text className="font-bold text-[28px] text-green">{ritualContent.name}</Text>
         ) : (
-          <Text className="font-bold text-[28px] text-green">Ritual Details</Text>
+          <Text className="font-bold text-[28px] text-green">Historic Place Details</Text>
         )}
         
         {loading ? (
@@ -358,12 +358,12 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           <View className="gap-y-5 pt-5 pb-5">
             <Text className="text-2xl font-bold">About {ritualContent.name}</Text>
             {typeof ritualContent.description === 'string' ? (
-              <Text className="text-lg leading-tight mb-2">
+              <Text className="text-lg leading-snug mb-2">
                 {ritualContent.description}
               </Text>
             ) : (
               ritualContent.description.map((desc: string, index: number) => (
-                <Text key={index} className="text-lg leading-tight mb-2">
+                <Text key={index} className="text-lg leading-snug mb-2">
                   {desc}
                 </Text>
               ))
@@ -373,12 +373,12 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
               <View key={pIndex} className="mt-4 mb-6">
                 <Text className="text-xl font-bold mb-2">{paragraph.title}</Text>
                 {typeof paragraph.description === 'string' ? (
-                  <Text className="text-lg leading-tight mb-2">
+                  <Text className="text-lg leading-snug mb-2">
                     {paragraph.description}
                   </Text>
                 ) : Array.isArray(paragraph.description) && 
                   paragraph.description.map((desc: string | string[], dIndex: number) => (
-                    <Text key={dIndex} className="text-lg leading-tight mb-2">
+                    <Text key={dIndex} className="text-lg leading-snug mb-2">
                       {Array.isArray(desc) ? desc.join(' ') : desc}
                     </Text>
                   ))

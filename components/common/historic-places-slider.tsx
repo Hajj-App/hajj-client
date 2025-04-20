@@ -2,12 +2,14 @@ import { View, Text, ScrollView, ImageBackground, Pressable } from "react-native
 import React from "react";
 import { useRouter } from "expo-router";
 
-const HistoricPlacesSlider = ({ data }: { data: number[] }) => {
+
+
+const HistoricPlacesSlider = ({ data, route }: { data: number[], route: string }) => {
     const router = useRouter()
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       {data.map((item, i) => (
-        <Pressable key={item} onPress={()=>router.push(`/ritual-details/${item}`)}>
+        <Pressable key={item} onPress={()=>router.push(`/${route}/${item}`)}>
         <ImageBackground
           source={require("@/assets/images/makkah/historical-place.png")}
           resizeMode="cover"
