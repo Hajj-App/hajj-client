@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "hajj-client",
+    "name": "IDX App",
     "slug": "hajj-client",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,11 +8,7 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+
     "ios": {
       "supportsTablet": true,
       "infoPlist": {

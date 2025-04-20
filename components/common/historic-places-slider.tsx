@@ -7,7 +7,7 @@ const HistoricPlacesSlider = ({ data }: { data: number[] }) => {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
       {data.map((item, i) => (
-        <Pressable key={item} onPress={()=>router.push(`/ritual-details/${item}`)}>
+        <Pressable key={item} onPress={()=>router.push(`/madina-historic-places/${item}`)}>
         <ImageBackground
           source={require("@/assets/images/makkah/historical-place.png")}
           resizeMode="cover"

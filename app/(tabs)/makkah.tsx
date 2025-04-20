@@ -21,22 +21,32 @@ interface HajjUpload {
   content_image: string;
 }
 
+interface HistoricPlace {
+  id: string;
+  name: string;
+  description: string;
+  content_image: string;
+  location: string;
+  type?: string;
+  country?: string;
+}
+
 const Makkah = () => {
   const params = useLocalSearchParams();
   const [selected, setSelected] = useState(0);
   const [uploads, setUploads] = useState<HajjUpload[]>([]);
+  const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Set the initial selection based on the route parameter
     if (params.selected) {
       setSelected(Number(params.selected));
     }
   }, [params]);
 
   useEffect(() => {
-    const fetchHajjUploads = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -45,47 +55,51 @@ const Makkah = () => {
           throw new Error("Firestore is not initialized");
         }
 
+        // Fetch rituals
         const uploadsCollectionRef = collection(
           firestore,
           selected === 0 ? "hajj_uploads" : "umrah_uploads"
         );
+        const uploadsSnapshot = await getDocs(uploadsCollectionRef);
+        const uploadsData: HajjUpload[] = uploadsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name || "Untitled",
+          description: Array.isArray(doc.data().description) 
+            ? doc.data().description[0] 
+            : doc.data().description || "",
+          content_image: doc.data().content_image || ""
+        }));
 
-        const querySnapshot = await getDocs(uploadsCollectionRef);
+        // Fetch historic places
+        const placesCollectionRef = collection(firestore, "makkah_historic_places");
+        const placesSnapshot = await getDocs(placesCollectionRef);
+        const placesData: HistoricPlace[] = placesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name || "Untitled",
+          description: doc.data().description || "",
+          content_image: doc.data().content_image || "",
+          location: "makkah",
+          type: doc.data().type || "Historic place in Makkah",
+          country: doc.data().country || "Saudi Arabia"
+        }));
 
-        const uploadsData: HajjUpload[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          uploadsData.push({
-            id: doc.id,
-            name: data.name || "Untitled",
-            description:
-              Array.isArray(data.description) && data.description.length > 0
-                ? data.description[0]
-                : typeof data.description === "string"
-                ? data.description
-                : "",
-            content_image: data.content_image || "",
-          });
-        });
-
-        console.log("Fetched uploads:", uploadsData.length);
         setUploads(uploadsData);
+        setHistoricPlaces(placesData);
       } catch (err) {
-        console.error("Error fetching hajj uploads:", err);
+        console.error("Error fetching data:", err);
         setError("Failed to fetch data from Firestore");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchHajjUploads();
+    fetchData();
   }, [selected]);
 
   return (
     <View className="flex-1">
       <ImageBackground
-        source={require("@/assets/images/makkah/makkah-img.webp")}
-        resizeMode="cover"
+        source={require("@/assets/images/makkah/makkah-img.webp")}        resizeMode="cover"
         className="w-full h-[350px] items-center justify-start pt-14"
       >
         <View className="w-full flex-row items-center justify-between px-10">
@@ -104,7 +118,7 @@ const Makkah = () => {
                 : "bg-[#E4E5E6]"
             }`}
           >
-            <Text className="text-lg py-2  text-center">Hajj</Text>
+            <Text className="text-lg py-2 text-center">Hajj</Text>
           </Pressable>
           <Pressable
             onPress={() => setSelected(1)}
@@ -114,22 +128,26 @@ const Makkah = () => {
                 : "bg-slate-100/20"
             }`}
           >
-            <Text className="text-lg py-2  text-center">Umrah</Text>
+            <Text className="text-lg py-2 text-center">Umrah</Text>
           </Pressable>
         </View>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white mb-20"
       >
-        <View className="gap-5">
+        <View className="gap-5 pt-5">
           <Text className="text-2xl font-bold ml-5">Historic places</Text>
-          <HistoricPlacesSlider data={[1, 2, 3, 4, 5, 6, 7]} />
+          <HistoricPlacesSlider data={historicPlaces} />
         </View>
 
         <View className="gap-5 mt-5">
           <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <HajjRituals data={uploads} route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} />
+          <HajjRituals 
+            data={uploads} 
+            route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} 
+          />
         </View>
       </ScrollView>
     </View>
