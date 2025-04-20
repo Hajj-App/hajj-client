@@ -30,7 +30,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
-        <data android:scheme="com.anonymous.hajjclient"/>
+        <data android:scheme="com.anonymous.idc"/>
         <data android:scheme="exp+idc"/>
       </intent-filter>
     </activity>

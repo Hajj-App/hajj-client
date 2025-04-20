@@ -28,7 +28,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>myapp</string>
-          <string>com.anonymous.hajjclient</string>
+          <string>com.anonymous.idc</string>
         </array>
       </dict>
       <dict>

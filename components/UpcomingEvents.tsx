@@ -1,22 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  TouchableOpacity, 
-  ActivityIndicator, 
-  StyleSheet, 
-  Dimensions
-} from 'react-native';
-import { ref, listAll, getDownloadURL } from 'firebase/storage';
-import { storage } from '@/utils/firebase';
-import { MaterialIcons } from '@expo/vector-icons';
-import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
-import LinearGradient from 'expo-linear-gradient';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  StyleSheet,
+  Dimensions,
+  Pressable,
+  Linking,
+} from "react-native";
+import { ref, listAll, getDownloadURL } from "firebase/storage";
+import { storage } from "@/utils/firebase";
+import { MaterialIcons } from "@expo/vector-icons";
+import ShimmerPlaceholder, {
+  createShimmerPlaceholder,
+} from "react-native-shimmer-placeholder";
+import LinearGradient from "expo-linear-gradient";
 
-const { width: screenWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get("window");
 
-const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
+const Shimmer = createShimmerPlaceholder(
+  LinearGradient as unknown as React.ComponentClass<any>
+);
 
 type Event = {
   id: string;
@@ -24,6 +30,7 @@ type Event = {
   date: string;
   location: string;
   description: string;
+  url?: string; // Optional URL field
   lastModified?: string;
 };
 
@@ -40,17 +47,17 @@ const UpcomingEvents = () => {
       setError(null);
 
       if (!storage) {
-        throw new Error('Firebase Storage is not initialized');
+        throw new Error("Firebase Storage is not initialized");
       }
 
-      const eventsRef = ref(storage, 'upcoming_events/');
+      const eventsRef = ref(storage, "upcoming_events/");
       const result = await listAll(eventsRef);
 
       const eventPromises = result.prefixes.map(async (folderRef) => {
         try {
           const folderItems = await listAll(folderRef);
-          const eventFile = folderItems.items.find(item => 
-            item.name === 'event_data.json'
+          const eventFile = folderItems.items.find(
+            (item) => item.name === "event_data.json"
           );
 
           if (eventFile) {
@@ -59,7 +66,7 @@ const UpcomingEvents = () => {
             const data = await response.json();
             return {
               ...data,
-              id: folderRef.name
+              id: folderRef.name,
             };
           }
         } catch (err) {
@@ -71,15 +78,15 @@ const UpcomingEvents = () => {
 
       const loadedEvents = (await Promise.all(eventPromises))
         .filter((event): event is Event => event !== null)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
 
       setEvents(loadedEvents);
     } catch (err) {
-      console.error('Error fetching events:', err);
+      console.error("Error fetching events:", err);
       setError(
-        err instanceof Error 
-          ? err.message 
-          : 'Failed to load upcoming events'
+        err instanceof Error ? err.message : "Failed to load upcoming events"
       );
     } finally {
       setLoading(false);
@@ -97,7 +104,16 @@ const UpcomingEvents = () => {
   };
 
   const renderEvent = ({ item }: { item: Event }) => (
-    <View style={styles.eventItem}>
+    <Pressable
+      style={styles.eventItem}
+      onPress={() => {
+        if (item.url) {
+          Linking.openURL(item.url).catch((err) =>
+            console.error("Error opening URL:", err)
+          );
+        }
+      }}
+    >
       <View style={styles.eventIconContainer}>
         <MaterialIcons name="event" size={24} color="#31C462" />
       </View>
@@ -106,29 +122,29 @@ const UpcomingEvents = () => {
         <Text style={styles.eventDate}>{item.date}</Text>
         <Text style={styles.eventLocation}>{item.description}</Text>
       </View>
-    </View>
+    </Pressable>
   );
 
   const renderShimmerItem = () => (
     <View style={styles.eventItem}>
-      <Shimmer 
-        style={styles.eventIconContainer} 
-        shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+      <Shimmer
+        style={styles.eventIconContainer}
+        shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
       >
         <View style={{ width: 24, height: 24 }} />
       </Shimmer>
       <View style={styles.eventContent}>
-        <Shimmer 
-          style={{ width: '70%', height: 18, marginBottom: 8 }} 
-          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        <Shimmer
+          style={{ width: "70%", height: 18, marginBottom: 8 }}
+          shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
-        <Shimmer 
-          style={{ width: '50%', height: 14, marginBottom: 6 }} 
-          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        <Shimmer
+          style={{ width: "50%", height: 14, marginBottom: 6 }}
+          shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
-        <Shimmer 
-          style={{ width: '90%', height: 14 }} 
-          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+        <Shimmer
+          style={{ width: "90%", height: 14 }}
+          shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
       </View>
     </View>
@@ -137,7 +153,9 @@ const UpcomingEvents = () => {
   if (loading) {
     return (
       <View style={styles.section}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Upcoming Events</Text>
+        <Text style={{ fontSize: 18, fontWeight: "bold" }}>
+          Upcoming Events
+        </Text>
         <FlatList
           data={[1, 2, 3]} // Render 3 shimmer items
           renderItem={renderShimmerItem}
@@ -162,10 +180,7 @@ const UpcomingEvents = () => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
-          onPress={fetchEvents}
-        >
+        <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -206,23 +221,23 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 15,
     paddingHorizontal: 20,
-    color: '#333',
+    color: "#333",
     height: 24, // Added height for shimmer
   },
   carouselContent: {
     paddingHorizontal: 20,
   },
   eventItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
+    flexDirection: "row",
+    backgroundColor: "white",
     borderRadius: 12,
     padding: 15,
     marginRight: 15,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
@@ -232,9 +247,9 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(49, 196, 98, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(49, 196, 98, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 15,
   },
   eventContent: {
@@ -242,56 +257,56 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 5,
-    color: '#333',
+    color: "#333",
   },
   eventDate: {
     fontSize: 14,
-    color: '#31C462',
+    color: "#31C462",
     marginBottom: 3,
   },
   eventLocation: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   loadingContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 10,
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   errorContainer: {
     padding: 16,
-    backgroundColor: '#ffeeee',
+    backgroundColor: "#ffeeee",
     borderRadius: 8,
     marginHorizontal: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   errorText: {
-    color: '#e74c3c',
-    textAlign: 'center',
+    color: "#e74c3c",
+    textAlign: "center",
     marginBottom: 12,
     fontSize: 14,
   },
   retryButton: {
-    backgroundColor: '#31C462',
+    backgroundColor: "#31C462",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 5,
   },
   retryButtonText: {
-    color: 'white',
-    fontWeight: '600',
+    color: "white",
+    fontWeight: "600",
     fontSize: 14,
   },
   noEventsText: {
-    textAlign: 'center',
-    color: '#666',
-    fontStyle: 'italic',
+    textAlign: "center",
+    color: "#666",
+    fontStyle: "italic",
     paddingHorizontal: 20,
   },
 });

@@ -7,13 +7,18 @@ import {
   Dimensions, 
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+  SafeAreaView,
+  StatusBar
 } from 'react-native';
 import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import { storage } from '@/utils/firebase';
 import { signInAnonymousUser } from '@/utils/firebase';
 import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
 import LinearGradient from 'expo-linear-gradient';
+import { AntDesign } from '@expo/vector-icons';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -35,6 +40,8 @@ const LatestUpdates = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
   const scrollInterval = useRef<NodeJS.Timeout>();
+  const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const fetchUpdates = async () => {
     try {
@@ -135,8 +142,38 @@ const LatestUpdates = () => {
     setActiveSlide(currentIndex);
   };
 
+  const openModal = (item: UpdateItem) => {
+    setSelectedUpdate(item);
+    setModalVisible(true);
+    // Pause auto-scrolling when modal is open
+    if (scrollInterval.current) {
+      clearInterval(scrollInterval.current);
+    }
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    // Resume auto-scrolling when modal is closed
+    if (updates.length > 1) {
+      scrollInterval.current = setInterval(() => {
+        setActiveSlide(prev => {
+          const nextSlide = prev === updates.length - 1 ? 0 : prev + 1;
+          carouselRef.current?.scrollToIndex({
+            index: nextSlide,
+            animated: true
+          });
+          return nextSlide;
+        });
+      }, 3000);
+    }
+  };
+
   const renderUpdate = ({ item }: { item: UpdateItem }) => (
-    <View style={styles.carouselItem}>
+    <TouchableOpacity 
+      style={styles.carouselItem}
+      activeOpacity={0.9}
+      onPress={() => openModal(item)}
+    >
       {item.imageUrl && (
         <Image 
           source={{ uri: item.imageUrl }} 
@@ -147,9 +184,11 @@ const LatestUpdates = () => {
       <View style={styles.carouselContent}>
         <Text style={styles.carouselTitle}>{item.title}</Text>
         <Text style={styles.carouselDate}>{item.date}</Text>
-        <Text style={styles.carouselDescription}>{item.description}</Text>
+        <Text style={styles.carouselDescription} numberOfLines={2}>
+          {item.description}
+        </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderShimmerItem = () => (
@@ -274,6 +313,41 @@ const LatestUpdates = () => {
       ) : (
         <Text style={styles.noUpdatesText}>No updates available</Text>
       )}
+
+      {/* Detailed View Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeModal}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <StatusBar backgroundColor="#31C462" barStyle="light-content" />
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={closeModal} style={styles.closeButton}>
+              <AntDesign name="close" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Update Details</Text>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            {selectedUpdate?.imageUrl && (
+              <Image 
+                source={{ uri: selectedUpdate.imageUrl }} 
+                style={styles.modalImage}
+                resizeMode="cover"
+              />
+            )}
+            <View style={styles.modalBody}>
+              <Text style={styles.modalUpdateTitle}>{selectedUpdate?.title}</Text>
+              <Text style={styles.modalUpdateDate}>{selectedUpdate?.date}</Text>
+              <Text style={styles.modalUpdateDescription}>
+                {selectedUpdate?.description}
+              </Text>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 };
@@ -361,7 +435,55 @@ const styles = StyleSheet.create({
     color: '#95a5a6',
     fontStyle: 'italic',
     marginVertical: 20,
-  }, 
+  },
+  
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  modalHeader: {
+    backgroundColor: '#31C462',
+    paddingTop: 10,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  modalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 15,
+  },
+  modalContent: {
+    flex: 1,
+  },
+  modalImage: {
+    width: '100%',
+    height: 250,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalUpdateTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  modalUpdateDate: {
+    fontSize: 16,
+    color: '#31C462',
+    marginBottom: 15,
+  },
+  modalUpdateDescription: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
 });
 
 export default LatestUpdates;

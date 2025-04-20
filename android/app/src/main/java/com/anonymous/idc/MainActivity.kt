@@ -1,4 +1,4 @@
-package com.anonymous.hajjclient
+package com.anonymous.idc
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
