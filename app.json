@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splashscreen_logo.png",
      "resizeMode": "contain",
      "backgroundColor": "#ffffff"
     },
@@ -79,10 +79,10 @@
   },
   "build": {
     "production": {
-      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp assets/splashscreen_logo.png android/app/src/main/res/drawable/\""
+      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp ./assets/images/splashscreen_logo.png android/app/src/main/res/drawable/splashscreen_logo.png\""
     },
     "development": {
-      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp assets/splashscreen_logo.png android/app/src/main/res/drawable/\""
+      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp ./assets/images/splashscreen_logo.png android/app/src/main/res/drawable/splashscreen_logo.png\""
     }
   }
 }
