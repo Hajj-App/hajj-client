@@ -31,6 +31,7 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="myapp"/>
         <data android:scheme="com.anonymous.hajjclient"/>
+        <data android:scheme="exp+hajj-client"/>
       </intent-filter>
     </activity>
   </application>

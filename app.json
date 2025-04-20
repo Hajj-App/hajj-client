@@ -10,8 +10,8 @@
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+     "resizeMode": "contain",
+     "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true,
@@ -44,8 +44,6 @@
       [
         "expo-splash-screen",
         {
-          "image": "",
-          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
@@ -77,6 +75,14 @@
       "eas": {
         "projectId": "f6f3d303-d244-44db-8564-6a8f622835f5"
       }
+    }
+  },
+  "build": {
+    "production": {
+      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp assets/splashscreen_logo.png android/app/src/main/res/drawable/\""
+    },
+    "development": {
+      "prebuildCommand": "bash -c \"mkdir -p android/app/src/main/res/drawable && cp assets/splashscreen_logo.png android/app/src/main/res/drawable/\""
     }
   }
 }
