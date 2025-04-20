@@ -32,6 +32,7 @@
         <data android:scheme="myapp"/>
         <data android:scheme="com.anonymous.hajjclient"/>
         <data android:scheme="exp+hajj-client"/>
+        <data android:scheme="exp+idc"/>
       </intent-filter>
     </activity>
   </application>
