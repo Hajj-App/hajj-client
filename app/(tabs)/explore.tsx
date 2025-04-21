@@ -5,7 +5,8 @@ import {
   View, 
   Text, 
   FlatList, 
-  useWindowDimensions
+  useWindowDimensions,
+  Platform
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useRef, useEffect } from "react";
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
   },
   section: {
     flex: 1,
-    marginBottom: 50,
+    marginBottom: Platform.OS === 'ios' ? 50 : 0,
     paddingHorizontal: 20,
   },
   sectionTitle: {
