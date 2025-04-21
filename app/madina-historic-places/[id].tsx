@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Linking,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Entypo, FontAwesome5, AntDesign } from "@expo/vector-icons";
@@ -35,6 +36,7 @@ interface RitualContent {
   id: string;
   name: string;
   description: string | string[];
+  content_image: string;
   paragraphs?: {
     title: string;
     description: string | string[];
@@ -66,6 +68,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
   const [ritualContent, setRitualContent] = useState<RitualContent | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<StorageFile | null>(null);
+  const [locationLink, setLocationLink] = useState<string | null>(null);
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -106,11 +109,18 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
         }
 
         const data = ritualDoc.data();
+        
+        // Set the location link if available
+        if (data.location_link) {
+          setLocationLink(data.location_link);
+        }
+        
         setRitualContent({
           id: ritualDoc.id,
           name: data.name || "Untitled",
           description: data.description || "",
-          paragraphs: data.paragraphs || []
+          paragraphs: data.paragraphs || [],
+          content_image: data.content_image || ""
         });
         
         await fetchRitualMedia();
@@ -191,28 +201,41 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
       setLoading(false);
     }
   };
+
+  // Handle opening location link
+  const openLocationLink = () => {
+    if (locationLink) {
+      Linking.openURL(locationLink)
+        .catch(err => {
+          console.error('Error opening location link:', err);
+          Alert.alert('Cannot Open Link', 'Unable to open the location link. Please try again later.');
+        });
+    }
+  };
+  
+  const ritualImage = ritualContent?.content_image;
   
   return (
     <View className="flex-1">
       <ImageBackground
-        source={require("@/assets/images/makkah/makkah-img.webp")}
+        source={{ uri: ritualImage }}
         resizeMode="cover"
         className="w-full h-[350px] items-center justify-start pt-14"
       >
         <View className="w-full flex-row items-center justify-between px-10">
           <Pressable
             onPress={() => router.back()}
-            className=" bg-white/50 rounded-xl"
+            className="bg-white/50 rounded-xl"
           >
             <Entypo name="chevron-small-left" size={40} color="black" />
           </Pressable>
-          <View className="w-10 h-10 bg-white rounded-full"></View>
+          {/* <View className="w-10 h-10 bg-white rounded-full"></View> */}
         </View>
       </ImageBackground>
       <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end">
-        <View className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full">
+        <Pressable onPress={openLocationLink} className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full">
           <Image source={require('@/assets/icons/share.png')} resizeMode="cover" className="w-10 h-10"/>
-        </View>
+        </Pressable>
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}

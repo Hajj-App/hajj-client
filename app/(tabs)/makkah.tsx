@@ -125,7 +125,7 @@ const Makkah = () => {
               : Array.isArray(data.description) 
                 ? data.description.join(" ") 
                 : "",
-            image: data.image || "",
+            image: data.content_image || "",
           });
         });
         

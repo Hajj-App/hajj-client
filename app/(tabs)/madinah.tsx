@@ -97,7 +97,7 @@ const Madinah = () => {
               : Array.isArray(data.description) 
                 ? data.description.join(" ") 
                 : "",
-            image: data.image || "",
+            image: data.content_image || "",
           });
         });
         
@@ -116,7 +116,7 @@ const Madinah = () => {
   return (
     <View className="flex-1">
       <ImageBackground
-        source={require("@/assets/images/makkah/makkah-img.webp")}
+        source={require("@/assets/images/madina/madina-banner.webp")}
         resizeMode="cover"
         className="w-full h-[350px] items-center justify-start pt-14"
       >

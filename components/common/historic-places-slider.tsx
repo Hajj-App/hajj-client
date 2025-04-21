@@ -31,19 +31,20 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
           <Pressable 
             key={item.id} 
             onPress={() => handlePress(item.id)}
+            className={`w-[250px] h-[150px] rounded-xl overflow-hidden ${
+              i === 0 ? "ml-5" : ""
+            } ${displayData.length - 1 === i ? "mr-5" : ""}`}
           >
             <ImageBackground
               source={item.image ? { uri: item.image } : require("@/assets/images/makkah/historical-place.png")}
               resizeMode="cover"
-              className={`w-[250px] h-[150px] rounded-xl mx-1 items-start justify-end ${
-                i === 0 ? "ml-5" : ""
-              } ${displayData.length - 1 === i ? "mr-5" : ""}`}
+              className={`w-[250px] h-[150px] mx-1 items-start justify-end rounded-xl`}
             >
-              <View className="w-full flex-col gap-0.5 p-5">
-                <Text className="text-white text-xl font-bold">
+              <View className="w-full h-full justify-end flex-col gap-0.5 p-5 bg-black/50">
+                <Text className="text-white text-lg font-bold">
                   {item.name}
                 </Text>
-                <Text className="text-white text-sm font-bold">
+                <Text className="text-white text-xs font-bold w-[90%]">
                   {item.description.length > 50 
                     ? item.description.substring(0, 50) + "..." 
                     : item.description}

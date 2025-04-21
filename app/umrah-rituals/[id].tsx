@@ -206,7 +206,7 @@ const UmrahRitualDetail = (props: Props) => {
           >
             <Entypo name="chevron-small-left" size={40} color="black" />
           </Pressable>
-          <View className="w-10 h-10 bg-white rounded-full"></View>
+          {/* <View className="w-10 h-10 bg-white rounded-full"></View> */}
         </View>
       </ImageBackground>
       <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end">
