@@ -1,4 +1,4 @@
-package com.anonymous.hajjclient
+package com.anonymous.idc
 
 import android.app.Application
 import android.content.res.Configuration

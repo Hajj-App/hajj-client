@@ -1,25 +1,29 @@
 {
   "expo": {
-    "name": "IDX App",
-    "slug": "hajj-client",
+    "name": "IDC",
+    "slug": "idc",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
+    "splash": {
+      "image": "./assets/splashscreen_logo.png",
+     "resizeMode": "cover",
+     "backgroundColor": "#ffffff"
+    },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload images to Firebase Storage.",
         "NSCameraUsageDescription": "This app needs access to your camera to take photos for Firebase Storage."
       },
-      "bundleIdentifier": "com.anonymous.hajjclient"
+      "bundleIdentifier": "com.anonymous.idc"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -28,7 +32,7 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.anonymous.hajjclient"
+      "package": "com.anonymous.idc"
     },
     "web": {
       "bundler": "metro",
@@ -40,9 +44,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "",
-          "imageWidth": 200,
-          "resizeMode": "contain",
+          "image": "./assets/splashscreen_logo.png",
+          "resizeMode": "cover",
           "backgroundColor": "#ffffff"
         }
       ],
@@ -71,7 +74,12 @@
         "origin": false
       },
       "eas": {
-        "projectId": "f6f3d303-d244-44db-8564-6a8f622835f5"
+        "projectId": "d621c9c0-97ad-458f-b3aa-1b1bdc6e6cb3"
+      }
+    },
+    "developmentClient": {
+      "ios": {
+        "simulator": true
       }
     }
   }

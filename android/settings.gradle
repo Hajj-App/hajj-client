@@ -21,7 +21,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   }
 }
 
-rootProject.name = 'IDX App'
+rootProject.name = 'IDC'
 
 dependencyResolutionManagement {
   versionCatalogs {
