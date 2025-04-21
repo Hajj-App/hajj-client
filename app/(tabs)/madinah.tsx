@@ -31,7 +31,7 @@ const Madinah = () => {
 
   // Fetch rituals data
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchHajjUploads = async () => {
       try {
         setLoading(true);
         setError(null);
@@ -40,42 +40,37 @@ const Madinah = () => {
           throw new Error("Firestore is not initialized");
         }
 
-        // Fetch rituals
         const uploadsCollectionRef = collection(firestore, "madina_uploads");
-        const uploadsSnapshot = await getDocs(uploadsCollectionRef);
-        const uploadsData: Upload[] = uploadsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || "Untitled",
-          description: Array.isArray(doc.data().description) 
-            ? doc.data().description[0] 
-            : doc.data().description || "",
-          content_image: doc.data().content_image || ""
-        }));
 
-        // Fetch historic places
-        const placesCollectionRef = collection(firestore, "madina_historic_places");
-        const placesSnapshot = await getDocs(placesCollectionRef);
-        const placesData: HistoricPlace[] = placesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || "Untitled",
-          description: doc.data().description || "",
-          content_image: doc.data().content_image || "",
-          location: "madina",
-          type: doc.data().type || "Historic place in Madina",
-          country: doc.data().country || "Saudi Arabia"
-        }));
+        const querySnapshot = await getDocs(uploadsCollectionRef);
 
+        const uploadsData: Upload[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          uploadsData.push({
+            id: doc.id,
+            name: data.name || "Untitled",
+            description:
+              Array.isArray(data.description) && data.description.length > 0
+                ? data.description[0]
+                : typeof data.description === "string"
+                ? data.description
+                : "",
+            content_image: data.content_image || "",
+          });
+        });
+
+        console.log("Fetched uploads:", uploadsData.length);
         setUploads(uploadsData);
-        setHistoricPlaces(placesData);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching hajj uploads:", err);
         setError("Failed to fetch data from Firestore");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchHajjUploads();
   }, [selected]);
 
   // Fetch historic places data
@@ -132,7 +127,6 @@ const Madinah = () => {
       </ImageBackground>
 
       <View className="h-20 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center pt-10 overflow-hidden" />
-      
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white mb-20"
