@@ -32,8 +32,8 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
             key={item.id} 
             onPress={() => handlePress(item.id)}
             className={`w-[250px] h-[150px] rounded-xl overflow-hidden ${
-              i === 0 ? "ml-7" : ""
-            } ${displayData.length - 1 === i ? "mr-7" : ""}`}
+              i === 0 ? "ml-5" : ""
+            } ${displayData.length - 1 === i ? "mr-5" : ""}`}
           >
             <ImageBackground
               source={item.image ? { uri: item.image } : require("@/assets/images/makkah/historical-place.png")}
