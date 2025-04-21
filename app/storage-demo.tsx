@@ -9,7 +9,6 @@ export default function StorageDemo() {
   const [selectedFile, setSelectedFile] = useState<StorageFile | null>(null);
   
   const handleSelectFile = (file: StorageFile): void => {
-    console.log('Selected file:', file);
     setSelectedFile(file);
   };
   

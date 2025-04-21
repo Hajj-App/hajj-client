@@ -354,7 +354,7 @@ const LatestUpdates = () => {
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 25,
+    marginBottom: 30,
     paddingHorizontal: 20,
   },
   sectionTitle: {
@@ -373,6 +373,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     width: screenWidth - 60,
     marginRight: 20,
+    marginBottom: 5,
   },
   carouselImage: {
     width: '100%',

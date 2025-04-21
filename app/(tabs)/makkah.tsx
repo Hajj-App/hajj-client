@@ -7,6 +7,8 @@ import {
   ScrollView,
   Text,
   View,
+  Platform,
+  StyleSheet,
 } from "react-native";
 import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
@@ -179,7 +181,8 @@ const Makkah = () => {
       </View>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1 bg-white mb-20"
+        className="flex-1 bg-white"
+        contentContainerStyle={styles.scrollContent}
       >
         {!historicPlacesLoading && historicPlaces.length > 0 && (
           <View className="gap-5">
@@ -199,5 +202,12 @@ const Makkah = () => {
     </View>
   );
 };
+
+// Platform-specific styles
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: Platform.OS === 'ios' ? 80 : 5, // Different padding for iOS and Android
+  }
+});
 
 export default Makkah;
