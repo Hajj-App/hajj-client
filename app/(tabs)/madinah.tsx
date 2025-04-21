@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ImageBackground, ScrollView, Text, View, ActivityIndicator } from "react-native";
+import { ImageBackground, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
 import { collection, getDocs } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
@@ -129,7 +129,8 @@ const Madinah = () => {
       <View className="h-20 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center pt-10 overflow-hidden" />
       <ScrollView
         showsVerticalScrollIndicator={false}
-        className="flex-1 bg-white mb-20"
+        className="flex-1 bg-white"
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Only show historic places section if data exists and loading is complete */}
         {!historicPlacesLoading && historicPlaces.length > 0 && (
@@ -150,5 +151,11 @@ const Madinah = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    paddingBottom: Platform.OS === 'ios' ? 80 : 5, 
+  }
+});
 
 export default Madinah;

@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, TouchableOpacity } from "react-native";
 import * as Location from "expo-location";
 import PrayerTimeContainer from "./prayer-time-container";
 import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
 import LinearGradient from 'expo-linear-gradient';
 import { locationPermission } from "@/hooks/useUserLocation";
+import { Ionicons } from "@expo/vector-icons";
 
 const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
@@ -31,37 +32,73 @@ export default function PrayerList() {
   const [timings, setTimings] = useState<Timings | null>(null);
   const [loading, setLoading] = useState(true);
   const [remainingTime, setRemainingTime] = useState<string>("N/A");
+  const [retryCount, setRetryCount] = useState(0);
 
   const apiUrl = useMemo(() => {
-    return `http://api.aladhan.com/v1/calendar/${date.getFullYear()}/${date.getMonth() + 1}?method=${METHOD}&tune=${TUNE}`;
+    return `https://api.aladhan.com/v1/calendar/${date.getFullYear()}/${date.getMonth() + 1}?method=${METHOD}&tune=${TUNE}`;
   }, [date]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
+  const fetchPrayerTimes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-       const permissionGranted = await locationPermission();
-    if (!permissionGranted) {
-      setError("Location permission denied.");
-      setLoading(false);
-      return;
-    }
-
-        let location = await Location.getCurrentPositionAsync({});
-        const response = await fetch(
-          `${apiUrl}&latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
-        );
-        const data = await response.json();
-
-        setTimings(data.data[date.getDate() - 1]?.timings || {});
-      } catch (error) {
-        setError("Error fetching prayer timings.");
-      } finally {
+      // Check location permission
+      const permissionGranted = await locationPermission();
+      if (!permissionGranted) {
+        setError("Location permission denied. Please enable location access for prayer times.");
         setLoading(false);
+        return;
       }
-    })();
+
+      // Get current location with timeout
+      const locationPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced, // Don't need high accuracy
+      });
+      
+      // Set a timeout for location fetch
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Location request timed out")), 10000)
+      );
+      
+      // Race between location fetch and timeout
+      const location = await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject;
+      
+      // Fetch prayer times data
+      const response = await fetch(
+        `${apiUrl}&latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`API responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.data || !Array.isArray(data.data) || !data.data[date.getDate() - 1]) {
+        throw new Error("Invalid data format received from prayer API");
+      }
+
+      setTimings(data.data[date.getDate() - 1]?.timings || {});
+      // Reset retry count on success
+      setRetryCount(0);
+    } catch (error: any) {
+      console.error("Prayer times error:", error.message);
+      if (error.message.includes("Location request timed out")) {
+        setError("Location services timed out. Please check your GPS settings and try again.");
+      } else if (error.message.includes("Network request failed")) {
+        setError("Network error. Please check your internet connection and try again.");
+      } else {
+        setError(`Error loading prayer times: ${error.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [apiUrl, date]);
+
+  useEffect(() => {
+    fetchPrayerTimes();
+  }, [fetchPrayerTimes, retryCount]);
 
   const getNextPrayer = () => {
     if (!timings || Object.keys(timings).length === 0) return null;
@@ -122,13 +159,13 @@ export default function PrayerList() {
   };
 
   // Function to calculate remaining time
-  const calculateRemainingTime = () => {
+  const calculateRemainingTime = useCallback(() => {
     const nextPrayerInfo = getNextPrayer();
     const isFirstPrayer = nextPrayerInfo?.name === "Fajr";
     if (nextPrayerInfo) {
       setRemainingTime(getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer));
     }
-  };
+  }, [timings]);
 
   useEffect(() => {
     // Update remaining time every minute
@@ -140,16 +177,28 @@ export default function PrayerList() {
     calculateRemainingTime();
 
     return () => clearInterval(interval); // Cleanup interval on component unmount
-  }, [timings]);
+  }, [calculateRemainingTime]);
 
   const nextPrayerInfo = getNextPrayer();
   const isFirstPrayer = nextPrayerInfo?.name === "Fajr";
-  // const remainingTime = nextPrayerInfo ? getRemainingTime(nextPrayerInfo.startTime, isFirstPrayer) : "N/A";
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
 
   return (
-    <View className="flex-1 bg-gray-100 justify-start items-start ">
+    <View className="flex-1 justify-start items-start">
       {error ? (
-        <Text className="text-red-500 text-lg">{error}</Text>
+        <View className="w-full items-center justify-center p-4 bg-red-50 rounded-lg">
+          <Text className="text-red-500 text-base text-center mb-3">{error}</Text>
+          <TouchableOpacity 
+            onPress={handleRetry} 
+            className="bg-red-500 px-4 py-2 rounded-full flex-row items-center"
+          >
+            <Ionicons name="refresh" size={18} color="white" />
+            <Text className="text-white ml-2">Retry</Text>
+          </TouchableOpacity>
+        </View>
       ) : loading ? (
         <>
           {/* Shimmer for PrayerTimeContainer */}
@@ -186,11 +235,11 @@ export default function PrayerList() {
             remainingTime={remainingTime}
           />
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="my-4">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-4">
             {PRAYER_NAMES.map((prayer) => (
               <Pressable
                 key={prayer}
-                className={`px-3 py-4 rounded-2xl shadow-md mx-2 items-start mt-3 ${
+                className={`px-3 py-4 rounded-2xl shadow-sm mx-2 items-start mt-3 ${
                   prayer === nextPrayerInfo?.name ? "border-[1px] border-green bg-white" : "bg-gray-100"
                 }`}
               >

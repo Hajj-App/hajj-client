@@ -120,7 +120,6 @@ export default function ExploreScreen() {
 
   const cities = ["Makka", "Madinah"];
   const apiKey = process.env.EXPO_PUBLIC_WEATHER_API_KEY
-  // console.log("API Key:", apiKey);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -294,6 +293,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+    marginBottom: 10,
   },
   header: {
     padding: 20,
@@ -309,7 +309,8 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   section: {
-    marginBottom: 25,
+    flex: 1,
+    marginBottom: 50,
     paddingHorizontal: 20,
   },
   sectionTitle: {

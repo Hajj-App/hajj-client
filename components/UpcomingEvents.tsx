@@ -242,6 +242,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     width: screenWidth - 80,
+    marginBottom: 5,
   },
   eventIconContainer: {
     width: 50,

@@ -52,7 +52,6 @@ interface RitualContent {
 const HajjRitualDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  console.log("params:", params)
   const ritualId = params.id as string;
   
   const [loading, setLoading] = useState<boolean>(true);
@@ -144,8 +143,6 @@ const HajjRitualDetail = (props: Props) => {
       
       // Fetch media from the specific ritual folder in Firebase Storage
       const storagePath = `hajj/${ritualId}`;
-      console.log(`Attempting to access path: ${storagePath}`);
-      
       try {
         const files = await getFilesWithUrls(storagePath);
         

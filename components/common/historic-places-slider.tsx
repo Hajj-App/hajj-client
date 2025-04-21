@@ -21,25 +21,25 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
     } else {
       console.log(`Navigating to ${route}/${id}`);
       router.push(`/${route}/${id}` as any);
-  }
-};
-
-return (
-  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-    {displayData.length > 0 ? (
-      displayData.map((item, i) => (
-        <Pressable 
-          key={item.id} 
-          onPress={() => handlePress(item.id)}
-          className={`w-[250px] h-[150px] rounded-xl overflow-hidden ${
-            i === 0 ? "ml-5" : ""
-          } ${displayData.length - 1 === i ? "mr-5" : ""}`}
-        >
-          <ImageBackground
-            source={item.image ? { uri: item.image } : require("@/assets/images/makkah/historical-place.png")}
-            resizeMode="cover"
-            className={`w-[250px] h-[150px] mx-1 items-start justify-end rounded-xl `}
+    }
+  };
+  
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {displayData.length > 0 ? (
+        displayData.map((item, i) => (
+          <Pressable 
+            key={item.id} 
+            onPress={() => handlePress(item.id)}
+            className={`w-[250px] h-[150px] rounded-xl overflow-hidden ${
+              i === 0 ? "ml-7" : ""
+            } ${displayData.length - 1 === i ? "mr-7" : ""}`}
           >
+            <ImageBackground
+              source={item.image ? { uri: item.image } : require("@/assets/images/makkah/historical-place.png")}
+              resizeMode="cover"
+              className={`w-[250px] h-[150px] mx-1 items-start justify-end rounded-xl`}
+            >
             <View className="w-full h-full justify-end flex-col gap-0.5 p-5 bg-black/50">
               <Text className="text-white text-lg font-bold">
                 {item.name}

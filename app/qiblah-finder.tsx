@@ -249,12 +249,6 @@ const QiblahFinder = () => {
           </Text>
         </View>
       )}
-
-      <Text style={styles.angle}>{qiblaAngle.toFixed(2)}°</Text>
-      <Text style={styles.instructions}>
-        Point the red arrow toward the Qibla direction for prayer
-      </Text>
-
       {showCalibration && !isCalibrating && (
         <TouchableOpacity
           style={styles.calibrateButton}
