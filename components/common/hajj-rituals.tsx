@@ -8,6 +8,9 @@ interface Ritual {
   name: string;
   description: string;
   content_image: string;
+  date: string;       // Format: "YYYY-MM-DD"
+  time?: string;      // Optional, Format: "HH:MM" (24-hour)
+  datetime?: Date;    // Alternative: Combined datetime field
 }
 
 type Props = {

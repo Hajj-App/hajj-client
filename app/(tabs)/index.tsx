@@ -133,6 +133,7 @@ export default function HomeScreen() {
               Linking.openURL("https://www.hajcommittee.gov.in/")
             }
           >
+            <Ionicons name="search" size={24} color="white" />
             <Text className="text-white font-bold text-lg">
             Search Your Cover Number
             </Text>
