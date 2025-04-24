@@ -13,7 +13,7 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
   const router = useRouter();
   
   // Only show the first 10 items to avoid performance issues
-  const displayData = data && data.length > 0 ? data.slice(0, 10) : [];
+  const displayData = data || [];
   
   const handlePress = (id: string) => {
     if (route === "madina-historic-places") {

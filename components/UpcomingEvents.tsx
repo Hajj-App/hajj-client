@@ -150,12 +150,11 @@ const UpcomingEvents = () => {
     </View>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.section}>
-        <Text style={{ fontSize: 18, fontWeight: "bold" }}>
-          Upcoming Events
-        </Text>
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Upcoming Events</Text>
+
+      {loading ? (
         <FlatList
           data={[1, 2, 3]} // Render 3 shimmer items
           renderItem={renderShimmerItem}
@@ -172,42 +171,28 @@ const UpcomingEvents = () => {
             index,
           })}
         />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Upcoming Events</Text>
-
-      {events.length > 0 ? (
-        <>
-          <FlatList
-            ref={carouselRef}
-            data={events}
-            renderItem={renderEvent}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            snapToInterval={screenWidth - 60}
-            snapToAlignment="center"
-            decelerationRate="fast"
-            contentContainerStyle={styles.carouselContent}
-            onMomentumScrollEnd={handleScroll}
-          />
-        </>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      ) : events.length > 0 ? (
+        <FlatList
+          ref={carouselRef}
+          data={events}
+          renderItem={renderEvent}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          snapToInterval={screenWidth - 60}
+          snapToAlignment="center"
+          decelerationRate="fast"
+          contentContainerStyle={styles.carouselContent}
+          onMomentumScrollEnd={handleScroll}
+        />
       ) : (
         <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
       )}
@@ -225,7 +210,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 20,
     color: "#333",
-    height: 24, // Added height for shimmer
   },
   carouselContent: {
     paddingHorizontal: 20,
