@@ -10,7 +10,7 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 
@@ -19,6 +19,7 @@ interface HajjUpload {
   name: string;
   description: string;
   content_image: string;
+  date: string;
 }
 
 interface HistoricPlace {
@@ -73,7 +74,9 @@ const Makkah = () => {
           selected === 0 ? "hajj_uploads" : "umrah_uploads"
         );
 
-        const querySnapshot = await getDocs(uploadsCollectionRef);
+        // Add ordering by name
+        const q = query(uploadsCollectionRef, orderBy("folderId"));
+        const querySnapshot = await getDocs(q);
 
         const uploadsData: HajjUpload[] = [];
         querySnapshot.forEach((doc) => {
@@ -88,6 +91,7 @@ const Makkah = () => {
                 ? data.description
                 : "",
             content_image: data.content_image || "",
+            date: data.date || "",
           });
         });
 
@@ -114,7 +118,9 @@ const Makkah = () => {
         }
 
         const historicPlacesRef = collection(firestore, "historic_places_makkah");
-        const querySnapshot = await getDocs(historicPlacesRef);
+        // Add ordering by name
+        const q = query(historicPlacesRef, orderBy("folderId"));
+        const querySnapshot = await getDocs(q);
         
         const placesData: HistoricPlace[] = [];
         querySnapshot.forEach((doc) => {

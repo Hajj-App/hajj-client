@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ImageBackground, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import HajjRituals from "@/components/common/hajj-rituals";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
@@ -11,6 +11,7 @@ interface Upload {
   name: string;
   description: string;
   content_image: string;
+  date: string;
 }
 
 interface HistoricPlace {
@@ -41,8 +42,8 @@ const Madinah = () => {
         }
 
         const uploadsCollectionRef = collection(firestore, "madina_uploads");
-
-        const querySnapshot = await getDocs(uploadsCollectionRef);
+        const q = query(uploadsCollectionRef, orderBy("folderId"));
+        const querySnapshot = await getDocs(q);
 
         const uploadsData: Upload[] = [];
         querySnapshot.forEach((doc) => {
@@ -57,6 +58,7 @@ const Madinah = () => {
                 ? data.description
                 : "",
             content_image: data.content_image || "",
+            date: data.date || "",
           });
         });
 
@@ -84,7 +86,8 @@ const Madinah = () => {
         }
 
         const historicPlacesRef = collection(firestore, "historic_places_madina");
-        const querySnapshot = await getDocs(historicPlacesRef);
+        const q = query(historicPlacesRef, orderBy("folderId"));
+        const querySnapshot = await getDocs(q);
         
         const placesData: HistoricPlace[] = [];
         querySnapshot.forEach((doc) => {
