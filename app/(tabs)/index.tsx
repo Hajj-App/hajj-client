@@ -68,19 +68,36 @@ export default function HomeScreen() {
               <Text className="text-lg font-bold">Umrah</Text>
             </Pressable>
           </View>
-          <Pressable
-            className="bg-white p-5 rounded-3xl w-full"
-            onPress={() => router.navigate("/madinah")}
-          >
-            <View className="flex items-end">
-              <Feather name="arrow-up-right" size={24} color="gray" />
-              <Image
-                source={require("@/assets/images/madinah.png")}
-                className="w-28 h-28"
-              />
-            </View>
-            <Text className="text-lg font-bold">Madina Ziyarat</Text>
-          </Pressable>
+
+
+          <View className="flex-row gap-4 my-4">
+            <Pressable
+              className="bg-white p-5 rounded-3xl w-1/2"
+              onPress={() => router.navigate("/madinah")}
+            >
+              <View className="flex items-end">
+                <Feather name="arrow-up-right" size={24} color="gray" />
+                <Image
+                  source={require("@/assets/images/madina-kubba.webp")}
+                  className="w-28 h-28"
+                />
+              </View>
+              <Text className="text-lg font-bold">Madina Ziyarah</Text>
+            </Pressable>
+            <Pressable
+              className="bg-white p-5 rounded-3xl w-1/2"
+              onPress={() => router.navigate("/historic-places")}
+            >
+              <View className="flex items-end">
+                <Feather name="arrow-up-right" size={24} color="gray" />
+                <Image
+                  source={require("@/assets/images/madinah.png")} // You'll need to add this image
+                  className="w-28 h-28"
+                />
+              </View>
+              <Text className="text-lg font-bold">Historic Places</Text>
+            </Pressable>
+          </View>
 
           {/* Prayer Time */}
           <View className="py-8 flex-row items-center justify-between">
