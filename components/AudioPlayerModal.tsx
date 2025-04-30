@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
+import Slider from '@react-native-community/slider';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { StorageFile } from '@/utils/storageTypes';
@@ -18,19 +18,29 @@ interface AudioPlayerModalProps {
   onClose: () => void;
 }
 
+type PlaybackStatus = {
+  isPlaying: boolean;
+  positionMillis: number;
+  durationMillis: number;
+  rate: number;
+};
+
+const SKIP_TIME = 10000; // 10 seconds for skip forward/backward
+
 const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
   visible,
   audioFile,
   onClose,
 }) => {
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const soundRef = useRef<Audio.Sound | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [isBuffering, setIsBuffering] = useState(false);
-  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus>({
+    isPlaying: false,
+    positionMillis: 0,
+    durationMillis: 0,
+    rate: 1.0,
+  });
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -67,79 +77,92 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
     try {
       setIsLoading(true);
       setError(null);
-      setIsBuffering(true);
 
       // Unload any existing sound
-      if (sound) {
-        await sound.unloadAsync();
-      }
+      await stopAudio();
 
-      // Load and play the new audio
-      const { sound: newSound } = await Audio.Sound.createAsync(
+      // Load the new audio
+      const { sound } = await Audio.Sound.createAsync(
         { uri: audioFile.downloadURL },
         { 
-          shouldPlay: true,
+          shouldPlay: false,
           isLooping: false,
           volume: 1.0,
-          rate: 1.0,
+          rate: playbackStatus.rate,
           shouldCorrectPitch: true,
         },
-        onPlaybackStatusUpdate
+        handlePlaybackStatusUpdate
       );
 
-      setSound(newSound);
-      setIsPlaying(true);
+      soundRef.current = sound;
       setIsLoading(false);
-      setIsBuffering(false);
+
     } catch (error) {
-      console.error('Error playing audio:', error);
-      setError('Failed to play the audio file. Please try again.');
+      console.error('Error loading audio:', error);
+      setError('Failed to load the audio file. Please try again.');
       setIsLoading(false);
-      setIsBuffering(false);
     }
   };
 
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
     if (status.isLoaded) {
-      setPosition(status.positionMillis);
-      setDuration(status.durationMillis || 0);
-      setIsBuffering(status.isBuffering);
+      setPlaybackStatus({
+        isPlaying: status.isPlaying,
+        positionMillis: status.positionMillis,
+        durationMillis: status.durationMillis || 0,
+        rate: status.rate,
+      });
       
       if (status.didJustFinish) {
-        setIsPlaying(false);
+        setPlaybackStatus(prev => ({
+          ...prev,
+          isPlaying: false,
+          positionMillis: 0,
+        }));
       }
     }
   };
 
   const stopAudio = async () => {
-    if (!sound) return;
-
     try {
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-        await sound.stopAsync();
-        await sound.unloadAsync();
+      if (soundRef.current) {
+        // Check if sound is loaded before trying to stop/unload
+        const status = await soundRef.current.getStatusAsync();
+        if (status.isLoaded) {
+          await soundRef.current.stopAsync();
+          await soundRef.current.unloadAsync();
+        }
       }
     } catch (error) {
-      console.error('Error stopping audio:', error);
-      // Don't throw error, just clean up the state
+      if (error instanceof Error) {
+        if (!error.message.includes('sound is not loaded')) {
+          console.error('Error stopping audio:', error);
+        }
+      } else {
+        console.error('Unknown error stopping audio:', error);
+      }
     } finally {
-      setSound(null);
-      setIsPlaying(false);
-      setPosition(0);
+      soundRef.current = null;
+      setPlaybackStatus({
+        isPlaying: false,
+        positionMillis: 0,
+        durationMillis: 0,
+        rate: 1.0,
+      });
     }
   };
 
   const togglePlayPause = async () => {
-    if (!sound) return;
+    if (!soundRef.current) return;
 
     try {
-      if (isPlaying) {
-        await sound.pauseAsync();
-        setIsPlaying(false);
+      const status = await soundRef.current.getStatusAsync();
+      if (!status.isLoaded) return;
+
+      if (status.isPlaying) {
+        await soundRef.current.pauseAsync();
       } else {
-        await sound.playAsync();
-        setIsPlaying(true);
+        await soundRef.current.playAsync();
       }
     } catch (error) {
       console.error('Error toggling play/pause:', error);
@@ -147,15 +170,62 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
     }
   };
 
-  const togglePlaybackSpeed = async () => {
-    if (!sound) return;
-
+  const handleSeek = async (value: number) => {
+    if (!soundRef.current) return;
+    
     try {
-      const newRate = playbackRate === 1.0 ? 2.0 : 1.0;
-      await sound.setRateAsync(newRate, true);
-      setPlaybackRate(newRate);
+      const status = await soundRef.current.getStatusAsync();
+      if (status.isLoaded) {
+        await soundRef.current.setPositionAsync(value);
+      }
     } catch (error) {
-      console.error('Error changing playback speed:', error);
+      console.error('Error seeking audio:', error);
+    }
+  };
+
+  const changePlaybackRate = async (rate: number) => {
+    if (!soundRef.current) return;
+    
+    try {
+      const status = await soundRef.current.getStatusAsync();
+      if (status.isLoaded) {
+        await soundRef.current.setRateAsync(rate, true);
+        setPlaybackStatus(prev => ({ ...prev, rate }));
+      }
+    } catch (error) {
+      console.error('Error changing playback rate:', error);
+    }
+  };
+
+  const skipForward = async () => {
+    if (!soundRef.current) return;
+    
+    try {
+      const status = await soundRef.current.getStatusAsync();
+      if (status.isLoaded && status.durationMillis !== undefined) {
+        const newPosition = Math.min(
+          status.positionMillis + SKIP_TIME,
+          status.durationMillis
+        );
+        await soundRef.current.setPositionAsync(newPosition);
+      }
+      
+    } catch (error) {
+      console.error('Error skipping forward:', error);
+    }
+  };
+
+  const skipBackward = async () => {
+    if (!soundRef.current) return;
+    
+    try {
+      const status = await soundRef.current.getStatusAsync();
+      if (status.isLoaded) {
+        const newPosition = Math.max(0, status.positionMillis - SKIP_TIME);
+        await soundRef.current.setPositionAsync(newPosition);
+      }
+    } catch (error) {
+      console.error('Error skipping backward:', error);
     }
   };
 
@@ -163,10 +233,8 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
-
-  const progress = duration ? (position / duration) * 100 : 0;
 
   return (
     <Modal
@@ -187,6 +255,12 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
           {error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity 
+                onPress={() => setError(null)}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryButtonText}>Try Again</Text>
+              </TouchableOpacity>
             </View>
           ) : isLoading ? (
             <View style={styles.loadingContainer}>
@@ -199,68 +273,80 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
                 {audioFile?.name || 'Unknown Audio'}
               </Text>
               
+              {/* Progress Bar */}
               <View style={styles.progressContainer}>
-                <View style={styles.progressBar}>
-                  <View 
-                    style={[
-                      styles.progressFill,
-                      { width: `${progress}%` }
-                    ]} 
-                  />
-                </View>
-                <View style={styles.timeContainer}>
-                  <Text style={styles.timeText}>{formatTime(position)}</Text>
-                  <Text style={styles.timeText}>{formatTime(duration)}</Text>
-                </View>
+                <Text style={styles.timeText}>
+                  {formatTime(playbackStatus.positionMillis)}
+                </Text>
+                <Slider
+                  style={styles.slider}
+                  minimumValue={0}
+                  maximumValue={playbackStatus.durationMillis || 1}
+                  value={playbackStatus.positionMillis}
+                  onSlidingComplete={handleSeek}
+                  minimumTrackTintColor="#34D399"
+                  maximumTrackTintColor="#D1D5DB"
+                  thumbTintColor="#34D399"
+                  disabled={isLoading}
+                />
+                <Text style={styles.timeText}>
+                  {formatTime(playbackStatus.durationMillis)}
+                </Text>
               </View>
-
-              <View style={styles.controlsContainer}>
+              
+              {/* Playback Controls */}
+              <View style={styles.controlsRow}>
                 <TouchableOpacity
                   style={styles.controlButton}
-                  onPress={() => {
-                    if (sound) {
-                      sound.setPositionAsync(Math.max(0, position - 10000));
-                    }
-                  }}
+                  onPress={skipBackward}
+                  disabled={isLoading}
                 >
                   <FontAwesome5 name="backward" size={20} color="#34D399" />
+                  <Text style={styles.skipText}>10s</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.playButton}
                   onPress={togglePlayPause}
-                  disabled={isBuffering}
+                  disabled={isLoading}
                 >
-                  {isBuffering ? (
-                    <ActivityIndicator size="large" color="#fff" />
-                  ) : (
-                    <FontAwesome5
-                      name={isPlaying ? 'pause' : 'play'}
-                      size={24}
-                      color="#fff"
-                    />
-                  )}
+                  <FontAwesome5
+                    name={playbackStatus.isPlaying ? 'pause' : 'play'}
+                    size={24}
+                    color="#fff"
+                  />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={styles.controlButton}
-                  onPress={() => {
-                    if (sound) {
-                      sound.setPositionAsync(Math.min(duration, position + 10000));
-                    }
-                  }}
+                  onPress={skipForward}
+                  disabled={isLoading}
                 >
                   <FontAwesome5 name="forward" size={20} color="#34D399" />
+                  <Text style={styles.skipText}>10s</Text>
                 </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                style={styles.speedButton}
-                onPress={togglePlaybackSpeed}
-                disabled={isBuffering}
-              >
-                <Text style={styles.speedText}>{playbackRate}x</Text>
-              </TouchableOpacity>
+              
+              {/* Speed Controls */}
+              <View style={styles.speedControls}>
+                {[1.0, 1.5, 2.0].map((rate) => (
+                  <TouchableOpacity
+                    key={rate.toString()}
+                    onPress={() => changePlaybackRate(rate)}
+                    style={[
+                      styles.speedButton,
+                      playbackStatus.rate === rate && styles.speedButtonActive
+                    ]}
+                  >
+                    <Text style={[
+                      styles.speedButtonText,
+                      playbackStatus.rate === rate && styles.speedButtonTextActive
+                    ]}>
+                      {rate}x
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -282,14 +368,6 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '90%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   header: {
     flexDirection: 'row',
@@ -315,41 +393,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
     marginBottom: 20,
   },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#34D399',
-    borderRadius: 2,
-  },
-  timeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  slider: {
+    flex: 1,
+    marginHorizontal: 10,
   },
   timeText: {
+    width: 50,
+    textAlign: 'center',
     fontSize: 12,
-    color: '#6B7280',
+    color: '#666',
   },
-  controlsContainer: {
+  controlsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    gap: 20,
+    alignItems: 'center',
+    marginBottom: 20,
   },
   controlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   playButton: {
     width: 60,
@@ -358,14 +425,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#34D399',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#34D399',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    marginHorizontal: 20,
+  },
+  skipText: {
+    color: '#34D399',
+    fontSize: 12,
+    marginTop: 5,
+  },
+  speedControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  speedButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    marginHorizontal: 5,
+    borderRadius: 9999,
+    backgroundColor: '#f1f1f1',
+  },
+  speedButtonActive: {
+    backgroundColor: '#34D399',
+  },
+  speedButtonText: {
+    color: '#80848a',
+    fontWeight: 'bold',
+  },
+  speedButtonTextActive: {
+    color: '#fff',
   },
   loadingContainer: {
     alignItems: 'center',
@@ -380,23 +467,22 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginVertical: 20,
+    alignItems: 'center',
   },
   errorText: {
     color: '#DC2626',
     textAlign: 'center',
+    marginBottom: 10,
   },
-  speedButton: {
-    marginTop: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 15,
+  retryButton: {
+    backgroundColor: '#34D399',
+    padding: 10,
+    borderRadius: 5,
   },
-  speedText: {
-    color: '#34D399',
-    fontWeight: '600',
-    fontSize: 14,
+  retryButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
-export default AudioPlayerModal; 
+export default AudioPlayerModal;
