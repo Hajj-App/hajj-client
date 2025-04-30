@@ -51,7 +51,7 @@ interface RitualContent {
 //   }
 // ]
 
-const MadinaHistoricPlaceDetail = (props: Props) => {
+const MakkahHistoricPlaceDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
   console.log("params:", params);
@@ -456,4 +456,4 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
   );
 };
 
-export default MadinaHistoricPlaceDetail;
+export default MakkahHistoricPlaceDetail;
