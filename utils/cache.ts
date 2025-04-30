@@ -58,10 +58,15 @@ export const fetchWithCache = async (
   const q = query(collectionRef, orderBy('folderId'));
   const querySnapshot = await getDocs(q);
   
-  const data = querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  const data = querySnapshot.docs.map(doc => {
+    const docData = doc.data();
+    // Remove folderId from the data
+    const { folderId, ...rest } = docData;
+    return {
+      id: doc.id,
+      ...rest
+    };
+  });
 
   // Cache the new data
   await setCachedData(cacheKey, data);
