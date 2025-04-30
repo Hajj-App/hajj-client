@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { ImageBackground, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 import ritualData from "@/data/data.json";
-import { collection, getDocs } from "firebase/firestore";
-import { firestore } from "@/utils/firebase";
+import { fetchWithCache } from "@/utils/cache";
 import HajjRituals from "@/components/common/hajj-rituals";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Upload {
   id: string;
   name: string;
   description: string;
   content_image: string;
+  date: string;
 }
 
 interface HistoricPlace {
@@ -29,37 +30,14 @@ const Madinah = () => {
   const [selected, setSelected] = useState(0);
   const rituals = ritualData.rituals;
 
-  // Fetch rituals data
+  // Fetch rituals data with caching
   useEffect(() => {
     const fetchHajjUploads = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        if (!firestore) {
-          throw new Error("Firestore is not initialized");
-        }
-
-        const uploadsCollectionRef = collection(firestore, "madina_uploads");
-
-        const querySnapshot = await getDocs(uploadsCollectionRef);
-
-        const uploadsData: Upload[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          uploadsData.push({
-            id: doc.id,
-            name: data.name || "Untitled",
-            description:
-              Array.isArray(data.description) && data.description.length > 0
-                ? data.description[0]
-                : typeof data.description === "string"
-                ? data.description
-                : "",
-            content_image: data.content_image || "",
-          });
-        });
-
+        const uploadsData = await fetchWithCache('madina_uploads', 'madina_uploads_cache');
         console.log("Fetched uploads:", uploadsData.length);
         setUploads(uploadsData);
       } catch (err) {
@@ -73,34 +51,13 @@ const Madinah = () => {
     fetchHajjUploads();
   }, [selected]);
 
-  // Fetch historic places data
+  // Fetch historic places data with caching
   useEffect(() => {
     const fetchHistoricPlaces = async () => {
       try {
         setHistoricPlacesLoading(true);
         
-        if (!firestore) {
-          throw new Error("Firestore is not initialized");
-        }
-
-        const historicPlacesRef = collection(firestore, "historic_places_madina");
-        const querySnapshot = await getDocs(historicPlacesRef);
-        
-        const placesData: HistoricPlace[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          placesData.push({
-            id: doc.id,
-            name: data.name || "Unknown Place",
-            description: typeof data.description === "string" 
-              ? data.description 
-              : Array.isArray(data.description) 
-                ? data.description.join(" ") 
-                : "",
-            image: data.content_image || "",
-          });
-        });
-        
+        const placesData = await fetchWithCache('historic_places_madina', 'historic_places_madina_cache');
         console.log("Fetched historic places:", placesData.length);
         setHistoricPlaces(placesData);
       } catch (err) {
@@ -112,6 +69,28 @@ const Madinah = () => {
 
     fetchHistoricPlaces();
   }, []);
+
+  // Skeleton loading component
+  const renderSkeleton = () => (
+    <View className="gap-5 pt-5">
+      <Skeleton className="h-8 w-40 ml-5" />
+      <View className="flex-row gap-4 px-5">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="w-[180px] h-[110px] rounded-lg" />
+        ))}
+      </View>
+    </View>
+  );
+  const renderVerticalSkeleton = () => (
+    <View className="gap-5 pt-5">
+      <Skeleton className="h-8 w-40 ml-5" />
+      <View className="flex-col gap-4 px-5">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 w-full rounded-lg" />
+        ))}
+      </View>
+    </View>
+  );
 
   return (
     <View className="flex-1">
@@ -132,8 +111,9 @@ const Madinah = () => {
         className="flex-1 bg-white"
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Only show historic places section if data exists and loading is complete */}
-        {!historicPlacesLoading && historicPlaces.length > 0 && (
+        {historicPlacesLoading ? (
+          renderSkeleton()
+        ) : historicPlaces.length > 0 ? (
           <View className="gap-5 pt-5">
             <Text className="text-2xl font-bold ml-5">Historic places</Text>
             <HistoricPlacesSlider 
@@ -141,12 +121,16 @@ const Madinah = () => {
               data={historicPlaces} 
             />
           </View>
-        )}
+        ) : null}
         
-        <View className="gap-5 mt-5">
-          <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <HajjRituals data={uploads} route="madina-rituals" />
-        </View>
+        {loading ? (
+          renderVerticalSkeleton()
+        ) : uploads.length > 0 ? (
+          <View className="gap-5 mt-5">
+            <Text className="text-2xl font-bold ml-5">Rituals</Text>
+            <HajjRituals data={uploads} route="madina-rituals" />
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );

@@ -59,7 +59,7 @@ const DikrCounter = () => {
 
   const incrementCount = () => {
     if (count < 99999) {
-      setCount(prev => prev + 1);
+    setCount(prev => prev + 1);
     }
   };
 
@@ -98,13 +98,13 @@ const DikrCounter = () => {
     <SafeAreaView style={styles.container}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.content}>
-          {/* Counter Display */}
+      {/* Counter Display */}
           <Pressable onPress={incrementCount} style={styles.counterButton}>
-            <Image
-              source={require("@/assets/images/tally-counter.png")}
+        <Image
+          source={require("@/assets/images/tally-counter.png")}
               style={styles.counterImage}
-              resizeMode="contain"
-            />
+          resizeMode="contain"
+        />
             <Text style={styles.countText} className="mt-20">{count}</Text>
           </Pressable>
 
@@ -118,7 +118,7 @@ const DikrCounter = () => {
               style={styles.actionButton}
             >
               <Text style={styles.buttonText}>Manage</Text>       
-            </Pressable>
+      </Pressable>
 
             <Pressable onPress={reset} style={styles.actionButton}>
               <Text style={styles.buttonText}>Reset</Text>       
@@ -147,32 +147,32 @@ const DikrCounter = () => {
                     <AntDesign name="close" size={24} color="black" />
                   </TouchableOpacity>
                 </View>
-                
-                <TextInput
-                  placeholder="Dikr Name"
-                  value={dikrName}
-                  onChangeText={setDikrName}
+          
+          <TextInput
+            placeholder="Dikr Name"
+            value={dikrName}
+            onChangeText={setDikrName}
                   style={styles.textInput}
-                />
-                
-                <TextInput
+          />
+          
+          <TextInput
                   placeholder="Set Count"
-                  value={editCount}
+            value={editCount}
                   onChangeText={handleEditCountChange}
-                  keyboardType="numeric"
+            keyboardType="numeric"
                   style={styles.textInput}
                   maxLength={5}
-                />
-                
-                <Pressable 
-                  onPress={saveChanges}
+          />
+          
+          <Pressable 
+            onPress={saveChanges}
                   style={styles.saveButton}
-                >
+          >
                   <Text style={styles.saveButtonText}>Save</Text>
-                </Pressable>
-              </View>
+          </Pressable>
+        </View>
             </TouchableWithoutFeedback>
-          </View>
+      </View>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>

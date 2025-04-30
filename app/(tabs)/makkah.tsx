@@ -10,15 +10,16 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
-import { firestore } from "@/utils/firebase";
+import { fetchWithCache } from "@/utils/cache";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface HajjUpload {
   id: string;
   name: string;
   description: string;
   content_image: string;
+  date: string;
 }
 
 interface HistoricPlace {
@@ -38,7 +39,6 @@ const Makkah = () => {
   const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
   const [historicPlacesLoading, setHistoricPlacesLoading] = useState(false);
 
-  // Set initial tab selection from URL parameters
   useEffect(() => {
     if (params.selected) {
       const tabIndex = Number(params.selected);
@@ -48,12 +48,9 @@ const Makkah = () => {
     }
   }, [params.selected]);
 
-  // Handler for tab switching - update URL params to reflect the selected tab
   const handleTabSwitch = (index: number) => {
-    // Only update parameters if the selection has changed
     if (index !== selected) {
       setSelected(index);
-
       routerInstance.setParams({ selected: index.toString() });
     }
   };
@@ -64,36 +61,13 @@ const Makkah = () => {
         setLoading(true);
         setError(null);
 
-        if (!firestore) {
-          throw new Error("Firestore is not initialized");
-        }
-
-        const uploadsCollectionRef = collection(
-          firestore,
-          selected === 0 ? "hajj_uploads" : "umrah_uploads"
-        );
-
-        const querySnapshot = await getDocs(uploadsCollectionRef);
-
-        const uploadsData: HajjUpload[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          uploadsData.push({
-            id: doc.id,
-            name: data.name || "Untitled",
-            description:
-              Array.isArray(data.description) && data.description.length > 0
-                ? data.description[0]
-                : typeof data.description === "string"
-                ? data.description
-                : "",
-            content_image: data.content_image || "",
-          });
-        });
-
+        const collectionName = selected === 0 ? "hajj_uploads" : "umrah_uploads";
+        const cacheKey = `${collectionName}_cache`;
+        
+        const uploadsData = await fetchWithCache(collectionName, cacheKey);
         setUploads(uploadsData);
       } catch (err) {
-        console.error("Error fetching hajj uploads:", err);
+        console.error("Error fetching uploads:", err);
         setError("Failed to fetch data from Firestore");
       } finally {
         setLoading(false);
@@ -103,34 +77,11 @@ const Makkah = () => {
     fetchHajjUploads();
   }, [selected]);
 
-  // Fetch historic places data
   useEffect(() => {
     const fetchHistoricPlaces = async () => {
       try {
         setHistoricPlacesLoading(true);
-        
-        if (!firestore) {
-          throw new Error("Firestore is not initialized");
-        }
-
-        const historicPlacesRef = collection(firestore, "historic_places_makkah");
-        const querySnapshot = await getDocs(historicPlacesRef);
-        
-        const placesData: HistoricPlace[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          placesData.push({
-            id: doc.id,
-            name: data.name || "Unknown Place",
-            description: typeof data.description === "string" 
-              ? data.description 
-              : Array.isArray(data.description) 
-                ? data.description.join(" ") 
-                : "",
-            image: data.content_image || "",
-          });
-        });
-        
+        const placesData = await fetchWithCache('historic_places_makkah', 'historic_places_makkah_cache');
         setHistoricPlaces(placesData);
       } catch (err) {
         console.error("Error fetching historic places:", err);
@@ -142,18 +93,34 @@ const Makkah = () => {
     fetchHistoricPlaces();
   }, []);
 
+  const renderSkeleton = () => (
+    <View className="gap-5 pt-5">
+      <Skeleton className="h-8 w-40 ml-5" />
+      <View className="flex-row gap-4 px-5">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="w-[180px] h-[110px] rounded-lg" />
+        ))}
+      </View>
+    </View>
+  );
+  const renderVerticalSkeleton = () => (
+    <View className="gap-5 pt-5">
+      <Skeleton className="h-8 w-40 ml-5" />
+      <View className="flex-col gap-4 px-5">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 w-full rounded-lg" />
+        ))}
+      </View>
+    </View>
+  );
+
   return (
     <View className="flex-1 w-full h-full">
       <ImageBackground
         source={require("@/assets/images/makkah/makkah-img.webp")}
         resizeMode="cover"
         className="w-full h-[350px] items-center justify-start pt-14"
-      >
-        {/* <View className="w-full flex-row items-center justify-between px-10">
-          <Text className="text-3xl text-white">Makkah</Text>
-          <View className="w-10 h-10 bg-white rounded-full"></View>
-        </View> */}
-      </ImageBackground>
+      />
 
       <View className="w-full h-28 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center">
         <View className="bg-[#F8F9FA] flex-row items-center justify-center rounded-md">
@@ -165,7 +132,7 @@ const Makkah = () => {
                 : "bg-[#E4E5E6]"
             }`}
           >
-            <Text className="text-lg py-2  text-center">Hajj</Text>
+            <Text className="text-lg py-2 text-center">Hajj</Text>
           </Pressable>
           <Pressable
             onPress={() => handleTabSwitch(1)}
@@ -175,16 +142,19 @@ const Makkah = () => {
                 : "bg-slate-100/20"
             }`}
           >
-            <Text className="text-lg py-2  text-center">Umrah</Text>
+            <Text className="text-lg py-2 text-center">Umrah</Text>
           </Pressable>
         </View>
       </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white"
         contentContainerStyle={styles.scrollContent}
       >
-        {!historicPlacesLoading && historicPlaces.length > 0 && (
+        {historicPlacesLoading ? (
+          renderSkeleton()
+        ) : historicPlaces.length > 0 ? (
           <View className="gap-5">
             <Text className="text-2xl font-bold ml-5">Historic places</Text>
             <HistoricPlacesSlider 
@@ -192,21 +162,27 @@ const Makkah = () => {
               data={historicPlaces} 
             />
           </View>
-        )}
+        ) : null}
 
-        <View className="gap-5 mt-5">
-          <Text className="text-2xl font-bold ml-5">Rituals</Text>
-          <HajjRituals data={uploads} route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} />
-        </View>
+        {loading ? (
+          renderVerticalSkeleton()
+        ) : uploads.length > 0 ? (
+          <View className="gap-5 mt-5">
+            <Text className="text-2xl font-bold ml-5">Rituals</Text>
+            <HajjRituals 
+              data={uploads} 
+              route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} 
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </View>
   );
 };
 
-// Platform-specific styles
 const styles = StyleSheet.create({
   scrollContent: {
-    paddingBottom: Platform.OS === 'ios' ? 80 : 5, // Different padding for iOS and Android
+    paddingBottom: Platform.OS === 'ios' ? 80 : 5,
   }
 });
 
