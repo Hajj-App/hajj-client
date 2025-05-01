@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   View, 
   Text, 
   FlatList, 
   Image, 
   Dimensions, 
-  ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   Modal,
   ScrollView,
   SafeAreaView,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage';
 import { storage } from '@/utils/firebase';
@@ -19,8 +19,11 @@ import { signInAnonymousUser } from '@/utils/firebase';
 import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder';
 import LinearGradient from 'expo-linear-gradient';
 import { AntDesign } from '@expo/vector-icons';
+import { getCachedData, setCachedData } from '@/utils/cache';
 
 const { width: screenWidth } = Dimensions.get('window');
+const CACHE_KEY = 'latestUpdatesCache';
+const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes cache
 
 const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
@@ -43,10 +46,18 @@ const LatestUpdates = () => {
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const fetchUpdates = async () => {
+  // Memoized fetch function with caching
+  const fetchUpdates = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Check cache first
+      const cachedData = await getCachedData(CACHE_KEY);
+      if (cachedData) {
+        setUpdates(cachedData);
+        setLoading(false);
+      }
 
       if (!storage) {
         throw new Error('Firebase Storage is not initialized');
@@ -57,61 +68,60 @@ const LatestUpdates = () => {
       const updatesRef = ref(storage, 'live_updates/');
       const result = await listAll(updatesRef);
 
+      // Process folders in parallel with error handling
       const updatePromises = result.prefixes.map(async (folderRef) => {
         try {
           const folderItems = await listAll(folderRef);
           
-          const updateFile = folderItems.items.find(item => 
-            item.name === 'update_data.json'
-          );
+          // Find required files in parallel
+          const [updateFile, imageFile] = await Promise.all([
+            folderItems.items.find(item => item.name === 'update_data.json'),
+            folderItems.items.find(item => item.name.startsWith('image_'))
+          ]);
+
+          if (!updateFile) return null;
+
+          // Parallelize all async operations
+          const [dataUrl, metadata, imageUrl] = await Promise.all([
+            getDownloadURL(updateFile),
+            getMetadata(updateFile),
+            imageFile ? getDownloadURL(imageFile) : Promise.resolve(undefined)
+          ]);
+
+          const response = await fetch(dataUrl);
+          if (!response.ok) throw new Error('Failed to fetch update data');
           
-          const imageFile = folderItems.items.find(item => 
-            item.name.startsWith('image_')
-          );
+          const data = await response.json();
 
-          if (updateFile) {
-            const [dataUrl, metadata, imageUrl] = await Promise.all([
-              getDownloadURL(updateFile),
-              getMetadata(updateFile),
-              imageFile ? getDownloadURL(imageFile) : Promise.resolve(null)
-            ]);
-
-            const response = await fetch(dataUrl);
-            const data = await response.json();
-
-            return {
-              ...data,
-              id: `${folderRef.name}-${metadata.name}`,
-              lastModified: metadata.updated,
-              imageUrl: imageUrl || undefined
-            };
-          }
+          return {
+            ...data,
+            id: `${folderRef.name}-${metadata.updated}`,
+            lastModified: metadata.updated,
+            imageUrl
+          };
         } catch (err) {
           console.error(`Error processing folder ${folderRef.name}:`, err);
           return null;
         }
-        return null;
       });
 
       const loadedUpdates = (await Promise.all(updatePromises))
         .filter((update): update is UpdateItem => update !== null)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+      // Update cache
+      await setCachedData(CACHE_KEY, loadedUpdates);
       setUpdates(loadedUpdates);
     } catch (err) {
       console.error('Error fetching updates:', err);
-      setError(
-        err instanceof Error 
-          ? err.message 
-          : 'Failed to load live updates'
-      );
+      setError(err instanceof Error ? err.message : 'Failed to load live updates');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Auto-scroll functionality
-  useEffect(() => {
+  // Auto-scroll functionality with cleanup
+  const startAutoScroll = useCallback(() => {
     if (updates.length > 1) {
       scrollInterval.current = setInterval(() => {
         setActiveSlide(prev => {
@@ -122,76 +132,81 @@ const LatestUpdates = () => {
           });
           return nextSlide;
         });
-      }, 3000); // Change slide every 3 seconds
+      }, 5000); // Increased to 5 seconds for better UX
     }
+  }, [updates.length]);
+
+  useEffect(() => {
+    fetchUpdates();
     
+    // Refresh data periodically
+    const refreshInterval = setInterval(fetchUpdates, CACHE_EXPIRY);
+    return () => {
+      clearInterval(refreshInterval);
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
+  }, [fetchUpdates]);
+
+  useEffect(() => {
+    startAutoScroll();
     return () => {
       if (scrollInterval.current) {
         clearInterval(scrollInterval.current);
       }
     };
-  }, [updates.length]);
+  }, [startAutoScroll]);
 
-  useEffect(() => {
-    fetchUpdates();
-  }, []);
-
-  const handleScroll = (event: any) => {
+  const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffset / (screenWidth - 60));
     setActiveSlide(currentIndex);
-  };
+  }, []);
 
-  const openModal = (item: UpdateItem) => {
+  const openModal = useCallback((item: UpdateItem) => {
     setSelectedUpdate(item);
     setModalVisible(true);
-    // Pause auto-scrolling when modal is open
     if (scrollInterval.current) {
       clearInterval(scrollInterval.current);
     }
-  };
+  }, []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setModalVisible(false);
-    // Resume auto-scrolling when modal is closed
-    if (updates.length > 1) {
-      scrollInterval.current = setInterval(() => {
-        setActiveSlide(prev => {
-          const nextSlide = prev === updates.length - 1 ? 0 : prev + 1;
-          carouselRef.current?.scrollToIndex({
-            index: nextSlide,
-            animated: true
-          });
-          return nextSlide;
-        });
-      }, 3000);
-    }
-  };
+    startAutoScroll();
+  }, [startAutoScroll]);
 
-  const renderUpdate = ({ item }: { item: UpdateItem }) => (
+  // Memoized components for better performance
+  const renderUpdate = useCallback(({ item }: { item: UpdateItem }) => (
     <TouchableOpacity 
       style={styles.carouselItem}
       activeOpacity={0.9}
       onPress={() => openModal(item)}
     >
-      {item.imageUrl && (
+      {item.imageUrl ? (
         <Image 
           source={{ uri: item.imageUrl }} 
           style={styles.carouselImage}
           resizeMode="cover"
+          progressiveRenderingEnabled
         />
+      ) : (
+        <View style={[styles.carouselImage, styles.imagePlaceholder]}>
+          <AntDesign name="picture" size={40} color="#ccc" />
+        </View>
       )}
       <View style={styles.carouselContent}>
-        <Text style={styles.carouselTitle}>{item.title}</Text>
+        <Text style={styles.carouselTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.carouselDate}>{item.date}</Text>
         <Text style={styles.carouselDescription} numberOfLines={2}>
           {item.description}
         </Text>
       </View>
     </TouchableOpacity>
-  );
+  ), [openModal]);
 
-  const renderShimmerItem = () => (
+  const renderShimmerItem = useCallback(() => (
     <View style={styles.carouselItem}>
       <Shimmer 
         style={styles.carouselImage} 
@@ -199,75 +214,38 @@ const LatestUpdates = () => {
       />
       <View style={styles.carouselContent}>
         <Shimmer 
-          style={{ width: '70%', height: 20, marginBottom: 8 }} 
+          style={styles.shimmerTitle} 
           shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
         />
         <Shimmer 
-          style={{ width: '40%', height: 16, marginBottom: 12 }} 
+          style={styles.shimmerDate} 
           shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
         />
         <Shimmer 
-          style={{ width: '100%', height: 14, marginBottom: 4 }} 
+          style={styles.shimmerDescLine1} 
           shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
         />
         <Shimmer 
-          style={{ width: '90%', height: 14, marginBottom: 4 }} 
-          shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
-        />
-        <Shimmer 
-          style={{ width: '80%', height: 14 }} 
+          style={styles.shimmerDescLine2} 
           shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
         />
       </View>
     </View>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.section}>
-        {/* Title is shown normally while content loads */}
-        <Text style={styles.sectionTitle}>Latest Updates</Text>
-        
-        {/* Only the content has shimmer effect */}
-        <FlatList
-          data={[1, 2, 3]} // Render 3 shimmer items
-          renderItem={renderShimmerItem}
-          keyExtractor={(item) => item.toString()}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          snapToInterval={screenWidth - 60}
-          snapToAlignment="center"
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          getItemLayout={(_, index) => ({
-            length: screenWidth - 60,
-            offset: (screenWidth - 60) * index,
-            index,
-          })}
-        />
-        <View style={styles.paginationContainer}>
-          {[1, 2, 3].map((_, index) => (
-            <Shimmer
-              key={index}
-              style={styles.paginationDot}
-              shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
-            />
-          ))}
-        </View>
-      </View>
-    );
-  }
+  ), []);
 
   if (error) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity 
-          style={styles.retryButton} 
-          onPress={fetchUpdates}
-        >
-          <Text style={styles.retryButtonText}>Try Again</Text>
-        </TouchableOpacity>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Latest Updates</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={fetchUpdates}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -276,7 +254,35 @@ const LatestUpdates = () => {
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Latest Updates</Text>
 
-      {updates.length > 0 ? (
+      {loading ? (
+        <>
+          <FlatList
+            data={Array(3).fill(null)}
+            renderItem={renderShimmerItem}
+            keyExtractor={(_, index) => index.toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={screenWidth - 60}
+            snapToAlignment="center"
+            contentContainerStyle={styles.carouselContentContainer}
+            getItemLayout={(_, index) => ({
+              length: screenWidth - 60,
+              offset: (screenWidth - 60) * index,
+              index,
+            })}
+          />
+          <View style={styles.paginationContainer}>
+            {[0, 1, 2].map((index) => (
+              <Shimmer
+                key={index}
+                style={styles.paginationDot}
+                shimmerColors={['#e0e0e0', '#f5f5f5', '#e0e0e0']}
+              />
+            ))}
+          </View>
+        </>
+      ) : updates.length > 0 ? (
         <>
           <FlatList
             ref={carouselRef}
@@ -289,9 +295,12 @@ const LatestUpdates = () => {
             snapToInterval={screenWidth - 60}
             snapToAlignment="center"
             decelerationRate="fast"
-            contentContainerStyle={{ paddingHorizontal: 20 }}
+            contentContainerStyle={styles.carouselContentContainer}
             onMomentumScrollEnd={handleScroll}
             initialScrollIndex={0}
+            windowSize={3}
+            maxToRenderPerBatch={3}
+            updateCellsBatchingPeriod={100}
             getItemLayout={(_, index) => ({
               length: screenWidth - 60,
               offset: (screenWidth - 60) * index,
@@ -314,12 +323,12 @@ const LatestUpdates = () => {
         <Text style={styles.noUpdatesText}>No updates available</Text>
       )}
 
-      {/* Detailed View Modal */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent={false}
         visible={modalVisible}
         onRequestClose={closeModal}
+        statusBarTranslucent
       >
         <SafeAreaView style={styles.modalContainer}>
           <StatusBar backgroundColor="#31C462" barStyle="light-content" />
@@ -330,13 +339,21 @@ const LatestUpdates = () => {
             <Text style={styles.modalTitle}>Update Details</Text>
           </View>
           
-          <ScrollView style={styles.modalContent}>
-            {selectedUpdate?.imageUrl && (
+          <ScrollView 
+            style={styles.modalContent}
+            contentContainerStyle={styles.modalContentContainer}
+          >
+            {selectedUpdate?.imageUrl ? (
               <Image 
                 source={{ uri: selectedUpdate.imageUrl }} 
                 style={styles.modalImage}
                 resizeMode="cover"
+                progressiveRenderingEnabled
               />
+            ) : (
+              <View style={[styles.modalImage, styles.imagePlaceholder]}>
+                <AntDesign name="picture" size={60} color="#ccc" />
+              </View>
             )}
             <View style={styles.modalBody}>
               <Text style={styles.modalUpdateTitle}>{selectedUpdate?.title}</Text>
@@ -355,30 +372,40 @@ const LatestUpdates = () => {
 const styles = StyleSheet.create({
   section: {
     marginBottom: 30,
-    paddingHorizontal: 20,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
+    paddingHorizontal: 20,
+    color: '#333',
   },
   carouselItem: {
     backgroundColor: 'white',
     borderRadius: 15,
     overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
     width: screenWidth - 60,
     marginRight: 20,
-    marginBottom: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   carouselImage: {
     width: '100%',
     height: 180,
-    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   carouselContent: {
     padding: 15,
@@ -398,6 +425,9 @@ const styles = StyleSheet.create({
     color: '#666',
     lineHeight: 20,
   },
+  carouselContentContainer: {
+    paddingHorizontal: 20,
+  },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -413,7 +443,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#ffeeee',
     borderRadius: 8,
-    margin: 16,
+    marginHorizontal: 20,
     alignItems: 'center',
   },
   errorText: {
@@ -422,7 +452,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryButton: {
-    backgroundColor: '#e74c3c',
+    backgroundColor: '#31C462',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 5,
@@ -436,8 +466,28 @@ const styles = StyleSheet.create({
     color: '#95a5a6',
     fontStyle: 'italic',
     marginVertical: 20,
+    paddingHorizontal: 20,
   },
-  
+  // Shimmer styles
+  shimmerTitle: {
+    width: '70%', 
+    height: 20, 
+    marginBottom: 8
+  },
+  shimmerDate: {
+    width: '40%', 
+    height: 16, 
+    marginBottom: 12
+  },
+  shimmerDescLine1: {
+    width: '100%', 
+    height: 14, 
+    marginBottom: 4
+  },
+  shimmerDescLine2: {
+    width: '90%', 
+    height: 14
+  },
   // Modal styles
   modalContainer: {
     flex: 1,
@@ -463,6 +513,9 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
   },
+  modalContentContainer: {
+    paddingBottom: 30,
+  },
   modalImage: {
     width: '100%',
     height: 250,
@@ -487,4 +540,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LatestUpdates;
+export default React.memo(LatestUpdates);

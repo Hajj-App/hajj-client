@@ -285,7 +285,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
                   value={playbackStatus.positionMillis}
                   onSlidingComplete={handleSeek}
                   minimumTrackTintColor="#34D399"
-                  maximumTrackTintColor="#D1D5DB"
+                  maximumTrackTintColor="#a1a0a0"
                   thumbTintColor="#34D399"
                   disabled={isLoading}
                 />

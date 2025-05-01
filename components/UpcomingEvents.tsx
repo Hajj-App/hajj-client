@@ -1,24 +1,27 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
   Dimensions,
   Pressable,
   Linking,
+  Platform
 } from "react-native";
-import { ref, listAll, getDownloadURL } from "firebase/storage";
+import { ref, listAll, getDownloadURL, getMetadata } from "firebase/storage";
 import { storage } from "@/utils/firebase";
 import { MaterialIcons } from "@expo/vector-icons";
 import ShimmerPlaceholder, {
   createShimmerPlaceholder,
 } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: screenWidth } = Dimensions.get("window");
+const CACHE_KEY = 'upcomingEventsCache';
+const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes cache
 
 const Shimmer = createShimmerPlaceholder(
   LinearGradient as unknown as React.ComponentClass<any>
@@ -30,21 +33,60 @@ type Event = {
   date: string;
   location: string;
   description: string;
-  url?: string; // Optional URL field
+  url?: string;
   lastModified?: string;
 };
 
-const UpcomingEvents = () => {
+const UpcomingEvents = React.memo(() => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
+  const scrollInterval = useRef<NodeJS.Timeout>();
 
-  const fetchEvents = async () => {
+  // Cache helper functions
+  const getCachedData = async (key: string): Promise<Event[] | null> => {
+    try {
+      const cached = await AsyncStorage.getItem(key);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_EXPIRY) {
+        await AsyncStorage.removeItem(key);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error reading cache:', error);
+      return null;
+    }
+  };
+
+  const setCachedData = async (key: string, data: Event[]): Promise<void> => {
+    try {
+      const cacheData = {
+        data,
+        timestamp: Date.now()
+      };
+      await AsyncStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('Error writing to cache:', error);
+    }
+  };
+
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Check cache first
+      const cachedData = await getCachedData(CACHE_KEY);
+      if (cachedData) {
+        setEvents(cachedData);
+        setLoading(false);
+      }
 
       if (!storage) {
         throw new Error("Firebase Storage is not initialized");
@@ -53,6 +95,7 @@ const UpcomingEvents = () => {
       const eventsRef = ref(storage, "upcoming_events/");
       const result = await listAll(eventsRef);
 
+      // Process folders in parallel
       const eventPromises = result.prefixes.map(async (folderRef) => {
         try {
           const folderItems = await listAll(folderRef);
@@ -60,28 +103,35 @@ const UpcomingEvents = () => {
             (item) => item.name === "event_data.json"
           );
 
-          if (eventFile) {
-            const downloadURL = await getDownloadURL(eventFile);
-            const response = await fetch(downloadURL);
-            const data = await response.json();
-            return {
-              ...data,
-              id: folderRef.name,
-            };
-          }
+          if (!eventFile) return null;
+
+          // Parallelize all async operations
+          const [downloadURL, metadata] = await Promise.all([
+            getDownloadURL(eventFile),
+            getMetadata(eventFile)
+          ]);
+
+          const response = await fetch(downloadURL);
+          if (!response.ok) throw new Error('Failed to fetch event data');
+          
+          const data = await response.json();
+          return {
+            ...data,
+            id: folderRef.name,
+            lastModified: metadata.updated
+          };
         } catch (err) {
           console.error(`Error processing folder ${folderRef.name}:`, err);
           return null;
         }
-        return null;
       });
 
       const loadedEvents = (await Promise.all(eventPromises))
         .filter((event): event is Event => event !== null)
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+      // Update cache
+      await setCachedData(CACHE_KEY, loadedEvents);
       setEvents(loadedEvents);
     } catch (err) {
       console.error("Error fetching events:", err);
@@ -91,19 +141,53 @@ const UpcomingEvents = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Auto-scroll functionality
+  const startAutoScroll = useCallback(() => {
+    if (events.length > 1) {
+      scrollInterval.current = setInterval(() => {
+        setActiveSlide(prev => {
+          const nextSlide = prev === events.length - 1 ? 0 : prev + 1;
+          carouselRef.current?.scrollToIndex({
+            index: nextSlide,
+            animated: true
+          });
+          return nextSlide;
+        });
+      }, 5000); // Change slide every 5 seconds
+    }
+  }, [events.length]);
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+    
+    // Set up periodic refresh
+    const refreshInterval = setInterval(fetchEvents, CACHE_EXPIRY);
+    return () => {
+      clearInterval(refreshInterval);
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
+  }, [fetchEvents]);
 
-  const handleScroll = (event: any) => {
+  useEffect(() => {
+    startAutoScroll();
+    return () => {
+      if (scrollInterval.current) {
+        clearInterval(scrollInterval.current);
+      }
+    };
+  }, [startAutoScroll]);
+
+  const handleScroll = useCallback((event: any) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffset / (screenWidth - 60));
     setActiveSlide(currentIndex);
-  };
+  }, []);
 
-  const renderEvent = ({ item }: { item: Event }) => (
+  const renderEvent = useCallback(({ item }: { item: Event }) => (
     <Pressable
       style={styles.eventItem}
       onPress={() => {
@@ -118,14 +202,14 @@ const UpcomingEvents = () => {
         <MaterialIcons name="event" size={24} color="#31C462" />
       </View>
       <View style={styles.eventContent}>
-        <Text style={styles.eventTitle}>{item.title}</Text>
+        <Text style={styles.eventTitle} numberOfLines={1}>{item.title}</Text>
         <Text style={styles.eventDate}>{item.date}</Text>
-        <Text style={styles.eventLocation}>{item.description}</Text>
+        <Text style={styles.eventLocation} numberOfLines={2}>{item.description}</Text>
       </View>
     </Pressable>
-  );
+  ), []);
 
-  const renderShimmerItem = () => (
+  const renderShimmerItem = useCallback(() => (
     <View style={styles.eventItem}>
       <Shimmer
         style={styles.eventIconContainer}
@@ -135,20 +219,34 @@ const UpcomingEvents = () => {
       </Shimmer>
       <View style={styles.eventContent}>
         <Shimmer
-          style={{ width: "70%", height: 18, marginBottom: 8 }}
+          style={styles.shimmerTitle}
           shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
         <Shimmer
-          style={{ width: "50%", height: 14, marginBottom: 6 }}
+          style={styles.shimmerDate}
           shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
         <Shimmer
-          style={{ width: "90%", height: 14 }}
+          style={styles.shimmerDescription}
           shimmerColors={["#e0e0e0", "#f5f5f5", "#e0e0e0"]}
         />
       </View>
     </View>
-  );
+  ), []);
+
+  if (error) {
+    return (
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.section}>
@@ -156,9 +254,9 @@ const UpcomingEvents = () => {
 
       {loading ? (
         <FlatList
-          data={[1, 2, 3]} // Render 3 shimmer items
+          data={Array(3).fill(null)}
           renderItem={renderShimmerItem}
-          keyExtractor={(item) => item.toString()}
+          keyExtractor={(_, index) => index.toString()}
           horizontal
           showsHorizontalScrollIndicator={false}
           pagingEnabled
@@ -171,34 +269,46 @@ const UpcomingEvents = () => {
             index,
           })}
         />
-      ) : error ? (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
       ) : events.length > 0 ? (
-        <FlatList
-          ref={carouselRef}
-          data={events}
-          renderItem={renderEvent}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          pagingEnabled
-          snapToInterval={screenWidth - 60}
-          snapToAlignment="center"
-          decelerationRate="fast"
-          contentContainerStyle={styles.carouselContent}
-          onMomentumScrollEnd={handleScroll}
-        />
+        <>
+          <FlatList
+            ref={carouselRef}
+            data={events}
+            renderItem={renderEvent}
+            keyExtractor={(item) => item.id}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            snapToInterval={screenWidth - 60}
+            snapToAlignment="center"
+            decelerationRate="fast"
+            contentContainerStyle={styles.carouselContent}
+            onMomentumScrollEnd={handleScroll}
+            windowSize={3}
+            maxToRenderPerBatch={3}
+            updateCellsBatchingPeriod={100}
+            initialNumToRender={3}
+          />
+          {events.length > 1 && (
+            <View style={styles.paginationContainer}>
+              {events.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    { backgroundColor: index === activeSlide ? '#31C462' : '#D9D9D9' }
+                  ]}
+                />
+              ))}
+            </View>
+          )}
+        </>
       ) : (
         <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   section: {
@@ -220,13 +330,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 15,
     marginRight: 15,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
     width: screenWidth - 80,
     marginBottom: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   eventIconContainer: {
     width: 50,
@@ -252,15 +368,6 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   eventLocation: {
-    fontSize: 14,
-    color: "#666",
-  },
-  loadingContainer: {
-    padding: 20,
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: 10,
     fontSize: 14,
     color: "#666",
   },
@@ -293,6 +400,33 @@ const styles = StyleSheet.create({
     color: "#666",
     fontStyle: "italic",
     paddingHorizontal: 20,
+  },
+  // Shimmer styles
+  shimmerTitle: {
+    width: "70%", 
+    height: 18, 
+    marginBottom: 8
+  },
+  shimmerDate: {
+    width: "50%", 
+    height: 14, 
+    marginBottom: 6
+  },
+  shimmerDescription: {
+    width: "90%", 
+    height: 14
+  },
+  // Pagination
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
   },
 });
 
