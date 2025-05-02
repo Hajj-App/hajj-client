@@ -26,7 +26,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [base64Data, setBase64Data] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<string | null>(null);
 
   const handleDownload = async () => {
     try {
@@ -49,7 +49,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         reader.onerror = reject;
       });
       
-      setBase64Data(base64);
+      setPdfData(base64);
     } catch (err) {
       console.error('Error handling PDF:', err);
       setError('Failed to load PDF. Please try again.');
@@ -65,7 +65,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   }, [visible, pdfUrl]);
 
   const renderWebView = () => {
-    if (!base64Data) return null;
+    if (!pdfData) return null;
 
     // Create a simple HTML wrapper for the PDF
     const html = `
@@ -81,7 +81,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
               overflow: hidden; 
               background-color: #fff;
             }
-            iframe { 
+            object { 
               width: 100%; 
               height: 100%; 
               border: none;
@@ -89,10 +89,12 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           </style>
         </head>
         <body>
-          <iframe src="data:application/pdf;base64,${base64Data.split(',')[1]}" 
+          <object data="data:application/pdf;base64,${pdfData.split(',')[1]}" 
                   type="application/pdf" 
                   width="100%" 
-                  height="100%" />
+                  height="100%">
+            <p>Unable to display PDF file. <a href="data:application/pdf;base64,${pdfData.split(',')[1]}">Download</a> instead.</p>
+          </object>
         </body>
       </html>
     `;
@@ -121,6 +123,10 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         domStorageEnabled={true}
         scalesPageToFit={true}
         useWebKit={true}
+        originWhitelist={['*']}
+        allowFileAccess={true}
+        allowUniversalAccessFromFileURLs={true}
+        allowFileAccessFromFileURLs={true}
       />
     );
   };
