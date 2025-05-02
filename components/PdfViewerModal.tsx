@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   Platform,
-  Linking,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AntDesign } from '@expo/vector-icons';
@@ -27,7 +26,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [localUri, setLocalUri] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<string | null>(null);
 
   const handleDownload = async () => {
     try {
@@ -36,11 +35,8 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
 
       const blob = await downloadFile(pdfUrl);
       
-      // Convert blob to a local URI via FileSystem
-      const fileName = pdfUrl.split('/').pop() || 'document.pdf';
-      const fileUri = FileSystem.documentDirectory + fileName;
-      
-      const fileString = await new Promise<string>((resolve, reject) => {
+      // Convert blob to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(blob);
         reader.onloadend = () => {
@@ -53,14 +49,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         reader.onerror = reject;
       });
       
-      // Write the file to the local filesystem
-      await FileSystem.writeAsStringAsync(
-        fileUri,
-        fileString.split(',')[1],
-        { encoding: FileSystem.EncodingType.Base64 }
-      );
-      
-      setLocalUri(fileUri);
+      setPdfData(base64);
     } catch (err) {
       console.error('Error handling PDF:', err);
       setError('Failed to load PDF. Please try again.');
@@ -75,89 +64,15 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     }
   }, [visible, pdfUrl]);
 
-  // Clean up local file when modal is closed
-  useEffect(() => {
-    return () => {
-      if (localUri) {
-        FileSystem.deleteAsync(localUri, { idempotent: true })
-          .catch(err => console.error('Error cleaning up PDF file:', err));
-      }
-    };
-  }, [localUri]);
-
   const renderWebView = () => {
-    if (!localUri) return null;
-
-    // For Android, we'll use a different approach
-    if (Platform.OS === 'android') {
-      return (
-        <WebView
-          source={{ uri: localUri }}
-          style={styles.webview}
-          startInLoadingState
-          renderLoading={() => (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#34D399" />
-            </View>
-          )}
-          onError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error('WebView error:', nativeEvent);
-            setError('Failed to display PDF. Please try again.');
-          }}
-          onHttpError={(syntheticEvent) => {
-            const { nativeEvent } = syntheticEvent;
-            console.error('WebView HTTP error:', nativeEvent);
-            setError('Failed to load PDF. Please try again.');
-          }}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          scalesPageToFit={true}
-          useWebKit={true}
-          originWhitelist={['*']}
-          allowFileAccess={true}
-          allowUniversalAccessFromFileURLs={true}
-          allowFileAccessFromFileURLs={true}
-        />
-      );
-    }
-
-    // For iOS, we'll use the base64 approach
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <style>
-            body, html { 
-              margin: 0; 
-              padding: 0; 
-              height: 100%; 
-              overflow: hidden; 
-              background-color: #fff;
-            }
-            object { 
-              width: 100%; 
-              height: 100%; 
-              border: none;
-            }
-          </style>
-        </head>
-        <body>
-          <object data="${localUri}" 
-                  type="application/pdf" 
-                  width="100%" 
-                  height="100%">
-            <p>Unable to display PDF file. <a href="${localUri}">Download</a> instead.</p>
-          </object>
-        </body>
-      </html>
-    `;
-
+    if (!pdfUrl) return null;
+  
+    const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfUrl)}`;
+  
     return (
     <WebView
   source={{ uri: googleDocsUrl }} // or Google Docs URL if used
-  style={{ flex: 1, margin: 10 }}
+  style={{ flex: 1, margin: 5 }}
   containerStyle={{ borderRadius: 8 }}
   scalesPageToFit={true}
   bounces={false}
@@ -213,8 +128,8 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     backgroundColor: 'white',
-    margin: 20,
-    marginTop: 40,
+    margin: 10,
+    marginTop: 10,
     borderRadius: 10,
     overflow: 'hidden',
   },
