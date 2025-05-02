@@ -106,11 +106,11 @@ const FilePreview: FC<FilePreviewProps> = ({ file }) => {
       );
     }
 
-    if (isPdf && localUri) {
+    if (isPdf) {
       return (
         <View style={[styles.previewContainer, { height: previewHeight }]}>
           <WebView
-            source={{ uri: localUri }}
+            source={{ uri: file.downloadURL }}
             style={{ width: previewWidth, height: previewHeight }}
           />
         </View>
