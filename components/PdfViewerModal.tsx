@@ -12,6 +12,8 @@ import { WebView } from 'react-native-webview';
 import { AntDesign } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { downloadFile } from '../utils/storageUtils';
+import { Share } from 'react-native';
+
 
 interface PdfViewerModalProps {
   visible: boolean;
@@ -58,6 +60,19 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Check out this PDF: ${pdfUrl}`,
+        url: pdfUrl, // Some platforms use this
+        title: 'Shared PDF',
+      });
+    } catch (error) {
+      console.error('Error sharing PDF:', error);
+    }
+  };
+  
+
   useEffect(() => {
     if (visible && pdfUrl) {
       handleDownload();
@@ -94,9 +109,20 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Document Viewer</Text>
+
+            {/* share button */}
+            <View className='flex items-center flex-row gap-8'>
+
+            <TouchableOpacity onPress={handleShare} style={{ marginRight:1 }}>
+                    <AntDesign name="sharealt" size={20} color="black" />
+              </TouchableOpacity>
+              {/* close button */}
             <TouchableOpacity onPress={onClose}>
               <AntDesign name="close" size={24} color="black" />
             </TouchableOpacity>
+
+            </View>
+
           </View>
           
           {loading ? (
