@@ -1,4 +1,4 @@
-// components/common/historic-places-list.tsx
+
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { router } from "expo-router";
@@ -7,7 +7,8 @@ interface HistoricPlace {
   id: string;
   name: string;
   description: string;
-  image: string; // Make optional since we have fallback
+  image: string; 
+  content_image: string;
 }
 
 interface Props {
@@ -24,16 +25,10 @@ const HistoricPlacesList: React.FC<Props> = ({ data, route }) => {
           onPress={() => router.push(`/${route}/${place.id}` as any)}
           className="w-full h-28 bg-gray-200 items-center justify-start my-2 rounded-xl flex-row p-5 gap-3"
         >
-          <Image
-            source={
-              place.image
-                ? { uri: place.image }
-                : require("@/assets/images/makkah/historical-place.png")
-            }
-            className="w-16 h-16 rounded-xl"
-            resizeMode="cover"
-            onError={(e) => console.log('Failed to load image:', e.nativeEvent.error)}
-          />
+           <Image
+              source={place.content_image ? { uri: place.content_image } : require("@/assets/images/makkah/historical-place.png")}
+              className="w-20 h-20 rounded-xl"
+            />
           <View className="flex-1">
             <Text className="text-lg font-bold text-gray-800">{place.name}</Text>
             <Text 

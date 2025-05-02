@@ -7,6 +7,7 @@ interface HistoricPlace {
   name: string;
   description: string;
   image: string;
+  content_image: string;
 }
 
 const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: string }) => {
@@ -36,7 +37,7 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
             } ${displayData.length - 1 === i ? "mr-5" : ""}`}
           >
             <ImageBackground
-              source={item.image ? { uri: item.image } : require("@/assets/images/makkah/historical-place.png")}
+              source={item.content_image ? { uri: item.content_image } : require("@/assets/images/makkah/historical-place.png")}
               resizeMode="cover"
               className={`w-[180px] h-[110px]  items-start justify-end rounded-xl`}
             >

@@ -18,6 +18,7 @@ interface HistoricPlace {
   name: string;
   description: string;
   image: string;
+  content_image: string;
 }
 
 const HistoricPlacesScreen = () => {
