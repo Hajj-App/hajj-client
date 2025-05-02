@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   Platform,
-  Linking,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AntDesign } from '@expo/vector-icons';
@@ -34,18 +33,6 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       setLoading(true);
       setError(null);
 
-      // For Android, we'll use a different approach
-      if (Platform.OS === 'android') {
-        // Try to open the PDF directly in the device's PDF viewer
-        const canOpen = await Linking.canOpenURL(pdfUrl);
-        if (canOpen) {
-          await Linking.openURL(pdfUrl);
-          onClose();
-          return;
-        }
-      }
-
-      // For iOS or if Android direct opening fails, download and display in WebView
       const blob = await downloadFile(pdfUrl);
       
       // Convert blob to a local URI via FileSystem
@@ -75,7 +62,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       setLocalUri(fileUri);
     } catch (err) {
       console.error('Error handling PDF:', err);
-      setError('Failed to load PDF. Please try again or download it manually.');
+      setError('Failed to load PDF. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -96,6 +83,44 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       }
     };
   }, [localUri]);
+
+  const renderWebView = () => {
+    if (!localUri) return null;
+
+    // Create a simple HTML wrapper for the PDF
+    const html = `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+          <style>
+            body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+            embed { width: 100%; height: 100%; }
+          </style>
+        </head>
+        <body>
+          <embed src="${localUri}" type="application/pdf" />
+        </body>
+      </html>
+    `;
+
+    return (
+      <WebView
+        source={{ html }}
+        style={styles.webview}
+        startInLoadingState
+        renderLoading={() => (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#34D399" />
+          </View>
+        )}
+        onError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error('WebView error:', nativeEvent);
+          setError('Failed to display PDF. Please try again.');
+        }}
+      />
+    );
+  };
 
   return (
     <Modal
@@ -121,30 +146,13 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           ) : error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.retryButton} onPress={handleDownload}>
-                  <Text style={styles.retryButtonText}>Retry</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={styles.downloadButton} 
-                  onPress={() => Linking.openURL(pdfUrl)}
-                >
-                  <Text style={styles.downloadButtonText}>Download</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity style={styles.retryButton} onPress={handleDownload}>
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
             </View>
-          ) : localUri ? (
-            <WebView
-              source={{ uri: localUri }}
-              style={styles.webview}
-              startInLoadingState
-              renderLoading={() => (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#34D399" />
-                </View>
-              )}
-            />
-          ) : null}
+          ) : (
+            renderWebView()
+          )}
         </View>
       </View>
     </Modal>
@@ -202,10 +210,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    gap: 10,
-  },
   retryButton: {
     backgroundColor: '#34D399',
     paddingHorizontal: 20,
@@ -213,17 +217,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  downloadButton: {
-    backgroundColor: '#3B82F6',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  downloadButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
