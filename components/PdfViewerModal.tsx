@@ -113,7 +113,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             {/* share button */}
             <View className='flex items-center flex-row gap-8'>
 
-            <TouchableOpacity onPress={handleShare} style={{ marginRight:1 }}>
+            <TouchableOpacity onPress={handleShare} >
                     <AntDesign name="sharealt" size={20} color="black" />
               </TouchableOpacity>
               {/* close button */}
@@ -154,8 +154,6 @@ const styles = StyleSheet.create({
   modalContent: {
     flex: 1,
     backgroundColor: 'white',
-    margin: 10,
-    marginTop: 10,
     borderRadius: 10,
     overflow: 'hidden',
   },
@@ -163,7 +161,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    padding: 10,
     backgroundColor: '#f5f5f5',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',

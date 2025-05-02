@@ -74,7 +74,7 @@ const HistoricPlacesScreen = () => {
         {/* Header content can be added here */}
       </ImageBackground>
 
-      <View className="w-full h-28 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center">
+      <View className="w-full h-28 bg-white mt-[-150px] rounded-t-[50px] items-center justify-center">
         <View className="bg-[#F8F9FA] flex-row items-center justify-center rounded-md">
           <Pressable
             onPress={() => setSelectedTab(0)}
