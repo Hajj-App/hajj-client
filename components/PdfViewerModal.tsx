@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  Dimensions,
+  Platform,
+  Linking,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AntDesign } from '@expo/vector-icons';
@@ -25,14 +26,26 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   onClose,
 }) => {
   const [loading, setLoading] = useState(true);
-  const [localUri, setLocalUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [localUri, setLocalUri] = useState<string | null>(null);
 
   const handleDownload = async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // For Android, we'll use a different approach
+      if (Platform.OS === 'android') {
+        // Try to open the PDF directly in the device's PDF viewer
+        const canOpen = await Linking.canOpenURL(pdfUrl);
+        if (canOpen) {
+          await Linking.openURL(pdfUrl);
+          onClose();
+          return;
+        }
+      }
+
+      // For iOS or if Android direct opening fails, download and display in WebView
       const blob = await downloadFile(pdfUrl);
       
       // Convert blob to a local URI via FileSystem
@@ -61,18 +74,28 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       
       setLocalUri(fileUri);
     } catch (err) {
-      console.error('Error downloading PDF:', err);
-      setError('Failed to load PDF');
+      console.error('Error handling PDF:', err);
+      setError('Failed to load PDF. Please try again or download it manually.');
     } finally {
       setLoading(false);
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible && pdfUrl) {
       handleDownload();
     }
   }, [visible, pdfUrl]);
+
+  // Clean up local file when modal is closed
+  useEffect(() => {
+    return () => {
+      if (localUri) {
+        FileSystem.deleteAsync(localUri, { idempotent: true })
+          .catch(err => console.error('Error cleaning up PDF file:', err));
+      }
+    };
+  }, [localUri]);
 
   return (
     <Modal
@@ -98,9 +121,17 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           ) : error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity style={styles.retryButton} onPress={handleDownload}>
-                <Text style={styles.retryButtonText}>Retry</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.retryButton} onPress={handleDownload}>
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.downloadButton} 
+                  onPress={() => Linking.openURL(pdfUrl)}
+                >
+                  <Text style={styles.downloadButtonText}>Download</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ) : localUri ? (
             <WebView
@@ -171,6 +202,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   retryButton: {
     backgroundColor: '#34D399',
     paddingHorizontal: 20,
@@ -178,6 +213,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  downloadButton: {
+    backgroundColor: '#3B82F6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  downloadButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
