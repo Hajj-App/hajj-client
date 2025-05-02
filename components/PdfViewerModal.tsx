@@ -65,71 +65,23 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   }, [visible, pdfUrl]);
 
   const renderWebView = () => {
-    if (!pdfData) return null;
-
-    // Create a simple HTML wrapper for the PDF
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-          <style>
-            body, html { 
-              margin: 0; 
-              padding: 0; 
-              height: 100%; 
-              overflow: hidden; 
-              background-color: #fff;
-            }
-            object { 
-              width: 100%; 
-              height: 100%; 
-              border: none;
-            }
-          </style>
-        </head>
-        <body>
-          <object data="data:application/pdf;base64,${pdfData.split(',')[1]}" 
-                  type="application/pdf" 
-                  width="100%" 
-                  height="100%">
-            <p>Unable to display PDF file. <a href="data:application/pdf;base64,${pdfData.split(',')[1]}">Download</a> instead.</p>
-          </object>
-        </body>
-      </html>
-    `;
-
+    if (!pdfUrl) return null;
+  
+    const googleDocsUrl = `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(pdfUrl)}`;
+  
     return (
-      <WebView
-        source={{ html }}
-        style={styles.webview}
-        startInLoadingState
-        renderLoading={() => (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#34D399" />
-          </View>
-        )}
-        onError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.error('WebView error:', nativeEvent);
-          setError('Failed to display PDF. Please try again.');
-        }}
-        onHttpError={(syntheticEvent) => {
-          const { nativeEvent } = syntheticEvent;
-          console.error('WebView HTTP error:', nativeEvent);
-          setError('Failed to load PDF. Please try again.');
-        }}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        scalesPageToFit={true}
-        useWebKit={true}
-        originWhitelist={['*']}
-        allowFileAccess={true}
-        allowUniversalAccessFromFileURLs={true}
-        allowFileAccessFromFileURLs={true}
-      />
+    <WebView
+  source={{ uri: googleDocsUrl }} // or Google Docs URL if used
+  style={{ flex: 1, margin: 10 }}
+  containerStyle={{ borderRadius: 8 }}
+  scalesPageToFit={true}
+  bounces={false}
+  startInLoadingState
+/>
+
     );
   };
+  
 
   return (
     <Modal

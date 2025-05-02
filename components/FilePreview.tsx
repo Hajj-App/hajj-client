@@ -106,15 +106,12 @@ const FilePreview: FC<FilePreviewProps> = ({ file }) => {
       );
     }
 
-    if (isPdf) {
-      const pdfUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(file.downloadURL)}&embedded=true`;
+    if (isPdf && localUri) {
       return (
         <View style={[styles.previewContainer, { height: previewHeight }]}>
           <WebView
-            source={{ uri: pdfUrl }}
+            source={{ uri: localUri }}
             style={{ width: previewWidth, height: previewHeight }}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
           />
         </View>
       );
