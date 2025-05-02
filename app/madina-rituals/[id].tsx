@@ -22,6 +22,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import AudioPlayerModal from '@/components/AudioPlayerModal';
 import ImageModal from '@/components/ImageModal';
+import PdfViewerModal from '@/components/PdfViewerModal';
 
 type Props = {} ;
 
@@ -320,33 +321,11 @@ const MadinaRitualDetail = (props: Props) => {
                 
                 {/* PDF Viewer Modal */}
                 {selectedPdf && (
-                  <Modal
-                    transparent={true}
+                  <PdfViewerModal
                     visible={!!selectedPdf}
-                    onRequestClose={() => setSelectedPdf(null)}
-                    animationType="slide"
-                  >
-                    <View className="flex-1 bg-black/50">
-                      <View className="flex-1 bg-white m-5 mt-10 rounded-xl overflow-hidden">
-                        <View className="flex-row items-center justify-between p-3 bg-gray-100">
-                          <Text className="font-bold">Document Viewer</Text>
-                          <TouchableOpacity onPress={() => setSelectedPdf(null)}>
-                            <AntDesign name="close" size={24} color="black" />
-                          </TouchableOpacity>
-                        </View>
-                        <WebView
-                          source={{ uri: selectedPdf }}
-                          style={{ flex: 1 }}
-                          startInLoadingState
-                          renderLoading={() => (
-                            <View className="absolute inset-0 justify-center items-center bg-white">
-                              <ActivityIndicator size="large" color="#34D399" />
-                            </View>
-                          )}
-                        />
-                      </View>
-                    </View>
-                  </Modal>
+                    pdfUrl={selectedPdf}
+                    onClose={() => setSelectedPdf(null)}
+                  />
                 )}
               </View>
             )}
