@@ -39,17 +39,17 @@ export default function PrayerList() {
   }, [date]);
 
   const fetchPrayerTimes = useCallback(async () => {
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
       setError("");
 
       // Check location permission
-      const permissionGranted = await locationPermission();
-      if (!permissionGranted) {
+       const permissionGranted = await locationPermission();
+    if (!permissionGranted) {
         setError("Location permission denied. Please enable location access for prayer times.");
-        setLoading(false);
-        return;
-      }
+      setLoading(false);
+      return;
+    }
 
       // Get current location with timeout
       const locationPromise = Location.getCurrentPositionAsync({
@@ -65,21 +65,21 @@ export default function PrayerList() {
       const location = await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject;
       
       // Fetch prayer times data
-      const response = await fetch(
-        `${apiUrl}&latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
-      );
+        const response = await fetch(
+          `${apiUrl}&latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
+        );
       
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`);
       }
       
-      const data = await response.json();
+        const data = await response.json();
       
       if (!data.data || !Array.isArray(data.data) || !data.data[date.getDate() - 1]) {
         throw new Error("Invalid data format received from prayer API");
       }
 
-      setTimings(data.data[date.getDate() - 1]?.timings || {});
+        setTimings(data.data[date.getDate() - 1]?.timings || {});
       // Reset retry count on success
       setRetryCount(0);
     } catch (error: any) {
@@ -91,9 +91,9 @@ export default function PrayerList() {
       } else {
         setError(`Error loading prayer times: ${error.message}`);
       }
-    } finally {
-      setLoading(false);
-    }
+      } finally {
+        setLoading(false);
+      }
   }, [apiUrl, date]);
 
   useEffect(() => {
