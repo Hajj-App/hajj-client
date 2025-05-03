@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  Modal,
+  ScrollView,
 } from "react-native";
 import {
   ref,
@@ -19,6 +21,8 @@ import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+import { AntDesign } from "@expo/vector-icons";
+
 const Shimmer = createShimmerPlaceholder(
   LinearGradient as unknown as React.ComponentClass<any>
 );
@@ -39,6 +43,7 @@ const TravelAdvisories = React.memo(() => {
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAdvisory, setSelectedAdvisory] = useState<Advisory | null>(null);
 
   // Cache helper functions
   const getCachedData = async (key: string): Promise<Advisory[] | null> => {
@@ -59,10 +64,7 @@ const TravelAdvisories = React.memo(() => {
     }
   };
 
-  const setCachedData = async (
-    key: string,
-    data: Advisory[]
-  ): Promise<void> => {
+  const setCachedData = async (key: string, data: Advisory[]): Promise<void> => {
     try {
       const cacheData = {
         data,
@@ -92,10 +94,7 @@ const TravelAdvisories = React.memo(() => {
 
       await signInAnonymousUser();
 
-      const advisoriesRef: StorageReference = ref(
-        storage,
-        "travel_advisories/"
-      );
+      const advisoriesRef: StorageReference = ref(storage, "travel_advisories/");
       const result = await listAll(advisoriesRef);
 
       // Process folders in parallel
@@ -136,7 +135,12 @@ const TravelAdvisories = React.memo(() => {
 
       // Update cache
       await setCachedData(CACHE_KEY, loadedAdvisories);
-      setAdvisories(loadedAdvisories);
+      // Sort advisories by id (lexical order)
+      const sortedAdvisories = loadedAdvisories.sort((a, b) =>
+        a.id.localeCompare(b.id)
+      );
+      setAdvisories(sortedAdvisories);
+
     } catch (err) {
       console.error("Error fetching advisories:", err);
       setError(
@@ -189,9 +193,13 @@ const TravelAdvisories = React.memo(() => {
     []
   );
 
-  const renderAdvisory = useCallback(
+  const renderAdvisoryItem = useCallback(
     (advisory: Advisory) => (
-      <View key={advisory.id} style={styles.advisoryItem}>
+      <TouchableOpacity
+        key={advisory.id}
+        style={styles.advisoryItem}
+        onPress={() => setSelectedAdvisory(advisory)}
+      >
         <View style={styles.advisoryHeader}>
           <Text style={styles.advisoryTitle} numberOfLines={1}>
             {advisory.title}
@@ -207,9 +215,9 @@ const TravelAdvisories = React.memo(() => {
             {new Date(advisory.lastModified).toLocaleDateString()}
           </Text>
         )}
-      </View>
+      </TouchableOpacity>
     ),
-    []
+    [t]
   );
 
   if (error) {
@@ -242,12 +250,49 @@ const TravelAdvisories = React.memo(() => {
           ))}
         </>
       ) : advisories.length > 0 ? (
-        <>{advisories.map(renderAdvisory)}</>
+        <>{advisories.map(renderAdvisoryItem)}</>
       ) : (
         <Text style={styles.noAdvisoriesText}>
           {t("noTravelAdvisoriesAvailable")}
         </Text>
       )}
+
+      {/* Advisory Detail Modal */}
+      <Modal
+        visible={!!selectedAdvisory}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setSelectedAdvisory(null)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setSelectedAdvisory(null)}
+            >
+              <AntDesign name="close" size={24} color="#2c3e50" />
+            </TouchableOpacity>
+            
+            <ScrollView>
+              {selectedAdvisory && (
+                <>
+                  <Text style={styles.modalTitle}>{selectedAdvisory.title}</Text>
+                  <Text style={styles.modalDate}>{selectedAdvisory.date}</Text>
+                  <Text style={styles.modalDescription}>
+                    {selectedAdvisory.description}
+                  </Text>
+                  {selectedAdvisory.lastModified && (
+                    <Text style={styles.modalLastUpdated}>
+                      {t("lastUpdated")}:{" "}
+                      {new Date(selectedAdvisory.lastModified).toLocaleDateString()}
+                    </Text>
+                  )}
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 });
@@ -365,6 +410,46 @@ const styles = StyleSheet.create({
     width: "40%",
     height: 14,
     marginTop: 8,
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  closeButton: {
+    alignSelf: "flex-end",
+    padding: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2c3e50",
+    marginBottom: 8,
+  },
+  modalDate: {
+    fontSize: 16,
+    color: "#7f8c8d",
+    marginBottom: 16,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: "#34495e",
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  modalLastUpdated: {
+    fontSize: 14,
+    color: "#95a5a6",
+    fontStyle: "italic",
   },
 });
 
