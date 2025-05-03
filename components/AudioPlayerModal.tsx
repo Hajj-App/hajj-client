@@ -11,6 +11,7 @@ import Slider from '@react-native-community/slider';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { StorageFile } from '@/utils/storageTypes';
+import { useTranslation } from 'react-i18next';
 
 interface AudioPlayerModalProps {
   visible: boolean;
@@ -41,7 +42,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
     durationMillis: 0,
     rate: 1.0,
   });
-
+  const { t } = useTranslation();
   useEffect(() => {
     const setupAudio = async () => {
       try {
@@ -246,7 +247,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>Audio Guide</Text>
+            <Text style={styles.title}>{t('audioGuide')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <FontAwesome5 name="times" size={20} color="#000" />
             </TouchableOpacity>

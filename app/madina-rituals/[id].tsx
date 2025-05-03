@@ -8,13 +8,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
-  Modal,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { Entypo, FontAwesome5, AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { Audio, AVPlaybackStatus } from "expo-av";
-import { WebView } from "react-native-webview";
+import { Audio } from "expo-av";
 import { getFilesWithUrls, listFiles } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
@@ -23,7 +21,7 @@ import { firestore } from "@/utils/firebase";
 import AudioPlayerModal from '@/components/AudioPlayerModal';
 import ImageModal from '@/components/ImageModal';
 import PdfViewerModal from '@/components/PdfViewerModal';
-
+import { useTranslation } from "react-i18next";
 type Props = {} ;
 
 interface RitualMedia {
@@ -40,21 +38,13 @@ interface RitualContent {
     title: string;
     description: string | string[];
   }[];
-}
-
-// const detailData =[
-//   {
-//     title:"",
-//     desc:''
-
-//   }
-// ]      
+} 
 
 const MadinaRitualDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
-  console.log("params:", params)
   const ritualId = params.id as string;
+  const { t } = useTranslation();
   
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -131,21 +121,8 @@ const MadinaRitualDetail = (props: Props) => {
       setLoading(true);
       setError(null);
       
-      // Try a simpler path first to test if the Firebase Storage is accessible
-      try {
-        console.log("Testing Firebase Storage access...");
-        // This is a very simple test to check if we can access the storage root
-        const testResult = await listFiles('');
-        console.log("Storage root access test result:", 
-          testResult.prefixes.map(p => p.fullPath));
-      } catch (testError: any) {
-        console.error("Firebase Storage access test failed:", testError);
-        // Continue anyway to try the actual path
-      }
-      
       // Fetch media from the specific ritual folder in Firebase Storage
       const storagePath = `madina/${ritualId}`;
-      console.log(`Attempting to access path: ${storagePath}`);
       
       try {
         const files = await getFilesWithUrls(storagePath);
@@ -222,7 +199,7 @@ const MadinaRitualDetail = (props: Props) => {
         {ritualContent ? (
           <Text className="font-bold text-[28px] text-green">{ritualContent.name}</Text>
         ) : (
-          <Text className="font-bold text-[28px] text-green">Ritual Details</Text>
+          <Text className="font-bold text-[28px] text-green">{t("ritualDetails")}</Text>
         )}
         
         {loading ? (
@@ -239,7 +216,7 @@ const MadinaRitualDetail = (props: Props) => {
             {/* Images Section */}
             {media.images.length > 0 && (
               <View className="my-4">
-                <Text className="text-xl font-bold mb-2">Images</Text>
+                <Text className="text-xl font-bold mb-2">{t("images")}</Text>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
@@ -272,7 +249,7 @@ const MadinaRitualDetail = (props: Props) => {
             {/* Audio Section */}
             {media.audio.length > 0 && (
               <View className="my-4">
-                <Text className="text-xl font-bold mb-2">Audio Guides</Text>
+                <Text className="text-xl font-bold mb-2">{t("audioGuides")}</Text>
                 {media.audio.map((audioFile, index) => (
                   <TouchableOpacity 
                     key={index}
@@ -298,7 +275,7 @@ const MadinaRitualDetail = (props: Props) => {
             {/* Documents Section */}
             {media.documents.length > 0 && (
               <View className="my-4">
-                <Text className="text-xl font-bold mb-2">Guides & Documents</Text>
+                <Text className="text-xl font-bold mb-2">{t("guidesAndDocuments")}</Text>
                 {media.documents.map((doc, index) => (
                   <TouchableOpacity 
                     key={index}
@@ -335,7 +312,7 @@ const MadinaRitualDetail = (props: Props) => {
         {/* Ritual content sections from data.json */}
         {ritualContent && (
           <View className="gap-y-5 pt-5 pb-5">
-            <Text className="text-2xl font-bold">About {ritualContent.name}</Text>
+            <Text className="text-2xl font-bold">{t("about")} {ritualContent.name}</Text>
             {typeof ritualContent.description === 'string' ? (
               <Text className="text-lg leading-snug mb-2">
                 {ritualContent.description}

@@ -13,7 +13,7 @@ import {
 import { fetchWithCache } from "@/utils/cache";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { useTranslation } from "react-i18next";
 interface HajjUpload {
   id: string;
   name: string;
@@ -39,7 +39,7 @@ const Makkah = () => {
   const [error, setError] = useState<string | null>(null);
   const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
   const [historicPlacesLoading, setHistoricPlacesLoading] = useState(false);
-
+  const { t } = useTranslation();
   useEffect(() => {
     if (params.selected) {
       const tabIndex = Number(params.selected);
@@ -133,7 +133,7 @@ const Makkah = () => {
                 : "bg-[#E4E5E6]"
             }`}
           >
-            <Text className="text-lg py-2 text-center">Hajj</Text>
+            <Text className="text-lg py-2 text-center">{t("hajj")}</Text>
           </Pressable>
           <Pressable
             onPress={() => handleTabSwitch(1)}
@@ -143,7 +143,7 @@ const Makkah = () => {
                 : "bg-slate-100/20"
             }`}
           >
-            <Text className="text-lg py-2 text-center">Umrah</Text>
+            <Text className="text-lg py-2 text-center">{t("umrah")}</Text>
           </Pressable>
         </View>
       </View>
@@ -157,7 +157,7 @@ const Makkah = () => {
           renderSkeleton()
         ) : historicPlaces.length > 0 ? (
           <View className="gap-5">
-            <Text className="text-2xl font-bold ml-5">Historic places</Text>
+            <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
             <HistoricPlacesSlider 
               route="makkah-historic-places" 
               data={historicPlaces} 
@@ -169,7 +169,7 @@ const Makkah = () => {
           renderVerticalSkeleton()
         ) : uploads.length > 0 ? (
           <View className="gap-5 mt-5">
-            <Text className="text-2xl font-bold ml-5">Rituals</Text>
+            <Text className="text-2xl font-bold ml-5">{t("rituals")}</Text>
             <HajjRituals 
               data={uploads} 
               route={selected === 0 ? "hajj-rituals" : "umrah-rituals"} 

@@ -20,7 +20,6 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
     if (route === "madina-historic-places") {
       router.push(`/madina-historic-places/${id}`);
     } else {
-      console.log(`Navigating to ${route}/${id}`);
       router.push(`/${route}/${id}` as any);
     }
   };

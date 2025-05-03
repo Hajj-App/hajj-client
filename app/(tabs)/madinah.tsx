@@ -5,6 +5,7 @@ import { fetchWithCache } from "@/utils/cache";
 import HajjRituals from "@/components/common/hajj-rituals";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 interface Upload {
   id: string;
@@ -23,6 +24,7 @@ interface HistoricPlace {
 }
 
 const Madinah = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploads, setUploads] = useState<Upload[]>([]);
@@ -39,7 +41,6 @@ const Madinah = () => {
         setError(null);
 
         const uploadsData = await fetchWithCache('madina_uploads', 'madina_uploads_cache');
-        console.log("Fetched uploads:", uploadsData.length);
         setUploads(uploadsData);
       } catch (err) {
         console.error("Error fetching hajj uploads:", err);
@@ -59,7 +60,6 @@ const Madinah = () => {
         setHistoricPlacesLoading(true);
         
         const placesData = await fetchWithCache('historic_places_madina', 'historic_places_madina_cache');
-        console.log("Fetched historic places:", placesData.length);
         setHistoricPlaces(placesData);
       } catch (err) {
         console.error("Error fetching historic places:", err);
@@ -116,7 +116,7 @@ const Madinah = () => {
           renderSkeleton()
         ) : historicPlaces.length > 0 ? (
           <View className="gap-5 pt-5">
-            <Text className="text-2xl font-bold ml-5">Historic places</Text>
+            <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
             <HistoricPlacesSlider 
               route="madina-historic-places" 
               data={historicPlaces} 
@@ -128,7 +128,7 @@ const Madinah = () => {
           renderVerticalSkeleton()
         ) : uploads.length > 0 ? (
           <View className="gap-5 mt-5">
-            <Text className="text-2xl font-bold ml-5">Rituals</Text>
+            <Text className="text-2xl font-bold ml-5">{t("rituals")}</Text>
             <HajjRituals data={uploads} route="madina-rituals" />
           </View>
         ) : null}

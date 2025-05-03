@@ -9,10 +9,9 @@ import {
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Magnetometer, DeviceMotion } from "expo-sensors";
 import * as Location from "expo-location";
-
+import { useTranslation } from "react-i18next";
 // Coordinates of the Kaaba in Mecca
 const KAABA_LAT = 21.4225;
 const KAABA_LNG = 39.8262;
@@ -32,7 +31,7 @@ const QiblahFinder = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [showCalibration, setShowCalibration] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
-
+  const { t } = useTranslation();
   // Calculate Qibla direction
   const calculateQiblaDirection = (latitude: number, longitude: number) => {
     // Convert all coordinates from degrees to radians
@@ -191,7 +190,7 @@ const QiblahFinder = () => {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#34D399" />
-        <Text style={styles.text}>Finding Qibla direction...</Text>
+        <Text style={styles.text}>{t("findingQiblaDirection")}</Text>
       </View>
     );
   }
@@ -206,12 +205,12 @@ const QiblahFinder = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Qibla Finder</Text>
+      <Text style={styles.title}>{t("qiblaFinder")}</Text>
 
       {isCalibrating && (
         <View style={styles.calibrationOverlay}>
           <Text style={styles.calibrationText}>
-            Move your device in a figure-8 pattern to calibrate...
+            {t("moveYourDeviceInAFigure8PatternToCalibrate")}
           </Text>
           <ActivityIndicator size="large" color="#34D399" />
         </View>
@@ -254,17 +253,15 @@ const QiblahFinder = () => {
           style={styles.calibrateButton}
           onPress={calibrateMagnetometer}
         >
-          <Text style={styles.calibrateButtonText}>Calibrate Compass</Text>
+          <Text style={styles.calibrateButtonText}>{t("calibrateCompass")}</Text>
         </TouchableOpacity>
       )}
 
       <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>For best results:</Text>
-        <Text style={styles.tipsText}>• Keep device flat and level</Text>
-        <Text style={styles.tipsText}>• Stay away from magnetic objects</Text>
-        <Text style={styles.tipsText}>
-          • Calibrate if direction seems wrong
-        </Text>
+        <Text style={styles.tipsTitle}>{t("forBestResults")}:</Text>
+        <Text style={styles.tipsText}>• {t("keepDeviceFlatAndLevel")}</Text>
+        <Text style={styles.tipsText}>• {t("stayAwayFromMagneticObjects")}</Text>
+        <Text style={styles.tipsText}>• {t("calibrateIfDirectionSeemsWrong")}</Text>
       </View>
     </View>
   );

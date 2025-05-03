@@ -13,11 +13,12 @@ import {
 import { ref, listAll, getDownloadURL, getMetadata } from "firebase/storage";
 import { storage } from "@/utils/firebase";
 import { MaterialIcons } from "@expo/vector-icons";
-import ShimmerPlaceholder, {
+import  {
   createShimmerPlaceholder,
 } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from "react-i18next";
 
 const { width: screenWidth } = Dimensions.get("window");
 const CACHE_KEY = 'upcomingEventsCache';
@@ -38,6 +39,7 @@ type Event = {
 };
 
 const UpcomingEvents = React.memo(() => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -237,7 +239,7 @@ const UpcomingEvents = React.memo(() => {
   if (error) {
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Upcoming Events</Text>
+        <Text style={styles.sectionTitle}>{t("upcomingEvents")}</Text>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
@@ -250,7 +252,7 @@ const UpcomingEvents = React.memo(() => {
 
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Upcoming Events</Text>
+      <Text style={styles.sectionTitle}>{t("upcomingEvents")}</Text>
 
       {loading ? (
         <FlatList
@@ -304,7 +306,7 @@ const UpcomingEvents = React.memo(() => {
           )}
         </>
       ) : (
-        <Text style={styles.noEventsText}>No upcoming events scheduled</Text>
+        <Text style={styles.noEventsText}>{t("noUpcomingEventsScheduled")}</Text>
       )}
     </View>
   );

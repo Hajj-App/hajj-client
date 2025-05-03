@@ -16,20 +16,20 @@ import {
   Pressable,
 } from "react-native";
 import { SafeAreaView, Text } from "react-native";
-
+import { useTranslation } from "react-i18next";
 export default function HomeScreen() {
-
   const [city, setCity] = useState("Fetching...");
 
+  const { t } = useTranslation();
   useEffect(() => {
-    getCurrentCity().then(setCity); 
+    getCurrentCity().then(setCity);
   }, []);
 
   return (
     <SafeAreaView className="flex-1">
       <ScrollView showsVerticalScrollIndicator={false}>
+        <HomeHeader />
         <View className="p-10 mb-8">
-          {/* <HomeHeader /> */}
           <View className="flex-row gap-4 my-4">
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"
@@ -47,7 +47,7 @@ export default function HomeScreen() {
                   className="w-28 h-28"
                 />
               </View>
-              <Text className="text-lg font-bold">Hajj</Text>
+              <Text className="text-lg font-bold">{t("hajj")}</Text>
             </Pressable>
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"
@@ -65,10 +65,9 @@ export default function HomeScreen() {
                   className="w-28 h-28"
                 />
               </View>
-              <Text className="text-lg font-bold">Umrah</Text>
+              <Text className="text-lg font-bold">{t("umrah")}</Text>
             </Pressable>
           </View>
-
 
           <View className="flex-row gap-4 my-4">
             <Pressable
@@ -82,7 +81,7 @@ export default function HomeScreen() {
                   className="w-28 h-28"
                 />
               </View>
-              <Text className="text-lg font-bold">Madina Ziyarah</Text>
+              <Text className="text-lg font-bold">{t("madinaZiyarah")}</Text>
             </Pressable>
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"
@@ -95,17 +94,19 @@ export default function HomeScreen() {
                   className="w-28 h-28"
                 />
               </View>
-              <Text className="text-lg font-bold">Historic Places</Text>
+              <Text className="text-lg font-bold">{t("historicPlaces")}</Text>
             </Pressable>
           </View>
 
           {/* Prayer Time */}
           <View className="py-8 flex-row items-center justify-between">
             <View>
-              <Text className="text-3xl">Prayer time in</Text>
+              <Text className="text-3xl">
+                {t("prayerTimeIn")}
+              </Text>
               <Text className="text-3xl font-bold">{city}</Text>
               <Text className="text-lg text-green font-medium">
-                Current Location?
+                {t("currentLocation")}
               </Text>
             </View>
             <View>
@@ -118,41 +119,36 @@ export default function HomeScreen() {
           <DateSlider />
 
           {/* <PrayerTimeContainer /> */}
-          <PrayerList /> 
+          <PrayerList />
 
           {/* Qibla, Dhikr Counter */}
           <View className="flex-row gap-4 my-6">
             <QuickLinkBtn
-              title="Qiblah"
-              subtitle="Direction"
-              description="display the accurate Qibla direction based on the user's location"
+              title={t("qiblah")}
+              subtitle={t("direction")}
               icon={require("@/assets/images/qiblah.png")}
               route="/qiblah-finder"
             />
             <QuickLinkBtn
-              title="Dhikr"
-              subtitle="Counter"
-              description="display the accurate Qibla direction based on the user's location"
+              title={t("dhikr")}
+              subtitle={t("counter")}
               icon={require("@/assets/images/counter.png")}
               route="/dikr-counter"
             />
           </View>
           <QuickLinkBtn
-            title="Dhikrs & Duas"
-            description="display the accurate Qibla direction based on the user's location"
+            title={t("dhikrsAndDuas")}
             icon={require("@/assets/images/thasbeeh-brown.png")}
             route="/dikrs-and-duas"
             width="full"
           />
           <TouchableOpacity
             className="my-4 bg-cyan-600 rounded-lg p-4 gap-2 flex-row items-center justify-center"
-            onPress={() =>
-              Linking.openURL("https://www.hajcommittee.gov.in/")
-            }
+            onPress={() => Linking.openURL("https://www.hajcommittee.gov.in/")}
           >
             <Ionicons name="search" size={24} color="white" />
             <Text className="text-white font-bold text-lg">
-            Search Your Cover Number
+              {t("searchYourCoverNumber")}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -163,7 +159,7 @@ export default function HomeScreen() {
           >
             <Ionicons name="logo-whatsapp" size={24} color="white" />
             <Text className="text-white font-bold text-lg">
-              Ask Doubts on WhatsApp
+              {t("askDoubtsOnWhatsApp")}
             </Text>
           </TouchableOpacity>
         </View>

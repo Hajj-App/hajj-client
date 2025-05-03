@@ -1,44 +1,38 @@
-import { 
-  View, 
-  Text, 
-  Image, 
-  Pressable, 
-  TextInput, 
-  ScrollView,
+import {
+  View,
+  Text,
+  Image,
+  Pressable,
+  TextInput,
   TouchableWithoutFeedback,
   Keyboard,
   StyleSheet,
   SafeAreaView,
   Modal,
-  TouchableOpacity
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign } from "@expo/vector-icons";
-
-interface Dikr {
-  name: string;
-  count: number;
-}
-
+import { useTranslation } from "react-i18next";
 const DikrCounter = () => {
   const [count, setCount] = useState(0);
   const [showManage, setShowManage] = useState(false);
   const [dikrName, setDikrName] = useState("Dikr");
   const [editCount, setEditCount] = useState("");
-
+  const { t } = useTranslation();
   // Load saved data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const savedData = await AsyncStorage.getItem('dikrData');
+        const savedData = await AsyncStorage.getItem("dikrData");
         if (savedData) {
           const { name, count } = JSON.parse(savedData);
           setDikrName(name);
           setCount(count);
         }
       } catch (error) {
-        console.error('Failed to load data', error);
+        console.error("Failed to load data", error);
       }
     };
     loadData();
@@ -49,9 +43,9 @@ const DikrCounter = () => {
     const saveData = async () => {
       try {
         const dataToSave = JSON.stringify({ name: dikrName, count });
-        await AsyncStorage.setItem('dikrData', dataToSave);
+        await AsyncStorage.setItem("dikrData", dataToSave);
       } catch (error) {
-        console.error('Failed to save data', error);
+        console.error("Failed to save data", error);
       }
     };
     saveData();
@@ -59,7 +53,7 @@ const DikrCounter = () => {
 
   const incrementCount = () => {
     if (count < 99999) {
-    setCount(prev => prev + 1);
+      setCount((prev) => prev + 1);
     }
   };
 
@@ -98,14 +92,16 @@ const DikrCounter = () => {
     <SafeAreaView style={styles.container}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.content}>
-      {/* Counter Display */}
+          {/* Counter Display */}
           <Pressable onPress={incrementCount} style={styles.counterButton}>
-        <Image
-          source={require("@/assets/images/tally-counter.png")}
+            <Image
+              source={require("@/assets/images/tally-counter.png")}
               style={styles.counterImage}
-          resizeMode="contain"
-        />
-            <Text style={styles.countText} className="mt-20">{count}</Text>
+              resizeMode="contain"
+            />
+            <Text style={styles.countText} className="mt-20">
+              {count}
+            </Text>
           </Pressable>
 
           {/* Divider Line */}
@@ -113,15 +109,12 @@ const DikrCounter = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <Pressable 
-              onPress={openManageModal} 
-              style={styles.actionButton}
-            >
-              <Text style={styles.buttonText}>Manage</Text>       
-      </Pressable>
+            <Pressable onPress={openManageModal} style={styles.actionButton}>
+              <Text style={styles.buttonText}>{t("manage")}</Text>
+            </Pressable>
 
             <Pressable onPress={reset} style={styles.actionButton}>
-              <Text style={styles.buttonText}>Reset</Text>       
+              <Text style={styles.buttonText}>{t("reset")}</Text>
             </Pressable>
           </View>
         </View>
@@ -136,43 +129,40 @@ const DikrCounter = () => {
       >
         <TouchableWithoutFeedback onPress={() => setShowManage(false)}>
           <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Manage Dikr</Text>
-                  <TouchableOpacity 
+                  <Text style={styles.modalTitle}>{t("manageDikr")}</Text>
+                  <TouchableOpacity
                     onPress={() => setShowManage(false)}
                     style={styles.closeButton}
                   >
                     <AntDesign name="close" size={24} color="black" />
                   </TouchableOpacity>
                 </View>
-          
-          <TextInput
-            placeholder="Dikr Name"
-            value={dikrName}
-            onChangeText={setDikrName}
+
+                <TextInput
+                  placeholder={t("dikrName")}
+                  value={dikrName}
+                  onChangeText={setDikrName}
                   style={styles.textInput}
-          />
-          
-          <TextInput
-                  placeholder="Set Count"
-            value={editCount}
+                />
+
+                <TextInput
+                  placeholder={t("setCount")}
+                  value={editCount}
                   onChangeText={handleEditCountChange}
-            keyboardType="numeric"
+                  keyboardType="numeric"
                   style={styles.textInput}
                   maxLength={5}
-          />
-          
-          <Pressable 
-            onPress={saveChanges}
-                  style={styles.saveButton}
-          >
-                  <Text style={styles.saveButtonText}>Save</Text>
-          </Pressable>
-        </View>
+                />
+
+                <Pressable onPress={saveChanges} style={styles.saveButton}>
+                  <Text style={styles.saveButtonText}>{t("save")}</Text>
+                </Pressable>
+              </View>
             </TouchableWithoutFeedback>
-      </View>
+          </View>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
@@ -182,102 +172,102 @@ const DikrCounter = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   content: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingBottom: 40,
   },
   counterButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   counterImage: {
     width: 380,
     height: 380,
   },
   countText: {
-    position: 'absolute',
+    position: "absolute",
     top: 10,
     fontSize: 42,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     right: 0,
     marginRight: 128,
-    marginTop: 60
+    marginTop: 60,
   },
   divider: {
-    width: '75%',
+    width: "75%",
     height: 1,
     borderRadius: 10,
-    backgroundColor: 'gray',
+    backgroundColor: "gray",
     opacity: 0.3,
     marginBottom: 32,
     marginTop: 16,
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 16,
   },
   actionButton: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     paddingVertical: 16,
     paddingHorizontal: 40,
     borderRadius: 16,
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
+    width: "80%",
+    backgroundColor: "white",
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   closeButton: {
     padding: 5,
   },
   textInput: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     padding: 15,
     borderRadius: 10,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: "#e0e0e0",
   },
   saveButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: "#3b82f6",
     padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   saveButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });
