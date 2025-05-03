@@ -259,7 +259,7 @@ const HajjRitualDetail = (props: Props) => {
                       <FontAwesome5 name="play" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">{audioFile.name}</Text>
+                      <Text className="font-semibold">Audio {index + 1}</Text>
                       {audioFile.size && (
                         <Text className="text-xs text-gray-500">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
@@ -285,7 +285,7 @@ const HajjRitualDetail = (props: Props) => {
                       <FontAwesome5 name="file-pdf" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">{doc.name}</Text>
+                      <Text className="font-semibold"> Document {index + 1}</Text>
                       {doc.size && (
                         <Text className="text-xs text-gray-500">
                           {(doc.size / (1024 * 1024)).toFixed(2)} MB

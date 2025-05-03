@@ -247,7 +247,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <View style={styles.header}>
-            <Text style={styles.title}>{t('audioGuide')}</Text>
+            <Text style={styles.title}>{t('audioGuides')}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <FontAwesome5 name="times" size={20} color="#000" />
             </TouchableOpacity>
@@ -271,7 +271,8 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
           ) : (
             <View style={styles.playerContainer}>
               <Text style={styles.audioName} numberOfLines={1}>
-                {audioFile?.name || 'Unknown Audio'}
+                {/* {audioFile?.name || 'Unknown Audio'} */}
+                {playbackStatus.isPlaying ? 'Playing' : 'Paused'}
               </Text>
               
               {/* Progress Bar */}
