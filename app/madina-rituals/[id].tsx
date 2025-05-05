@@ -18,11 +18,11 @@ import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
-import AudioPlayerModal from '@/components/AudioPlayerModal';
-import ImageModal from '@/components/ImageModal';
-import PdfViewerModal from '@/components/PdfViewerModal';
+import AudioPlayerModal from "@/components/AudioPlayerModal";
+import ImageModal from "@/components/ImageModal";
+import PdfViewerModal from "@/components/PdfViewerModal";
 import { useTranslation } from "react-i18next";
-type Props = {} ;
+type Props = {};
 
 interface RitualMedia {
   images: StorageFile[];
@@ -38,24 +38,26 @@ interface RitualContent {
     title: string;
     description: string | string[];
   }[];
-} 
+}
 
 const MadinaRitualDetail = (props: Props) => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const ritualId = params.id as string;
   const { t } = useTranslation();
-  
+
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [media, setMedia] = useState<RitualMedia>({
     images: [],
     audio: [],
-    documents: [] 
+    documents: [],
   });
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
-  const [ritualContent, setRitualContent] = useState<RitualContent | null>(null);
+  const [ritualContent, setRitualContent] = useState<RitualContent | null>(
+    null
+  );
   const [selectedAudio, setSelectedAudio] = useState<StorageFile | null>(null);
 
   useEffect(() => {
@@ -81,17 +83,19 @@ const MadinaRitualDetail = (props: Props) => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Sign in anonymously to Firebase
         await signInAnonymousUser();
-        
+
         // Fetch ritual data from Firestore
         if (!firestore) {
           throw new Error("Firestore is not initialized");
         }
 
-        const ritualDoc = await getDoc(doc(firestore, "madina_uploads", ritualId));
-        
+        const ritualDoc = await getDoc(
+          doc(firestore, "madina_uploads", ritualId)
+        );
+
         if (!ritualDoc.exists()) {
           throw new Error("Ritual not found");
         }
@@ -101,9 +105,9 @@ const MadinaRitualDetail = (props: Props) => {
           id: ritualDoc.id,
           name: data.name || "Untitled",
           description: data.description || "",
-          paragraphs: data.paragraphs || []
+          paragraphs: data.paragraphs || [],
         });
-        
+
         await fetchRitualMedia();
       } catch (err) {
         console.error("Error fetching ritual:", err);
@@ -112,64 +116,71 @@ const MadinaRitualDetail = (props: Props) => {
         setLoading(false);
       }
     };
-    
+
     initializeAndFetch();
   }, [ritualId]);
-  
+
   const fetchRitualMedia = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch media from the specific ritual folder in Firebase Storage
       const storagePath = `madina/${ritualId}`;
-      
+
       try {
         const files = await getFilesWithUrls(storagePath);
-        
+
         // Categorize files by type
         const images: StorageFile[] = [];
         const audio: StorageFile[] = [];
         const documents: StorageFile[] = [];
-        
-        files.forEach(file => {
-          const contentType = file.contentType || '';
-          
-          if (contentType.startsWith('image/')) {
+
+        files.forEach((file) => {
+          const contentType = file.contentType || "";
+
+          if (contentType.startsWith("image/")) {
             images.push(file);
-          } else if (contentType.startsWith('audio/')) {
+          } else if (contentType.startsWith("audio/")) {
             audio.push(file);
-          } else if (contentType === 'application/pdf' || contentType.includes('document')) {
+          } else if (
+            contentType === "application/pdf" ||
+            contentType.includes("document")
+          ) {
             documents.push(file);
           }
         });
-        
+
         setMedia({ images, audio, documents });
       } catch (storageError: any) {
-        console.error('Storage error:', storageError);
-        
+        console.error("Storage error:", storageError);
+
         // Handle common Firebase Storage errors
-        if (storageError.code === 'storage/unauthorized') {
-          setError('Permission denied. You do not have access to these files. Please check your Firebase Storage rules.');
+        if (storageError.code === "storage/unauthorized") {
+          setError(
+            "Permission denied. You do not have access to these files. Please check your Firebase Storage rules."
+          );
           Alert.alert(
             "Storage Access Error",
             "You don't have permission to access these files. Please update your Firebase Storage rules to allow access to the 'rituals' folder.",
             [{ text: "OK" }]
           );
-        } else if (storageError.code === 'storage/object-not-found') {
+        } else if (storageError.code === "storage/object-not-found") {
           setError(`No media files found for ritual ${ritualId}`);
         } else {
-          setError(`Error: ${storageError.message || 'Unknown error occurred'}`);
+          setError(
+            `Error: ${storageError.message || "Unknown error occurred"}`
+          );
         }
       }
     } catch (err) {
-      console.error('Error fetching ritual media:', err);
-      setError('Failed to load media files. Please try again later.');
+      console.error("Error fetching ritual media:", err);
+      setError("Failed to load media files. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <View className="flex-1">
       <ImageBackground
@@ -187,21 +198,21 @@ const MadinaRitualDetail = (props: Props) => {
           {/* <View className="w-10 h-10 bg-white rounded-full"></View> */}
         </View>
       </ImageBackground>
-      <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end">
-        <View className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full">
-          <Image source={require('@/assets/icons/share.png')} resizeMode="cover" className="w-10 h-10"/>
-        </View>
-      </View>
+      <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white px-5"
       >
         {ritualContent ? (
-          <Text className="font-bold text-[28px] text-green">{ritualContent.name}</Text>
+          <Text className="font-bold text-[28px] text-green">
+            {ritualContent.name}
+          </Text>
         ) : (
-          <Text className="font-bold text-[28px] text-green">{t("ritualDetails")}</Text>
+          <Text className="font-bold text-[28px] text-green">
+            {t("ritualDetails")}
+          </Text>
         )}
-        
+
         {loading ? (
           <View className="items-center justify-center py-10">
             <ActivityIndicator size="large" color="#34D399" />
@@ -217,19 +228,19 @@ const MadinaRitualDetail = (props: Props) => {
             {media.images.length > 0 && (
               <View className="my-4">
                 <Text className="text-xl font-bold mb-2">{t("images")}</Text>
-                <ScrollView 
-                  horizontal 
+                <ScrollView
+                  horizontal
                   showsHorizontalScrollIndicator={false}
-                  className="flex-row" 
+                  className="flex-row"
                 >
                   {media.images.map((image, index) => (
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       key={index}
                       onPress={() => setSelectedImage(image.downloadURL)}
                       className="mr-3"
                     >
-                      <Image 
-                        source={{ uri: image.downloadURL }} 
+                      <Image
+                        source={{ uri: image.downloadURL }}
                         className="w-32 h-32 rounded-lg"
                         resizeMode="cover"
                       />
@@ -238,20 +249,22 @@ const MadinaRitualDetail = (props: Props) => {
                 </ScrollView>
               </View>
             )}
-            
+
             {/* Image Modal */}
             <ImageModal
               visible={!!selectedImage}
               imageUrl={selectedImage}
               onClose={() => setSelectedImage(null)}
             />
-            
+
             {/* Audio Section */}
             {media.audio.length > 0 && (
               <View className="my-4">
-                <Text className="text-xl font-bold mb-2">{t("audioGuides")}</Text>
+                <Text className="text-xl font-bold mb-2">
+                  {t("audioGuides")}
+                </Text>
                 {media.audio.map((audioFile, index) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={index}
                     onPress={() => setSelectedAudio(audioFile)}
                     className="flex-row items-center p-3 bg-gray-100 rounded-lg mb-2"
@@ -260,7 +273,14 @@ const MadinaRitualDetail = (props: Props) => {
                       <FontAwesome5 name="play" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">Audio {index + 1}</Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          audio-{index + 1}
+                        </Text>
+                      </View>
                       {audioFile.size && (
                         <Text className="text-xs text-gray-500">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
@@ -271,13 +291,15 @@ const MadinaRitualDetail = (props: Props) => {
                 ))}
               </View>
             )}
-            
+
             {/* Documents Section */}
             {media.documents.length > 0 && (
               <View className="my-4">
-                <Text className="text-xl font-bold mb-2">{t("guidesAndDocuments")}</Text>
+                <Text className="text-xl font-bold mb-2">
+                  {t("guidesAndDocuments")}
+                </Text>
                 {media.documents.map((doc, index) => (
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     key={index}
                     onPress={() => setSelectedPdf(doc.downloadURL)}
                     className="flex-row items-center p-3 bg-gray-100 rounded-lg mb-2"
@@ -286,7 +308,14 @@ const MadinaRitualDetail = (props: Props) => {
                       <FontAwesome5 name="file-pdf" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold"> Document {index + 1}</Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          doc-{index + 1}
+                        </Text>
+                      </View>
                       {doc.size && (
                         <Text className="text-xs text-gray-500">
                           {(doc.size / (1024 * 1024)).toFixed(2)} MB
@@ -295,7 +324,7 @@ const MadinaRitualDetail = (props: Props) => {
                     </View>
                   </TouchableOpacity>
                 ))}
-                
+
                 {/* PDF Viewer Modal */}
                 {selectedPdf && (
                   <PdfViewerModal
@@ -308,12 +337,14 @@ const MadinaRitualDetail = (props: Props) => {
             )}
           </>
         )}
-        
+
         {/* Ritual content sections from data.json */}
         {ritualContent && (
           <View className="gap-y-5 pt-5 pb-5">
-            <Text className="text-2xl font-bold">{t("about")} {ritualContent.name}</Text>
-            {typeof ritualContent.description === 'string' ? (
+            <Text className="text-2xl font-bold">
+              {t("about")} {ritualContent.name}
+            </Text>
+            {typeof ritualContent.description === "string" ? (
               <Text className="text-lg leading-snug mb-2">
                 {ritualContent.description}
               </Text>
@@ -324,21 +355,26 @@ const MadinaRitualDetail = (props: Props) => {
                 </Text>
               ))
             )}
-            
+
             {ritualContent.paragraphs?.map((paragraph, pIndex) => (
               <View key={pIndex} className="mt-4 mb-6">
-                <Text className="text-xl font-bold mb-2">{paragraph.title}</Text>
-                {typeof paragraph.description === 'string' ? (
+                <Text className="text-xl font-bold mb-2">
+                  {paragraph.title}
+                </Text>
+                {typeof paragraph.description === "string" ? (
                   <Text className="text-lg leading-snug mb-2">
                     {paragraph.description}
                   </Text>
-                ) : Array.isArray(paragraph.description) && 
-                  paragraph.description.map((desc: string | string[], dIndex: number) => (
-                    <Text key={dIndex} className="text-lg leading-snug mb-2">
-                      {Array.isArray(desc) ? desc.join(' ') : desc}
-                    </Text>
-                  ))
-                }
+                ) : (
+                  Array.isArray(paragraph.description) &&
+                  paragraph.description.map(
+                    (desc: string | string[], dIndex: number) => (
+                      <Text key={dIndex} className="text-lg leading-snug mb-2">
+                        {Array.isArray(desc) ? desc.join(" ") : desc}
+                      </Text>
+                    )
+                  )
+                )}
               </View>
             ))}
           </View>

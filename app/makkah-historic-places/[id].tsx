@@ -305,7 +305,14 @@ const MakkahHistoricPlaceDetail = (props: Props) => {
                       <FontAwesome5 name="play" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">Audio {index + 1}</Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          audio-{index + 1}
+                        </Text>
+                      </View>
                       {audioFile.size && (
                         <Text className="text-xs text-gray-500">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
@@ -333,7 +340,14 @@ const MakkahHistoricPlaceDetail = (props: Props) => {
                       <FontAwesome5 name="file-pdf" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold"> Document {index + 1}</Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          doc-{index + 1}
+                        </Text>
+                      </View>
                       {doc.size && (
                         <Text className="text-xs text-gray-500">
                           {(doc.size / (1024 * 1024)).toFixed(2)} MB

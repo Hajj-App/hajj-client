@@ -197,15 +197,7 @@ const UmrahRitualDetail = (props: Props) => {
           {/* <View className="w-10 h-10 bg-white rounded-full"></View> */}
         </View>
       </ImageBackground>
-      <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end">
-        <View className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full">
-          <Image
-            source={require("@/assets/icons/share.png")}
-            resizeMode="cover"
-            className="w-10 h-10"
-          />
-        </View>
-      </View>
+      <View className="w-full h-20 relative bg-white mt-[-50px] rounded-t-[50px] items-end justify-end" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white px-5"
@@ -280,7 +272,14 @@ const UmrahRitualDetail = (props: Props) => {
                       <FontAwesome5 name="play" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">Audio {index + 1}</Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          audio-{index + 1}
+                        </Text>
+                      </View>
                       {audioFile.size && (
                         <Text className="text-xs text-gray-500">
                           {(audioFile.size / (1024 * 1024)).toFixed(2)} MB
@@ -308,9 +307,14 @@ const UmrahRitualDetail = (props: Props) => {
                       <FontAwesome5 name="file-pdf" size={16} color="white" />
                     </View>
                     <View className="flex-1">
-                      <Text className="font-semibold">
-                        Document {index + 1}
-                      </Text>
+                      <View className="w-full flex flex-row justify-between">
+                        <Text className="font-semibold">
+                          {ritualContent?.name}
+                        </Text>
+                        <Text className="text-gray-400 text-xs">
+                          doc-{index + 1}
+                        </Text>
+                      </View>
                       {doc.size && (
                         <Text className="text-xs text-gray-500">
                           {(doc.size / (1024 * 1024)).toFixed(2)} MB
