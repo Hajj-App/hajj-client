@@ -13,6 +13,9 @@ import TravelAdvisories from "@/components/TravelAdvisories";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import LatestUpdates from "@/components/LatestUpdates";
 import { useTranslation } from "react-i18next";
+import { getDocs, collection } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
+
 // Define types for our data
 type NewsItem = {
   id: number;
@@ -56,6 +59,31 @@ export default function ExploreScreen() {
   const [weather, setWeather] = useState<{
     [key: string]: { temp: number; description: string };
   }>({});
+
+  // Firestore data states
+  const [travelAdvisories, setTravelAdvisories] = useState<any[]>([]);
+  const [liveUpdates, setLiveUpdates] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+
+  // Fetch Firestore data
+  useEffect(() => {
+    const fetchFirestoreData = async () => {
+      try {
+        if (!firestore) return;
+        const travelSnap = await getDocs(collection(firestore, "travel_advisories"));
+        setTravelAdvisories(travelSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        const liveSnap = await getDocs(collection(firestore, "live_updates"));
+        setLiveUpdates(liveSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        const eventsSnap = await getDocs(collection(firestore, "upcoming_events"));
+        setUpcomingEvents(eventsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (err) {
+        console.error("Error fetching Firestore data:", err);
+      }
+    };
+    fetchFirestoreData();
+  }, []);
 
   // Weather Updates
 
@@ -116,9 +144,9 @@ export default function ExploreScreen() {
             {t("stayUpdatedWithLatestNewsAndEvents")}
           </Text>
         </View>
-        <LatestUpdates />
-        <UpcomingEvents />
-        <TravelAdvisories />
+        {typeof LatestUpdates === 'function' ? <LatestUpdates data={liveUpdates} /> : <LatestUpdates />}
+        {typeof UpcomingEvents === 'function' ? <UpcomingEvents data={upcomingEvents} /> : <UpcomingEvents />}
+        {typeof TravelAdvisories === 'function' ? <TravelAdvisories data={travelAdvisories} /> : <TravelAdvisories />}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t("weatherUpdates")}</Text>
           <View style={styles.weatherContainer}>
