@@ -70,14 +70,24 @@ export default function ExploreScreen() {
     const fetchFirestoreData = async () => {
       try {
         if (!firestore) return;
-        const travelSnap = await getDocs(collection(firestore, "travel_advisories"));
-        setTravelAdvisories(travelSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const travelSnap = await getDocs(
+          collection(firestore, "travel_advisories")
+        );
+        setTravelAdvisories(
+          travelSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
 
         const liveSnap = await getDocs(collection(firestore, "live_updates"));
-        setLiveUpdates(liveSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        setLiveUpdates(
+          liveSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
 
-        const eventsSnap = await getDocs(collection(firestore, "upcoming_events"));
-        setUpcomingEvents(eventsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const eventsSnap = await getDocs(
+          collection(firestore, "upcoming_events")
+        );
+        setUpcomingEvents(
+          eventsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
       } catch (err) {
         console.error("Error fetching Firestore data:", err);
       }
@@ -144,9 +154,9 @@ export default function ExploreScreen() {
             {t("stayUpdatedWithLatestNewsAndEvents")}
           </Text>
         </View>
-        {typeof LatestUpdates === 'function' ? <LatestUpdates data={liveUpdates} /> : <LatestUpdates />}
-        {typeof UpcomingEvents === 'function' ? <UpcomingEvents data={upcomingEvents} /> : <UpcomingEvents />}
-        {typeof TravelAdvisories === 'function' ? <TravelAdvisories data={travelAdvisories} /> : <TravelAdvisories />}
+        <LatestUpdates />
+        <UpcomingEvents />
+        <TravelAdvisories />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t("weatherUpdates")}</Text>
           <View style={styles.weatherContainer}>

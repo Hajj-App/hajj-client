@@ -13,8 +13,8 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { ref, listAll, getDownloadURL, getMetadata } from "firebase/storage";
-import { storage } from "@/utils/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
 import { signInAnonymousUser } from "@/utils/firebase";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
@@ -45,7 +45,7 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<NodeJS.Timeout>();
+  const scrollInterval = useRef<number>();
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -62,57 +62,20 @@ const LatestUpdates = () => {
         setLoading(false);
       }
 
-      if (!storage) {
-        throw new Error("Firebase Storage is not initialized");
+      if (!firestore) {
+        throw new Error("Firebase is not initialized");
       }
 
       await signInAnonymousUser();
 
-      const updatesRef = ref(storage, "live_updates/");
-      const result = await listAll(updatesRef);
+      const updatesRef = collection(firestore, "live_updates");
+      const q = query(updatesRef, orderBy("date", "desc"));
+      const querySnapshot = await getDocs(q);
 
-      // Process folders in parallel with error handling
-      const updatePromises = result.prefixes.map(async (folderRef) => {
-        try {
-          const folderItems = await listAll(folderRef);
-
-          // Find required files in parallel
-          const [updateFile, imageFile] = await Promise.all([
-            folderItems.items.find((item) => item.name === "update_data.json"),
-            folderItems.items.find((item) => item.name.startsWith("image_")),
-          ]);
-
-          if (!updateFile) return null;
-
-          // Parallelize all async operations
-          const [dataUrl, metadata, imageUrl] = await Promise.all([
-            getDownloadURL(updateFile),
-            getMetadata(updateFile),
-            imageFile ? getDownloadURL(imageFile) : Promise.resolve(undefined),
-          ]);
-
-          const response = await fetch(dataUrl);
-          if (!response.ok) throw new Error("Failed to fetch update data");
-
-          const data = await response.json();
-
-          return {
-            ...data,
-            id: `${folderRef.name}-${metadata.updated}`,
-            lastModified: metadata.updated,
-            imageUrl,
-          };
-        } catch (err) {
-          console.error(`Error processing folder ${folderRef.name}:`, err);
-          return null;
-        }
-      });
-
-      const loadedUpdates = (await Promise.all(updatePromises))
-        .filter((update): update is UpdateItem => update !== null)
-        .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
+      const loadedUpdates = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as UpdateItem[];
 
       // Update cache
       await setCachedData(CACHE_KEY, loadedUpdates);

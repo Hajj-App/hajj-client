@@ -8,14 +8,8 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import {
-  ref,
-  listAll,
-  getDownloadURL,
-  getMetadata,
-  StorageReference,
-} from "firebase/storage";
-import { storage } from "@/utils/firebase";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { firestore } from "@/utils/firebase";
 import { signInAnonymousUser } from "@/utils/firebase";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
@@ -88,59 +82,24 @@ const TravelAdvisories = React.memo(() => {
         setLoading(false);
       }
 
-      if (!storage) {
-        throw new Error("Firebase Storage is not initialized");
+      if (!firestore) {
+        throw new Error("Firebase is not initialized");
       }
 
       await signInAnonymousUser();
 
-      const advisoriesRef: StorageReference = ref(storage, "travel_advisories/");
-      const result = await listAll(advisoriesRef);
+      const advisoriesRef = collection(firestore, "travel_advisories");
+      const q = query(advisoriesRef, orderBy("date", "asc"));
+      const querySnapshot = await getDocs(q);
 
-      // Process folders in parallel
-      const advisoryPromises = result.prefixes.map(async (folderRef) => {
-        try {
-          const folderItems = await listAll(folderRef);
-          const advisoryFile = folderItems.items.find(
-            (item) => item.name === "advisory_data.json"
-          );
-
-          if (!advisoryFile) return null;
-
-          // Parallelize all async operations
-          const [url, metadata] = await Promise.all([
-            getDownloadURL(advisoryFile),
-            getMetadata(advisoryFile),
-          ]);
-
-          const response = await fetch(url);
-          if (!response.ok) throw new Error("Failed to fetch advisory data");
-
-          const data = await response.json();
-
-          return {
-            ...data,
-            id: `${folderRef.name}-${metadata.updated}`,
-            lastModified: metadata.updated,
-          };
-        } catch (err) {
-          console.error(`Error processing folder ${folderRef.name}:`, err);
-          return null;
-        }
-      });
-
-      const loadedAdvisories = (await Promise.all(advisoryPromises)).filter(
-        (adv): adv is Advisory => adv !== null
-      );
+      const loadedAdvisories = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Advisory[];
 
       // Update cache
       await setCachedData(CACHE_KEY, loadedAdvisories);
-      // Sort advisories by id (lexical order)
-      const sortedAdvisories = loadedAdvisories.sort((a, b) =>
-        a.id.localeCompare(b.id)
-      );
-      setAdvisories(sortedAdvisories);
-
+      setAdvisories(loadedAdvisories);
     } catch (err) {
       console.error("Error fetching advisories:", err);
       setError(
