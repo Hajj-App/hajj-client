@@ -1,8 +1,8 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, FirebaseApp } from "firebase/app";
-import { getStorage, ref, uploadBytes, getDownloadURL, listAll, getMetadata, deleteObject, FirebaseStorage } from "firebase/storage";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getAuth, signInAnonymously, Auth } from "firebase/auth";
+import { signInAnonymously, Auth, getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -11,12 +11,12 @@ const firebaseConfig = {
   projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "",
   storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "",
   messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || ""
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
 };
 
 // Check if configuration has actual values
-const hasValidConfig = Object.values(firebaseConfig).every(value => 
-  value && !value.includes("YOUR_")
+const hasValidConfig = Object.values(firebaseConfig).every(
+  (value) => value && !value.includes("YOUR_")
 );
 
 // Initialize Firebase
@@ -40,7 +40,7 @@ export const signInAnonymousUser = async (): Promise<void> => {
     console.warn("Firebase not properly configured. Skipping authentication.");
     return;
   }
-  
+
   try {
     await signInAnonymously(auth);
     console.log("Signed in anonymously to Firebase");
@@ -51,4 +51,4 @@ export const signInAnonymousUser = async (): Promise<void> => {
 };
 
 export { app, storage, firestore, auth };
-export default app; 
+export default app;

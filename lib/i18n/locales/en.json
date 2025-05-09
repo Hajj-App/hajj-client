@@ -50,5 +50,6 @@
   "stayAwayFromMagneticObjects": "Stay away from magnetic objects",
   "calibrateIfDirectionSeemsWrong": "Calibrate if direction seems wrong",
   "calibrateCompass": "Calibrate Compass",
-  "qiblaFinder": "Qibla Finder"
+  "qiblaFinder": "Qibla Finder",
+  "upcomingEvents": "Upcoming Events"
 }

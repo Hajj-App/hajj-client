@@ -19,7 +19,8 @@ interface AudioPlayerModalProps {
   onClose: () => void;
 }
 
-type PlaybackStatus = {
+// Define a simplified playback status for our UI state
+type PlaybackStatusUI = {
   isPlaying: boolean;
   positionMillis: number;
   durationMillis: number;
@@ -36,7 +37,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
   const soundRef = useRef<Audio.Sound | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatus>({
+  const [playbackStatus, setPlaybackStatus] = useState<PlaybackStatusUI>({
     isPlaying: false,
     positionMillis: 0,
     durationMillis: 0,

@@ -10,10 +10,10 @@ import {
   Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { Entypo, FontAwesome5, AntDesign } from "@expo/vector-icons";
+import { Entypo, FontAwesome5 } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Audio } from "expo-av";
-import { getFilesWithUrls, listFiles } from "../../utils/storageUtils";
+import { getFilesWithUrls } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";

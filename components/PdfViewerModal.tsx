@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  Platform,
+  SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AntDesign } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
 import { downloadFile } from '../utils/storageUtils';
 import { Share } from 'react-native';
 
+const { width, height } = Dimensions.get('window');
 
 interface PdfViewerModalProps {
   visible: boolean;
@@ -86,14 +87,13 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
   
     return (
     <WebView
-  source={{ uri: googleDocsUrl }} // or Google Docs URL if used
-  style={{ flex: 1, margin: 5 }}
-  containerStyle={{ borderRadius: 8 }}
-  scalesPageToFit={true}
-  bounces={false}
-  startInLoadingState
-/>
-
+      source={{ uri: googleDocsUrl }}
+      style={styles.webview}
+      containerStyle={{ borderRadius: 8 }}
+      scalesPageToFit={true}
+      bounces={false}
+      startInLoadingState
+    />
     );
   };
   
@@ -106,7 +106,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        <View style={styles.modalContent}>
+        <SafeAreaView style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Document Viewer</Text>
 
@@ -140,7 +140,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
           ) : (
             renderWebView()
           )}
-        </View>
+        </SafeAreaView>
       </View>
     </Modal>
   );
@@ -156,6 +156,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     overflow: 'hidden',
+    width: width * 0.95,
+    alignSelf: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -171,7 +173,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   webview: {
-    flex: 1,
+    height: height * 0.7,
+    width: '100%',
   },
   loadingContainer: {
     flex: 1,

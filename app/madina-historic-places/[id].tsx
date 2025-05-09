@@ -11,10 +11,10 @@ import {
   Linking,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { Entypo, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Audio } from "expo-av";
-import { getFilesWithUrls, listFiles } from "../../utils/storageUtils";
+import { getFilesWithUrls } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
 import { signInAnonymousUser } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -226,11 +226,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           onPress={openLocationLink}
           className="p-5 bg-white shadow-xl absolute -top-10 right-10 rounded-full"
         >
-          <Image
-            source={require("@/assets/icons/share.png")}
-            resizeMode="cover"
-            className="w-10 h-10"
-          />
+          <Ionicons name="location" size={30} color="black" />
         </Pressable>
       </View>
       <ScrollView
