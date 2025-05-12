@@ -55,21 +55,38 @@ export const fetchWithCache = async (
   }
   
   const collectionRef = collection(firestore, collectionName);
-  const q = query(collectionRef, orderBy('folderId'));
+  
+  // Create query with orderBy for 'order' field if it exists, otherwise fallback to 'folderId'
+  const q = query(collectionRef, orderBy('order', 'asc'));
   const querySnapshot = await getDocs(q);
   
   const data = querySnapshot.docs.map(doc => {
     const docData = doc.data();
-    // Remove folderId from the data
-    const { folderId, ...rest } = docData;
+    // Remove order and folderId from the data
+    const { order, folderId, ...rest } = docData;
     return {
       id: doc.id,
+      // Use folderId as fallback when order is 0 or not present
+      order: order !== undefined && order !== 0 ? order : (folderId || 0),
       ...rest
     };
   });
 
+  // Sort the data array to ensure items without order come after items with order
+  const sortedData = data.sort((a, b) => {
+    // If both have order, compare by order
+    if (a.order !== undefined && b.order !== undefined) {
+      return a.order - b.order;
+    }
+    // If only one has order, prioritize the one with order
+    if (a.order !== undefined) return -1;
+    if (b.order !== undefined) return 1;
+    // If neither has order, maintain original order
+    return 0;
+  });
+
   // Cache the new data
-  await setCachedData(cacheKey, data);
+  await setCachedData(cacheKey, sortedData);
   
-  return data;
+  return sortedData;
 }; 
