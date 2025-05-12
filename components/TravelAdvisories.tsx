@@ -27,6 +27,8 @@ type Advisory = {
   date: string;
   description: string;
   lastModified: string;
+  folderId: number;
+  order:number;
 };
 
 const CACHE_KEY = "travelAdvisoriesCache";
@@ -89,7 +91,7 @@ const TravelAdvisories = React.memo(() => {
       await signInAnonymousUser();
 
       const advisoriesRef = collection(firestore, "travel_advisories");
-      const q = query(advisoriesRef, orderBy("date", "asc"));
+      const q = query(advisoriesRef, orderBy("order", "asc"));
       const querySnapshot = await getDocs(q);
 
       const loadedAdvisories = querySnapshot.docs.map(doc => ({
@@ -197,7 +199,7 @@ const TravelAdvisories = React.memo(() => {
   }
 
   return (
-    <View style={styles.section}>
+    <ScrollView style={styles.section}>
       <Text style={styles.sectionTitle}>{t("travelAdvisories")}</Text>
 
       {loading ? (
@@ -252,7 +254,7 @@ const TravelAdvisories = React.memo(() => {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 });
 
@@ -260,6 +262,7 @@ const styles = StyleSheet.create({
   section: {
     marginVertical: 20,
     paddingHorizontal: 16,
+
   },
   sectionTitle: {
     fontSize: 22,
