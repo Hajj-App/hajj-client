@@ -9,10 +9,12 @@ import {
   Pressable,
   Linking,
   Platform,
+  Modal,
+  ScrollView,
 } from "react-native";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -34,6 +36,102 @@ type Event = {
   description: string;
   url?: string;
   lastModified?: string;
+  isNew?: boolean;
+  order: number;
+};
+
+const BlinkingNewIndicator = () => {
+  const [opacity, setOpacity] = useState(1);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOpacity((prev) => (prev === 1 ? 0.7 : 1));
+    }, 1000); // Blink every second
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <View style={[styles.newIndicator, { opacity }]}>
+      <Text style={styles.newIndicatorText}>NEW</Text>
+    </View>
+  );
+};
+
+const EventModal = ({
+  event,
+  visible,
+  onClose,
+}: {
+  event: Event | null;
+  visible: boolean;
+  onClose: () => void;
+}) => {
+  if (!event) return null;
+
+  return (
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>{event.title}</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.modalContent}>
+            <View style={styles.modalField}>
+              <MaterialIcons
+                name="date-range"
+                size={20}
+                color="#31C462"
+                style={styles.modalIcon}
+              />
+              <Text style={styles.modalText}>{event.date}</Text>
+            </View>
+
+            {event.location && (
+              <View style={styles.modalField}>
+                <MaterialIcons
+                  name="location-on"
+                  size={20}
+                  color="#31C462"
+                  style={styles.modalIcon}
+                />
+                <Text style={styles.modalText}>{event.location}</Text>
+              </View>
+            )}
+
+            <View style={styles.modalDescription}>
+              <Text style={styles.modalDescriptionText}>{event.description}</Text>
+            </View>
+
+            {/* {event.url && (
+              <View style={styles.modalField}>
+                <MaterialIcons
+                  name="link"
+                  size={20}
+                  color="#31C462"
+                  style={styles.modalIcon}
+                />
+                <Text 
+                  style={[styles.modalText, { color: '#31C462' }]}
+                  onPress={() => Linking.openURL(event.url!)}
+                >
+                  {event.url}
+                </Text>
+              </View>
+            )} */}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
 };
 
 const UpcomingEvents = React.memo(() => {
@@ -44,7 +142,8 @@ const UpcomingEvents = React.memo(() => {
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
   const scrollInterval = useRef<number>();
-  const [selectedUpdate, setSelectedUpdate] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Cache helper functions
   const getCachedData = async (key: string): Promise<Event[] | null> => {
@@ -94,13 +193,23 @@ const UpcomingEvents = React.memo(() => {
       }
 
       const eventsRef = collection(firestore, "upcoming_events");
-      const q = query(eventsRef, orderBy("date", "desc"));
+      const q = query(eventsRef, orderBy("order", "asc"));
       const querySnapshot = await getDocs(q);
 
-      const loadedEvents = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Event[];
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const loadedEvents = querySnapshot.docs.map((doc) => {
+        const eventData = doc.data();
+        const eventDate = eventData.lastModified
+          ? new Date(eventData.lastModified)
+          : new Date();
+        return {
+          id: doc.id,
+          ...eventData,
+          isNew: eventDate > twentyFourHoursAgo,
+        } as Event;
+      });
 
       // Update cache
       await setCachedData(CACHE_KEY, loadedEvents);
@@ -159,18 +268,23 @@ const UpcomingEvents = React.memo(() => {
     setActiveSlide(currentIndex);
   }, []);
 
+  const handleEventPress = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setModalVisible(false);
+    setSelectedEvent(null);
+  }, []);
+
   const renderEvent = useCallback(
     ({ item }: { item: Event }) => (
       <Pressable
         style={styles.eventItem}
-        onPress={() => {
-          if (item.url) {
-            Linking.openURL(item.url).catch((err) =>
-              console.error("Error opening URL:", err)
-            );
-          }
-        }}
+        onPress={() => handleEventPress(item)}
       >
+        {item.isNew && <BlinkingNewIndicator />}
         <View style={styles.eventIconContainer}>
           <MaterialIcons name="event" size={24} color="#31C462" />
         </View>
@@ -185,7 +299,7 @@ const UpcomingEvents = React.memo(() => {
         </View>
       </Pressable>
     ),
-    []
+    [handleEventPress]
   );
 
   const renderShimmerItem = useCallback(
@@ -233,6 +347,13 @@ const UpcomingEvents = React.memo(() => {
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{t("upcomingEvents")}</Text>
+
+      {/* Modal for event details */}
+      <EventModal
+        event={selectedEvent}
+        visible={modalVisible}
+        onClose={closeModal}
+      />
 
       {loading ? (
         <FlatList
@@ -388,7 +509,6 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     paddingHorizontal: 20,
   },
-  // Shimmer styles
   shimmerTitle: {
     width: "70%",
     height: 18,
@@ -403,7 +523,6 @@ const styles = StyleSheet.create({
     width: "90%",
     height: 14,
   },
-  // Pagination
   paginationContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -414,6 +533,87 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginHorizontal: 4,
+  },
+  newIndicator: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#FF5722",
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    zIndex: 1,
+  },
+  newIndicatorText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: "90%",
+    maxHeight: "80%",
+    backgroundColor: "white",
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    flex: 1,
+    color: "#333",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    padding: 16,
+  },
+  modalField: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  modalIcon: {
+    marginRight: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    color: "#555",
+  },
+  modalDescription: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  modalDescriptionText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#666",
+  },
+  urlButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    paddingVertical: 8,
+  },
+  urlButtonText: {
+    color: "#31C462",
+    fontSize: 16,
+    fontWeight: "600",
+    marginRight: 6,
   },
 });
 

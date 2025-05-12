@@ -13,14 +13,15 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import { signInAnonymousUser } from "@/utils/firebase";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
-import { getCachedData, setCachedData } from "@/utils/cache";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+
 const { width: screenWidth } = Dimensions.get("window");
 const CACHE_KEY = "latestUpdatesCache";
 const CACHE_EXPIRY = 15 * 60 * 1000; // 15 minutes cache
@@ -36,6 +37,7 @@ type UpdateItem = {
   description: string;
   imageUrl?: string;
   lastModified?: string;
+  order: number;
 };
 
 const LatestUpdates = () => {
@@ -45,9 +47,40 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<number>();
+  const scrollInterval = useRef<NodeJS.Timeout>();
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // Cache helper functions
+  const getCachedData = async (key: string): Promise<UpdateItem[] | null> => {
+    try {
+      const cached = await AsyncStorage.getItem(key);
+      if (!cached) return null;
+
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > CACHE_EXPIRY) {
+        await AsyncStorage.removeItem(key);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Error reading cache:", error);
+      return null;
+    }
+  };
+
+  const setCachedData = async (key: string, data: UpdateItem[]): Promise<void> => {
+    try {
+      const cacheData = {
+        data,
+        timestamp: Date.now(),
+      };
+      await AsyncStorage.setItem(key, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error("Error writing to cache:", error);
+    }
+  };
 
   // Memoized fetch function with caching
   const fetchUpdates = useCallback(async () => {
@@ -68,14 +101,24 @@ const LatestUpdates = () => {
 
       await signInAnonymousUser();
 
-      const updatesRef = collection(firestore, "live_updates");
-      const q = query(updatesRef, orderBy("date", "desc"));
+      const updatesRef = collection(firestore, 'live_updates');
+      const q = query(updatesRef, orderBy("order", "desc"));
       const querySnapshot = await getDocs(q);
 
-      const loadedUpdates = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as UpdateItem[];
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+      const loadedUpdates = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        const updateDate = data.lastModified 
+          ? new Date(data.lastModified)
+          : new Date();
+        return {
+          id: doc.id,
+          ...data,
+          isNew: updateDate > twentyFourHoursAgo,
+        } as UpdateItem;
+      });
 
       // Update cache
       await setCachedData(CACHE_KEY, loadedUpdates);
@@ -102,7 +145,7 @@ const LatestUpdates = () => {
           });
           return nextSlide;
         });
-      }, 5000); // Increased to 5 seconds for better UX
+      }, 5000);
     }
   }, [updates.length]);
 
@@ -155,6 +198,7 @@ const LatestUpdates = () => {
         activeOpacity={0.9}
         onPress={() => openModal(item)}
       >
+
         {item.imageUrl ? (
           <Image
             source={{ uri: item.imageUrl }}
@@ -518,6 +562,7 @@ const styles = StyleSheet.create({
     color: "#333",
     lineHeight: 24,
   },
+
 });
 
 export default React.memo(LatestUpdates);
