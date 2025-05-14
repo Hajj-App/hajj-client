@@ -1,14 +1,46 @@
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, Platform, View } from "react-native";
 import { HapticTab } from "@/components/HapticTab";
 import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import icons from "@/constants/icons";
+import { shouldShowTabBadge } from "@/utils/tabBadge";
+import { useNavigation } from "@react-navigation/native";
+import { clearNewUpdatesFlag } from "@/utils/tabBadge";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const [hasNewUpdates, setHasNewUpdates] = useState(false);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const checkUpdates = async () => {
+      const hasUpdates = await shouldShowTabBadge();
+      setHasNewUpdates(hasUpdates);
+    };
+    checkUpdates();
+    // Check for updates every minute
+    const interval = setInterval(checkUpdates, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Clear badge when explore tab is focused
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', async () => {
+      const state = navigation.getState();
+      if (state && state.routes && state.routes[state.index]) {
+        const currentRoute = state.routes[state.index];
+        if (currentRoute.name === 'explore') {
+          setHasNewUpdates(false);
+          await clearNewUpdatesFlag();
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   return (
     <Tabs
@@ -25,7 +57,6 @@ export default function TabLayout() {
           },
           default: {
             height: 60,
-            
           },
         }),
       }}
@@ -45,9 +76,9 @@ export default function TabLayout() {
                   style={{
                     width: 8,
                     height: 6,
-                    borderRadius: 4, // Makes the view circular
+                    borderRadius: 4,
                     backgroundColor: "green",
-                    marginTop: 4, // Add spacing below the icon
+                    marginTop: 4,
                   }}
                 />
               )}
@@ -60,11 +91,28 @@ export default function TabLayout() {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View style={{ alignItems: "center", marginTop: 20 }}>
-              <Image
-                source={icons.searchIcon}
-                style={{ width: 28, height: 28 }}
-                resizeMode="contain"
-              />
+              <View>
+                <Image
+                  source={icons.searchIcon}
+                  style={{ width: 28, height: 28 }}
+                  resizeMode="contain"
+                />
+                {hasNewUpdates && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -5,
+                      backgroundColor: 'red',
+                      borderRadius: 8,
+                      width: 16,
+                      height: 16,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  />
+                )}
+              </View>
               {focused && (
                 <View
                   style={{

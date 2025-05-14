@@ -11,47 +11,35 @@ import {
   Platform,
   Modal,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { firestore } from "@/utils/firebase";
+import type { ListRenderItem } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
-import LinearGradient from "expo-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+import { fetchEvents, type Event } from "../utils/events";
+import { clearNewUpdatesFlag } from "@/utils/tabBadge";
 
 const { width: screenWidth } = Dimensions.get("window");
-const CACHE_KEY = "upcomingEventsCache";
-const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes cache
+const NEW_UPDATES_KEY = "new_updates_status";
 
-const Shimmer = createShimmerPlaceholder(
-  LinearGradient as unknown as React.ComponentClass<any>
-);
-
-type Event = {
-  id: string;
-  title: string;
-  date: string;
-  location: string;
-  description: string;
-  url?: string;
-  lastModified?: string;
-  isNew?: boolean;
-  order: number;
-};
+const Shimmer = createShimmerPlaceholder(LinearGradient);
 
 const BlinkingNewIndicator = () => {
-  const [opacity, setOpacity] = useState(1);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setOpacity((prev) => (prev === 1 ? 0.7 : 1));
-    }, 1000); // Blink every second
+      setIsVisible((prev) => !prev);
+    }, 1000);
+
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <View style={[styles.newIndicator, { opacity }]}>
+    <View style={[styles.newIndicator, { opacity: isVisible ? 1 : 0.5 }]}>
       <Text style={styles.newIndicatorText}>NEW</Text>
     </View>
   );
@@ -141,81 +129,26 @@ const UpcomingEvents = React.memo(() => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<number>();
+  const scrollInterval = useRef<number | undefined>(undefined);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Cache helper functions
-  const getCachedData = async (key: string): Promise<Event[] | null> => {
-    try {
-      const cached = await AsyncStorage.getItem(key);
-      if (!cached) return null;
-
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp > CACHE_EXPIRY) {
-        await AsyncStorage.removeItem(key);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Error reading cache:", error);
-      return null;
-    }
-  };
-
-  const setCachedData = async (key: string, data: Event[]): Promise<void> => {
-    try {
-      const cacheData = {
-        data,
-        timestamp: Date.now(),
-      };
-      await AsyncStorage.setItem(key, JSON.stringify(cacheData));
-    } catch (error) {
-      console.error("Error writing to cache:", error);
-    }
-  };
-
-  const fetchEvents = useCallback(async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Check cache first
-      const cachedData = await getCachedData(CACHE_KEY);
-      if (cachedData) {
-        setEvents(cachedData);
-        setLoading(false);
-      }
-
-      if (!firestore) {
-        throw new Error("Firebase is not initialized");
-      }
-
-      const eventsRef = collection(firestore, "upcoming_events");
-      const q = query(eventsRef, orderBy("order", "asc"));
-      const querySnapshot = await getDocs(q);
-
-      const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-      const loadedEvents = querySnapshot.docs.map((doc) => {
-        const eventData = doc.data();
-        const eventDate = eventData.lastModified
-          ? new Date(eventData.lastModified)
-          : new Date();
-        return {
-          id: doc.id,
-          ...eventData,
-          isNew: eventDate > twentyFourHoursAgo,
-        } as Event;
-      });
-
-      // Update cache
-      await setCachedData(CACHE_KEY, loadedEvents);
+      const loadedEvents = await fetchEvents();
+      
+      // Set events with isNew property
       setEvents(loadedEvents);
+
+      // Check if any events are new and update the badge
+      const hasNewEvents = loadedEvents.some(event => event.isNew);
+      if (hasNewEvents) {
+        await AsyncStorage.setItem("newUpdatesAvailable", "true");
+      }
     } catch (err) {
-      console.error("Error fetching events:", err);
+      console.error("Error loading events:", err);
       setError(
         err instanceof Error ? err.message : "Failed to load upcoming events"
       );
@@ -223,6 +156,10 @@ const UpcomingEvents = React.memo(() => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   // Auto-scroll functionality
   const startAutoScroll = useCallback(() => {
@@ -241,19 +178,6 @@ const UpcomingEvents = React.memo(() => {
   }, [events.length]);
 
   useEffect(() => {
-    fetchEvents();
-
-    // Set up periodic refresh
-    const refreshInterval = setInterval(fetchEvents, CACHE_EXPIRY);
-    return () => {
-      clearInterval(refreshInterval);
-      if (scrollInterval.current) {
-        clearInterval(scrollInterval.current);
-      }
-    };
-  }, [fetchEvents]);
-
-  useEffect(() => {
     startAutoScroll();
     return () => {
       if (scrollInterval.current) {
@@ -267,6 +191,15 @@ const UpcomingEvents = React.memo(() => {
     const currentIndex = Math.round(contentOffset / (screenWidth - 60));
     setActiveSlide(currentIndex);
   }, []);
+
+  // const handleEventPress = useCallback(async (event: Event) => {
+  //   if (event.url) {
+  //     try {
+  //       await Linking.openURL(event.url);
+  //     } catch (err) {
+  //       console.error("Error opening URL:", err);
+  //     }
+  //   }
 
   const handleEventPress = useCallback((event: Event) => {
     setSelectedEvent(event);
@@ -336,7 +269,7 @@ const UpcomingEvents = React.memo(() => {
         <Text style={styles.sectionTitle}>{t("upcomingEvents")}</Text>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={fetchEvents}>
+          <TouchableOpacity style={styles.retryButton} onPress={loadEvents}>
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -429,7 +362,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     color: "#333",
   },
-  carouselContent: {
+  contentContainer: {
     paddingHorizontal: 20,
   },
   eventItem: {
@@ -440,6 +373,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
     width: screenWidth - 80,
     marginBottom: 5,
+    position: "relative",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -614,6 +548,62 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginRight: 6,
+  },
+  eventCard: {
+    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    width: screenWidth - 80,
+    marginBottom: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: "#666",
+  },
+  shimmerContainer: {
+    flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 12,
+    padding: 15,
+    marginRight: 15,
+    width: screenWidth - 80,
+    marginBottom: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  shimmerCard: {
+    width: "100%",
+    height: "100%",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  carouselContent: {
+    paddingHorizontal: 20,
   },
 });
 

@@ -15,6 +15,7 @@ import LatestUpdates from "@/components/LatestUpdates";
 import { useTranslation } from "react-i18next";
 import { getDocs, collection } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
+import { clearNewUpdatesFlag } from "@/utils/tabBadge";
 
 // Define types for our data
 type NewsItem = {
@@ -142,6 +143,11 @@ export default function ExploreScreen() {
 
     return () => clearInterval(interval);
   }, [activeSlide]);
+
+  useEffect(() => {
+    // Clear the new updates badge when the explore tab is visited
+    clearNewUpdatesFlag();
+  }, []);
 
   const { t } = useTranslation();
 

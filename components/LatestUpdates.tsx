@@ -36,7 +36,6 @@ type UpdateItem = {
   date: string;
   description: string;
   imageUrl?: string;
-  lastModified?: string;
   order: number;
 };
 
@@ -47,7 +46,7 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<NodeJS.Timeout>();
+  const scrollInterval = useRef<number | null>(null);
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -115,7 +114,11 @@ const LatestUpdates = () => {
           : new Date();
         return {
           id: doc.id,
-          ...data,
+          title: data.title || '',
+          date: data.date || '',
+          description: data.description || '',
+          order: data.order || 0,
+          imageUrl: data.imageUrl,
           isNew: updateDate > twentyFourHoursAgo,
         } as UpdateItem;
       });
