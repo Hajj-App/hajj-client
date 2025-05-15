@@ -36,6 +36,7 @@ type UpdateItem = {
   date: string;
   description: string;
   imageUrl?: string;
+  lastModified?: string;
   order: number;
 };
 
@@ -46,7 +47,7 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<number | null>(null);
+  const scrollInterval = useRef<NodeJS.Timeout>();
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -114,11 +115,7 @@ const LatestUpdates = () => {
           : new Date();
         return {
           id: doc.id,
-          title: data.title || '',
-          date: data.date || '',
-          description: data.description || '',
-          order: data.order || 0,
-          imageUrl: data.imageUrl,
+          ...data,
           isNew: updateDate > twentyFourHoursAgo,
         } as UpdateItem;
       });
@@ -522,7 +519,7 @@ const styles = StyleSheet.create({
   },
   modalHeader: {
     backgroundColor: "#31C462",
-    paddingTop: 10,
+    paddingTop: 30,
     paddingBottom: 15,
     paddingHorizontal: 20,
     flexDirection: "row",
@@ -530,12 +527,14 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 5,
+    marginTop:5,
   },
   modalTitle: {
     color: "white",
     fontSize: 18,
     fontWeight: "bold",
     marginLeft: 15,
+    marginTop:5,
   },
   modalContent: {
     flex: 1,
