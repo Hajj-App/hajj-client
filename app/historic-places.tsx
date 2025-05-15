@@ -9,7 +9,7 @@ import {
   Platform,
   StyleSheet,
 } from "react-native";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import HistoricPlacesList from "@/components/common/historic-places-list";
 import { useTranslation } from "react-i18next";
@@ -30,49 +30,53 @@ const HistoricPlacesScreen = () => {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   // Fetch historic places data
-  useEffect(() => {
-    const fetchHistoricPlaces = async () => {
-      try {
-        setLoading(true);
+ useEffect(() => {
+  const fetchHistoricPlaces = async () => {
+    try {
+      setLoading(true);
 
-        if (!firestore) {
-          throw new Error("Firestore is not initialized");
-        }
-
-        // Fetch Makka historic places
-        const makkaQuerySnapshot = await getDocs(
-          collection(firestore, "historic_places_makkah")
-        );
-        const makkaData: HistoricPlace[] = makkaQuerySnapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as HistoricPlace)
-        );
-        setMakkaPlaces(makkaData);
-
-        // Fetch Madina historic places
-        const madinaQuerySnapshot = await getDocs(
-          collection(firestore, "historic_places_madina")
-        );
-        const madinaData: HistoricPlace[] = madinaQuerySnapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as HistoricPlace)
-        );
-        setMadinaPlaces(madinaData);
-      } catch (err) {
-        console.error("Error fetching historic places:", err);
-      } finally {
-        setLoading(false);
+      if (!firestore) {
+        throw new Error("Firestore is not initialized");
       }
-    };
 
-    fetchHistoricPlaces();
-  }, []);
+      // Fetch Makka historic places with ordering
+      const makkaQuery = query(
+        collection(firestore, "historic_places_makkah"),
+        orderBy('order', 'asc') // Order by 'order' field ascending
+      );
+      const makkaQuerySnapshot = await getDocs(makkaQuery);
+      const makkaData: HistoricPlace[] = makkaQuerySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as HistoricPlace)
+      );
+      setMakkaPlaces(makkaData);
+
+      // Fetch Madina historic places with ordering
+      const madinaQuery = query(
+        collection(firestore, "historic_places_madina"),
+        orderBy('order', 'asc') // Order by 'order' field ascending
+      );
+      const madinaQuerySnapshot = await getDocs(madinaQuery);
+      const madinaData: HistoricPlace[] = madinaQuerySnapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          } as HistoricPlace)
+      );
+      setMadinaPlaces(madinaData);
+    } catch (err) {
+      console.error("Error fetching historic places:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchHistoricPlaces();
+}, []);
 
   return (
     <View className="flex-1 w-full h-full">
