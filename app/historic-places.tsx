@@ -5,7 +5,7 @@ import {
   Pressable,
   ScrollView,
   Text,
-  View,
+  SafeAreaView,
   Platform,
   StyleSheet,
 } from "react-native";
@@ -79,7 +79,7 @@ const HistoricPlacesScreen = () => {
 }, []);
 
   return (
-    <View className="flex-1 w-full h-full">
+    <SafeAreaView className="flex-1 w-full h-full">
       <ImageBackground
         source={require("@/assets/images/historic-places.webp")}
         resizeMode="cover"
@@ -144,7 +144,7 @@ const HistoricPlacesScreen = () => {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
