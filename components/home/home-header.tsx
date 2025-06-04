@@ -15,7 +15,7 @@ const HomeHeader = () => {
   };
 
   return (
-    <View className="flex-row justify-end p-2">
+    <View className="flex-row justify-end top-10 right-5 p-2">
       <View>
         <TouchableOpacity
           onPress={() => setShowDropdown(!showDropdown)}
