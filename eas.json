@@ -1,23 +1,25 @@
 {
-    "build": {  
-      "development": {
-        "distribution": "internal",
-        "android": {
-          "buildType": "apk"
-        },
-        "ios": {
-          "simulator": true
-        }
+  "build": {
+    "development": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
       },
-      "production": {
-        "android": {
-          "buildType": "app-bundle",
-           "gradleCommand": ":app:assembleRelease"
-        },
-        "ios": {
-          "enterpriseProvisioning": "universal"
-        }
+      "ios": {
+        "simulator": true
       }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "enterpriseProvisioning": "universal"
+      },
+      "autoIncrement": true
     }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
-  
+}

@@ -136,12 +136,12 @@ export default function HomeScreen() {
               route="/dikr-counter"
             />
           </View>
-          <QuickLinkBtn
+          {/* <QuickLinkBtn
             title={t("dhikrsAndDuas")}
             icon={require("@/assets/images/thasbeeh-brown.png")}
             route="/dikrs-and-duas"
             width="full"
-          />
+          /> */}
           <TouchableOpacity
             className="my-4 bg-cyan-600 rounded-lg p-4 gap-2 flex-row items-center justify-center"
             onPress={() => Linking.openURL("https://www.hajcommittee.gov.in/")}
