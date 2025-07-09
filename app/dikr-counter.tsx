@@ -11,10 +11,11 @@ import {
   Modal,
   TouchableOpacity,
   ScrollView,
+  Vibration,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { AntDesign, Feather } from "@expo/vector-icons";
+import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 
 type DikrItem = {
@@ -27,20 +28,21 @@ type DikrItem = {
 const DikrCounter = () => {
   const [count, setCount] = useState(0);
   const [showManage, setShowManage] = useState(false);
-  const [showDikrList, setShowDikrList] = useState(false);
+  const [showDikrDropdown, setShowDikrDropdown] = useState(false);
   const [dikrName, setDikrName] = useState("Dikr");
   const [editCount, setEditCount] = useState("");
   const [editNotify, setEditNotify] = useState("");
   const [dikrList, setDikrList] = useState<DikrItem[]>([]);
   const [currentDikrId, setCurrentDikrId] = useState("");
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [editingDikrId, setEditingDikrId] = useState("");
+  const [buttonText, setButtonText] = useState("Manage Dikr");
   const { t } = useTranslation();
 
   // Load saved data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        const savedData = await AsyncStorage.getItem("dikrData");
         const savedDikrList = await AsyncStorage.getItem("dikrList");
         const savedCurrentId = await AsyncStorage.getItem("currentDikrId");
 
@@ -56,18 +58,10 @@ const DikrCounter = () => {
               setCount(currentDikr.count);
             }
           } else if (list.length > 0) {
-            // If no current ID but have list, select first item
             setCurrentDikrId(list[0].id);
             setDikrName(list[0].name);
             setCount(list[0].count);
           }
-        }
-
-        if (savedData && !savedCurrentId) {
-          // Legacy support for old data format
-          const { name, count } = JSON.parse(savedData);
-          setDikrName(name);
-          setCount(count);
         }
       } catch (error) {
         console.error("Failed to load data", error);
@@ -94,7 +88,6 @@ const DikrCounter = () => {
       const newCount = count + 1;
       setCount(newCount);
       
-      // Update count in dikrList
       if (currentDikrId) {
         const updatedList = dikrList.map(dikr => 
           dikr.id === currentDikrId ? {...dikr, count: newCount} : dikr
@@ -116,15 +109,32 @@ const DikrCounter = () => {
     }
   };
 
-  const openManageModal = () => {
-    setShowDikrList(true);
+
+  // Vibration 
+
+    useEffect(() => {
+    if (currentDikrId) {
+      const currentDikr = dikrList.find(d => d.id === currentDikrId);
+      if (currentDikr && count > 0 && count === currentDikr.notify) {
+        // Vibrate for 500ms
+        Vibration.vibrate(500);
+        
+        // Optional: You can add a longer pattern if desired
+        // Vibration.vibrate([0, 500, 200, 500]);
+      }
+    }
+  }, [count, currentDikrId, dikrList]);
+
+  const toggleDikrDropdown = () => {
+    setShowDikrDropdown(!showDikrDropdown);
   };
 
   const selectDikr = (dikr: DikrItem) => {
     setDikrName(dikr.name);
+     setButtonText(dikr.name);
     setCount(dikr.count);
     setCurrentDikrId(dikr.id);
-    setShowDikrList(false);
+    setShowDikrDropdown(false);
   };
 
   const startAddingNew = () => {
@@ -132,40 +142,49 @@ const DikrCounter = () => {
     setDikrName("");
     setEditCount("0");
     setEditNotify("100");
-    setShowDikrList(false);
+    setEditingDikrId("");
+    setShowDikrDropdown(false);
     setShowManage(true);
   };
 
-  const saveNewDikr = () => {
-    const newDikr: DikrItem = {
-      id: Date.now().toString(),
-      name: dikrName,
-      count: parseInt(editCount) || 0,
-      notify: parseInt(editNotify) || 100,
-    };
-
-    const updatedList = [...dikrList, newDikr];
-    setDikrList(updatedList);
-    selectDikr(newDikr);
+  const startEditingDikr = (dikr: DikrItem) => {
     setIsAddingNew(false);
-    setShowManage(false);
+    setDikrName(dikr.name);
+    setEditCount(dikr.count.toString());
+    setEditNotify(dikr.notify.toString());
+    setEditingDikrId(dikr.id);
+    setShowDikrDropdown(false);
+    setShowManage(true);
   };
 
-  const updateCurrentDikr = () => {
-    if (!currentDikrId) return;
-
-    const updatedList = dikrList.map(dikr => 
-      dikr.id === currentDikrId 
-        ? {
-            ...dikr,
-            name: dikrName,
-            count: parseInt(editCount) || dikr.count,
-            notify: parseInt(editNotify) || dikr.notify,
-          }
-        : dikr
-    );
-
-    setDikrList(updatedList);
+  const saveDikr = () => {
+    if (isAddingNew) {
+      const newDikr: DikrItem = {
+        id: Date.now().toString(),
+        name: dikrName,
+        count: parseInt(editCount) || 0,
+        notify: parseInt(editNotify) || 100,
+      };
+      const updatedList = [...dikrList, newDikr];
+      setDikrList(updatedList);
+      selectDikr(newDikr);
+    } else {
+      const updatedList = dikrList.map(dikr => 
+        dikr.id === editingDikrId
+          ? {
+              ...dikr,
+              name: dikrName,
+              count: parseInt(editCount) || dikr.count,
+              notify: parseInt(editNotify) || dikr.notify,
+            }
+          : dikr
+      );
+      setDikrList(updatedList);
+      
+      if (editingDikrId === currentDikrId) {
+        setCount(parseInt(editCount) || count);
+      }
+    }
     setShowManage(false);
   };
 
@@ -208,7 +227,7 @@ const DikrCounter = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableWithoutFeedback onPress={() => setShowDikrDropdown(false)}>
         <View style={styles.content}>
           {/* Counter Display */}
           <Pressable onPress={incrementCount} style={styles.counterButton}>
@@ -218,7 +237,6 @@ const DikrCounter = () => {
               resizeMode="contain"
             />
             <Text style={styles.countText}>{count}</Text>
-           
           </Pressable>
 
           {/* Divider Line */}
@@ -226,80 +244,70 @@ const DikrCounter = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <Pressable onPress={openManageModal} style={styles.actionButton}>
-              <Text style={styles.buttonText}>{t("manage")}</Text>
+            <Pressable 
+              onPress={toggleDikrDropdown} 
+              style={styles.manageButton}
+            >
+             <Text style={styles.buttonText}>{buttonText}</Text>
+              <Ionicons 
+                name={showDikrDropdown ? "chevron-up" : "chevron-down"} 
+                size={16} 
+                color="black" 
+                style={styles.dropdownIcon}
+              />
             </Pressable>
 
-            <Pressable onPress={reset} style={styles.actionButton}>
+            <Pressable onPress={reset} style={styles.resetButton}>
               <Text style={styles.buttonText}>{t("reset")}</Text>
             </Pressable>
           </View>
-        </View>
-      </TouchableWithoutFeedback>
 
-      {/* Dikr List Modal */}
-      <Modal
-        visible={showDikrList}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDikrList(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowDikrList(false)}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-              <View style={[styles.modalContent, { width: "90%", maxHeight: "70%" }]}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Select Dikr</Text>
-                  <TouchableOpacity
-                    onPress={() => setShowDikrList(false)}
-                    style={styles.closeButton}
-                  >
-                    <AntDesign name="close" size={24} color="black" />
-                  </TouchableOpacity>
-                </View>
-
-                <ScrollView style={styles.dikrListScroll}>
-                  {dikrList.map((dikr) => (
-                    <View key={dikr.id} style={styles.dikrItemContainer}>
-                      <Pressable 
-                        onPress={() => selectDikr(dikr)}
-                        style={styles.dikrItem}
+          {/* Dikr Dropdown */}
+          {showDikrDropdown && (
+            <View style={styles.dropdownContainer}>
+              <ScrollView style={styles.dropdownScroll}>
+                {dikrList.map((dikr) => (
+                  <View key={dikr.id} style={styles.dropdownItemContainer}>
+                    <Pressable
+                      onPress={() => selectDikr(dikr)}
+                      style={styles.dropdownItem}
+                    >
+                      <Text style={[
+                        styles.dropdownItemText,
+                        currentDikrId === dikr.id && styles.selectedDikrText
+                      ]}>
+                        {dikr.name}
+                      </Text>
+                      <Text style={styles.dropdownItemCount}>{dikr.count}</Text>
+                    </Pressable>
+                    <View style={styles.dropdownItemActions}>
+                      <TouchableOpacity 
+                        onPress={() => startEditingDikr(dikr)}
+                        style={styles.editButton}
                       >
-                        <Text style={[
-                          styles.dikrItemName,
-                          currentDikrId === dikr.id && styles.selectedDikrName
-                        ]}>
-                          {dikr.name}
-                        </Text>
-                        <View style={styles.dikrItemDetails}>
-                          <Text style={styles.dikrItemCount}>Count</Text>
-                          <Text style={styles.dikrItemNotify}>Notify: {dikr.notify}</Text>
-                        </View>
-                      </Pressable>
+                        <Feather name="edit" size={16} color="#3b82f6" />
+                      </TouchableOpacity>
                       <TouchableOpacity 
                         onPress={() => deleteDikr(dikr.id)}
                         style={styles.deleteButton}
                       >
-                        <Feather name="trash-2" size={20} color="#ef4444" />
+                        <Feather name="trash-2" size={16} color="#ef4444" />
                       </TouchableOpacity>
                     </View>
-                  ))}
-                </ScrollView>
-
-                <View style={styles.dikrListFooter}>
-                  <Pressable 
-                    onPress={startAddingNew} 
-                    style={styles.addButton}
-                  >
-                    <Feather name="plus" size={20} color="white" />
-                    <Text style={styles.addButtonText}>Add New Dikr</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
+                  </View>
+                ))}
+              </ScrollView>
+              <Pressable 
+                onPress={startAddingNew} 
+                style={styles.addNewButton}
+              >
+                <Feather name="plus" size={16} color="#3b82f6" />
+                <Text style={styles.addNewButtonText}>Add New Dikr</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
 
       {/* Edit/Add Dikr Modal */}
       <Modal
@@ -350,7 +358,7 @@ const DikrCounter = () => {
                 />
 
                 <Pressable 
-                  onPress={isAddingNew ? saveNewDikr : updateCurrentDikr} 
+                  onPress={saveDikr} 
                   style={styles.saveButton}
                 >
                   <Text style={styles.saveButtonText}>
@@ -416,8 +424,20 @@ const styles = StyleSheet.create({
   buttonRow: {
     flexDirection: "row",
     gap: 16,
+    width: "75%",
+    justifyContent: "space-between",
   },
-  actionButton: {
+  manageButton: {
+    flex: 1,
+    backgroundColor: "#e0e0e0",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resetButton: {
     backgroundColor: "#e0e0e0",
     paddingVertical: 16,
     paddingHorizontal: 40,
@@ -425,6 +445,74 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
+    fontWeight: "bold",
+  },
+  dropdownIcon: {
+    marginLeft: 8,
+  },
+  dropdownContainer: {
+    width: "75%",
+    maxHeight: 200,
+    backgroundColor: "white",
+    borderRadius: 16,
+    marginTop: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    padding: 10,
+  },
+  dropdownScroll: {
+    maxHeight: 150,
+  },
+  dropdownItemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  dropdownItem: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingRight: 10,
+  },
+  dropdownItemText: {
+    fontSize: 16,
+  },
+  selectedDikrText: {
+    color: "#3b82f6",
+    fontWeight: "bold",
+  },
+  dropdownItemCount: {
+    fontSize: 14,
+    color: "#666",
+  },
+  dropdownItemActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  editButton: {
+    padding: 5,
+  },
+  deleteButton: {
+    padding: 5,
+  },
+  addNewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    marginTop: 5,
+  },
+  addNewButtonText: {
+    marginLeft: 5,
+    color: "#3b82f6",
     fontWeight: "bold",
   },
   // Modal styles
@@ -473,58 +561,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  dikrListScroll: {
-    maxHeight: "80%",
-  },
-  dikrItemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  dikrItem: {
-    paddingVertical: 15,
-    flex: 1,
-  },
-  dikrItemName: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  selectedDikrName: {
-    color: "#3b82f6",
-  },
-  dikrItemDetails: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  dikrItemCount: {
-    color: "#666",
-  },
-  dikrItemNotify: {
-    color: "#666",
-  },
-  deleteButton: {
-    padding: 10,
-  },
-  dikrListFooter: {
-    marginTop: 15,
-  },
-  addButton: {
-    backgroundColor: "#10b981",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 10,
-  },
-  addButtonText: {
     color: "white",
     fontWeight: "bold",
     fontSize: 16,
