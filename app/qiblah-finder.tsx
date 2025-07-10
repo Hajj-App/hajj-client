@@ -1,5 +1,6 @@
 import {
   View,
+  SafeAreaView,
   Text,
   Image,
   StyleSheet,
@@ -204,7 +205,7 @@ const QiblahFinder = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>{t("qiblaFinder")}</Text>
 
       {isCalibrating && (
@@ -263,7 +264,7 @@ const QiblahFinder = () => {
         <Text style={styles.tipsText}>• {t("stayAwayFromMagneticObjects")}</Text>
         <Text style={styles.tipsText}>• {t("calibrateIfDirectionSeemsWrong")}</Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
