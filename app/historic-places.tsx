@@ -4,8 +4,8 @@ import {
   ImageBackground,
   Pressable,
   ScrollView,
+  View,
   Text,
-  SafeAreaView,
   Platform,
   StyleSheet,
 } from "react-native";
@@ -13,6 +13,7 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import HistoricPlacesList from "@/components/common/historic-places-list";
 import { useTranslation } from "react-i18next";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface HistoricPlace {
   id: string;

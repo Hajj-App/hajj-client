@@ -1,10 +1,15 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp, FirebaseApp } from "firebase/app";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { signInAnonymously, Auth, getAuth } from "firebase/auth";
+import {
+  initializeAuth,
+  getReactNativePersistence,
+  signInAnonymously,
+  Auth,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Your web app's Firebase configuration
+// Firebase config
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
@@ -14,11 +19,6 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
 };
 
-// Check if configuration has actual values
-const hasValidConfig = Object.values(firebaseConfig).every(
-  (value) => value && !value.includes("YOUR_")
-);
-
 // Initialize Firebase
 let app: FirebaseApp | null = null;
 let storage: FirebaseStorage | null = null;
@@ -27,14 +27,27 @@ let auth: Auth | null = null;
 
 try {
   app = initializeApp(firebaseConfig);
-  storage = getStorage(app);
-  firestore = getFirestore(app);
-  auth = getAuth(app);
+  
+  // Initialize other services only if app initialization succeeds
+  if (app) {
+    storage = getStorage(app);
+    firestore = getFirestore(app);
+    
+    // Initialize auth with persistence
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  }
 } catch (error) {
   console.error("Error initializing Firebase:", error);
 }
 
-// Sign in anonymously to Firebase
+// Check if configuration has actual values
+const hasValidConfig = Object.values(firebaseConfig).every(
+  (value) => value && !value.includes("YOUR_")
+);
+
+// Anonymous sign-in
 export const signInAnonymousUser = async (): Promise<void> => {
   if (!hasValidConfig || !auth) {
     console.warn("Firebase not properly configured. Skipping authentication.");
@@ -46,7 +59,6 @@ export const signInAnonymousUser = async (): Promise<void> => {
     console.log("Signed in anonymously to Firebase");
   } catch (error) {
     console.error("Error signing in anonymously:", error);
-    // Continue without authentication - storage might still work if rules allow public access
   }
 };
 

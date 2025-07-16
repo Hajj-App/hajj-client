@@ -5,80 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30e4a812-1c9c-4e78-b041-405289eed776" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/icon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/images/Event_group.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/images/madina/madina-banner.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/images/madina/madina-rituals.webp" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/splashscreen_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/SplashScreenLogo.imageset/Contents.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/SplashScreenLogo.imageset/image.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/SplashScreenLogo.imageset/image@2x.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/SplashScreenLogo.imageset/image@3x.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/com/anonymous/hajjclient/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/com/anonymous/idc/MainActivity.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/com/anonymous/hajjclient/MainApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/com/anonymous/idc/MainApplication.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/values/colors.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/res/values/styles.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/res/values/styles.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/hs_err_pid4984.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/replay_pid4984.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/android/settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/madinah.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/madinah.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/makkah.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/makkah.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/hajj-rituals/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/hajj-rituals/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/madina-historic-places/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/madina-historic-places/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/madina-rituals/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/madina-rituals/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/makkah-historic-places/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/makkah-historic-places/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/umrah-rituals/[id].tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/umrah-rituals/[id].tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/splashscreen_logo.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/LatestUpdates.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/LatestUpdates.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/UpcomingEvents.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/UpcomingEvents.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components/common/historic-places-slider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/common/historic-places-slider.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Podfile" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Podfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/Podfile.lock" beforeDir="false" afterPath="$PROJECT_DIR$/ios/Podfile.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient.xcodeproj/project.pbxproj" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC.xcodeproj/project.pbxproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient.xcodeproj/xcshareddata/xcschemes/hajjclient.xcscheme" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC.xcodeproj/xcshareddata/xcschemes/IDC.xcscheme" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient.xcworkspace/contents.xcworkspacedata" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC.xcworkspace/contents.xcworkspacedata" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/AppDelegate.h" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/AppDelegate.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/AppDelegate.mm" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/AppDelegate.mm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Images.xcassets/AppIcon.appiconset/Contents.json" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/AppIcon.appiconset/Contents.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Images.xcassets/Contents.json" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/Contents.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Images.xcassets/SplashScreenBackground.colorset/Contents.json" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/Images.xcassets/SplashScreenBackground.colorset/Contents.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Info.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/Info.plist" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/PrivacyInfo.xcprivacy" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/PrivacyInfo.xcprivacy" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/SplashScreen.storyboard" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/SplashScreen.storyboard" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/Supporting/Expo.plist" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/Supporting/Expo.plist" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/hajjclient-Bridging-Header.h" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/IDC-Bridging-Header.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/hajjclient.entitlements" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/IDC.entitlements" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/main.m" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/main.m" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ios/hajjclient/noop-file.swift" beforeDir="false" afterPath="$PROJECT_DIR$/ios/IDC/noop-file.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/dikr-counter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/dikr-counter.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/historic-places.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/historic-places.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/qiblah-finder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/qiblah-finder.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/firebase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/utils/firebase.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -101,15 +36,16 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "AnalyzeApkAction.lastApkPath": "D:/MY WORKS/RACTNATIVE/Hajj-App/hajj-client",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "Merging main",
+    "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/MY WORKS/RACTNATIVE/Hajj/hajj-client"
+    "last_opened_file_path": "D:/MY WORKS/RACTNATIVE/Hajj-App/hajj-client"
   }
 }]]></component>
   <component name="RecentsManager">

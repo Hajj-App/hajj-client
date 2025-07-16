@@ -7,8 +7,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   StyleSheet,
-  SafeAreaView,
-  Modal,
+./gradlew assembleDebug  Modal,
   TouchableOpacity,
   ScrollView,
   Vibration,
@@ -17,6 +16,7 @@ import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type DikrItem = {
   id: string;

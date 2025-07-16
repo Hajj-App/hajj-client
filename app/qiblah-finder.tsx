@@ -1,6 +1,5 @@
 import {
   View,
-  SafeAreaView,
   Text,
   Image,
   StyleSheet,
@@ -13,6 +12,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import { Magnetometer, DeviceMotion } from "expo-sensors";
 import * as Location from "expo-location";
 import { useTranslation } from "react-i18next";
+import { SafeAreaView } from "react-native-safe-area-context";
 // Coordinates of the Kaaba in Mecca
 const KAABA_LAT = 21.4225;
 const KAABA_LNG = 39.8262;
