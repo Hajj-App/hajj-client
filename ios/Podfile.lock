@@ -282,6 +282,8 @@ PODS:
     - Yoga
   - ExpoAsset (11.1.5):
     - ExpoModulesCore
+  - ExpoAudio (0.4.8):
+    - ExpoModulesCore
   - ExpoCrypto (14.1.4):
     - ExpoModulesCore
   - ExpoDevice (7.1.4):
@@ -346,6 +348,8 @@ PODS:
   - ExpoSymbols (0.4.4):
     - ExpoModulesCore
   - ExpoSystemUI (5.0.7):
+    - ExpoModulesCore
+  - ExpoVideo (2.2.2):
     - ExpoModulesCore
   - ExpoWebBrowser (14.1.6):
     - ExpoModulesCore
@@ -2473,6 +2477,7 @@ DEPENDENCIES:
   - expo-dev-menu (from `../node_modules/expo-dev-menu`)
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
+  - ExpoAudio (from `../node_modules/expo-audio/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDevice (from `../node_modules/expo-device/ios`)
   - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
@@ -2493,6 +2498,7 @@ DEPENDENCIES:
   - ExpoSplashScreen (from `../node_modules/expo-splash-screen/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
+  - ExpoVideo (from `../node_modules/expo-video/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXStructuredHeaders (from `../node_modules/expo-structured-headers/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
@@ -2620,6 +2626,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
+  ExpoAudio:
+    :path: "../node_modules/expo-audio/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
   ExpoDevice:
@@ -2660,6 +2668,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-symbols/ios"
   ExpoSystemUI:
     :path: "../node_modules/expo-system-ui/ios"
+  ExpoVideo:
+    :path: "../node_modules/expo-video/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
   EXStructuredHeaders:
@@ -2845,6 +2855,7 @@ SPEC CHECKSUMS:
   expo-dev-menu: 56d5bdee4af7361bcfb6a6ce42419befd81d45ef
   expo-dev-menu-interface: 609c35ae8b97479cdd4c9e23c8cf6adc44beea0e
   ExpoAsset: 3bc9adb7dbbf27ae82c18ca97eb988a3ae7e73b1
+  ExpoAudio: a910693605f0285e08a776ce847f50114010ee9e
   ExpoCrypto: e5098d184ff5989ac395542d5d41f84e2051bffa
   ExpoDevice: 7082f03af1c588333ef1417d5aa8287081d94b24
   ExpoDocumentPicker: 5487ce33530198f4ecf724e650d390b2abe84c15
@@ -2865,6 +2876,7 @@ SPEC CHECKSUMS:
   ExpoSplashScreen: f524572afd81522e40850eaa7163e2ae99cce783
   ExpoSymbols: 5324de61341b396965a1cd3d2c738227b13d6a60
   ExpoSystemUI: 82c970cf8495449698e7343b4f78a0d04bcec9ee
+  ExpoVideo: ada534976cfd4a6bf082cc61aa1b17920a251e32
   ExpoWebBrowser: 06fb5f767f53ad53944b068cdd207984cb998712
   EXStructuredHeaders: 32bec6771c2db18c4cd47cecae530d1d06cdf972
   EXTaskManager: a7a2d34c0fa6a459dcd9f50844ecbec886bd2da8
