@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   StyleSheet,
-./gradlew assembleDebug  Modal,
+  Modal,
   TouchableOpacity,
   ScrollView,
   Vibration,
@@ -52,7 +52,7 @@ const DikrCounter = () => {
 
           if (savedCurrentId) {
             setCurrentDikrId(savedCurrentId);
-            const currentDikr = list.find(d => d.id === savedCurrentId);
+            const currentDikr = list.find((d:DikrItem) => d.id === savedCurrentId);
             if (currentDikr) {
               setDikrName(currentDikr.name);
               setCount(currentDikr.count);

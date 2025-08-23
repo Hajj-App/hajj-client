@@ -17,7 +17,11 @@ import {
 } from "react-native";
 import { SafeAreaView, Text } from "react-native";
 import { useTranslation } from "react-i18next";
+
+
+
 export default function HomeScreen() {
+  
   const [city, setCity] = useState("Fetching...");
 
   const { t } = useTranslation();

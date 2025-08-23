@@ -35,6 +35,7 @@ const CACHE_KEY = "travelAdvisoriesCache";
 const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes cache
 
 const TravelAdvisories = React.memo(() => {
+  
   const { t } = useTranslation();
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
   const [loading, setLoading] = useState(false);
