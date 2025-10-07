@@ -1,11 +1,10 @@
-import { initializeApp, FirebaseApp } from "firebase/app";
-import { getStorage, FirebaseStorage } from "firebase/storage";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { getStorage } from "firebase/storage";
+import { getFirestore } from "firebase/firestore";
 import {
   initializeAuth,
   getReactNativePersistence,
   signInAnonymously,
-  Auth,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -20,19 +19,18 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp | null = null;
-let storage: FirebaseStorage | null = null;
-let firestore: Firestore | null = null;
-let auth: Auth | null = null;
+let app: ReturnType<typeof initializeApp> | null = null;
+let storage: ReturnType<typeof getStorage> | null = null;
+let firestore: ReturnType<typeof getFirestore> | null = null;
+let auth: ReturnType<typeof initializeAuth> | null = null;
 
 try {
   app = initializeApp(firebaseConfig);
-  
-  // Initialize other services only if app initialization succeeds
+
   if (app) {
     storage = getStorage(app);
     firestore = getFirestore(app);
-    
+
     // Initialize auth with persistence
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage),
