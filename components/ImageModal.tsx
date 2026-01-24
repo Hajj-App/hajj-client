@@ -8,6 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ImageModalProps {
   visible: boolean;
@@ -22,6 +23,8 @@ const ImageModal: React.FC<ImageModalProps> = ({
   imageUrl,
   onClose,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
     <Modal
       visible={visible}
@@ -32,10 +35,10 @@ const ImageModal: React.FC<ImageModalProps> = ({
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           <TouchableOpacity 
-            style={styles.closeButton}
+            style={[styles.closeButton, { top: insets.top + 20 }]}
             onPress={onClose}
           >
-            <AntDesign name="closecircle" size={24} color="white" />
+            <AntDesign name="close-circle" size={24} color="white" />
           </TouchableOpacity>
           
           {imageUrl && (

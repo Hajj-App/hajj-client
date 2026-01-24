@@ -15,12 +15,12 @@ import {
 } from "react-native";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
-import { signInAnonymousUser } from "@/utils/firebase";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
+import { logger } from "@/utils/logger";
 
 const { width: screenWidth } = Dimensions.get("window");
 const CACHE_KEY = "latestUpdatesCache";
@@ -47,7 +47,7 @@ const LatestUpdates = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<NodeJS.Timeout>();
+  const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [selectedUpdate, setSelectedUpdate] = useState<UpdateItem | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -65,7 +65,7 @@ const LatestUpdates = () => {
 
       return data;
     } catch (error) {
-      console.error("Error reading cache:", error);
+      logger.error("Error reading cache", error);
       return null;
     }
   };
@@ -78,7 +78,7 @@ const LatestUpdates = () => {
       };
       await AsyncStorage.setItem(key, JSON.stringify(cacheData));
     } catch (error) {
-      console.error("Error writing to cache:", error);
+      logger.error("Error writing to cache", error);
     }
   };
 
@@ -99,8 +99,7 @@ const LatestUpdates = () => {
         throw new Error("Firebase is not initialized");
       }
 
-      await signInAnonymousUser();
-
+      // Auth is handled globally in _layout.tsx
       const updatesRef = collection(firestore, 'live_updates');
       const q = query(updatesRef, orderBy("order", "desc"));
       const querySnapshot = await getDocs(q);
@@ -110,13 +109,14 @@ const LatestUpdates = () => {
 
       const loadedUpdates = querySnapshot.docs.map((doc) => {
         const data = doc.data();
-        const updateDate = data.lastModified 
-          ? new Date(data.lastModified)
-          : new Date();
         return {
           id: doc.id,
-          ...data,
-          isNew: updateDate > twentyFourHoursAgo,
+          title: data.title || '',
+          date: data.date || '',
+          description: data.description || '',
+          imageUrl: data.imageUrl,
+          lastModified: data.lastModified,
+          order: data.order || 0,
         } as UpdateItem;
       });
 
@@ -124,7 +124,7 @@ const LatestUpdates = () => {
       await setCachedData(CACHE_KEY, loadedUpdates);
       setUpdates(loadedUpdates);
     } catch (err) {
-      console.error("Error fetching updates:", err);
+      logger.error("Error fetching updates", err);
       setError(
         err instanceof Error ? err.message : "Failed to load live updates"
       );

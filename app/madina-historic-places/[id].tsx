@@ -7,7 +7,6 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   Linking,
 } from "react-native";
 import React, { useState, useEffect } from "react";
@@ -16,13 +15,14 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { Audio } from "expo-av";
 import { getFilesWithUrls } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
-import { signInAnonymousUser } from "../../utils/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import AudioPlayerModal from "@/components/AudioPlayerModal";
 import ImageModal from "@/components/ImageModal";
 import PdfViewerModal from "@/components/PdfViewerModal";
 import { useTranslation } from "react-i18next";
+import { logger } from "@/utils/logger";
+import { showErrorAlert, formatErrorForDisplay } from "@/utils/errorHandler";
 type Props = {};
 
 interface RitualMedia {
@@ -73,7 +73,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           playThroughEarpieceAndroid: false,
         });
       } catch (error) {
-        console.error("Error setting up audio mode:", error);
+        logger.error("Error setting up audio mode", error);
       }
     };
 
@@ -86,10 +86,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
         setLoading(true);
         setError(null);
 
-        // Sign in anonymously to Firebase
-        await signInAnonymousUser();
-
-        // Fetch ritual data from Firestore
+        // Auth is handled globally in _layout.tsx
         if (!firestore) {
           throw new Error("Firestore is not initialized");
         }
@@ -119,7 +116,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
 
         await fetchRitualMedia();
       } catch (err) {
-        console.error("Error fetching ritual:", err);
+        logger.error("Error fetching ritual", err);
         setError("Failed to load ritual data");
       } finally {
         setLoading(false);
@@ -161,28 +158,18 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
 
         setMedia({ images, audio, documents });
       } catch (storageError: any) {
-        console.error("Storage error:", storageError);
+        logger.error("Storage error", storageError);
 
-        // Handle common Firebase Storage errors
-        if (storageError.code === "storage/unauthorized") {
-          setError(
-            "Permission denied. You do not have access to these files. Please check your Firebase Storage rules."
-          );
-          Alert.alert(
-            "Storage Access Error",
-            "You don't have permission to access these files. Please update your Firebase Storage rules to allow access to the 'rituals' folder.",
-            [{ text: "OK" }]
-          );
-        } else if (storageError.code === "storage/object-not-found") {
-          setError(`No media files found for ritual ${ritualId}`);
+        // Use user-friendly error messages
+        if (storageError.code === "storage/object-not-found") {
+          // This is not really an error - just no media files uploaded
+          // Don't show error, just leave media empty
         } else {
-          setError(
-            `Error: ${storageError.message || "Unknown error occurred"}`
-          );
+          setError(formatErrorForDisplay(storageError));
         }
       }
     } catch (err) {
-      console.error("Error fetching ritual media:", err);
+      logger.error("Error fetching ritual media", err);
       setError("Failed to load media files. Please try again later.");
     } finally {
       setLoading(false);
@@ -193,11 +180,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
   const openLocationLink = () => {
     if (locationLink) {
       Linking.openURL(locationLink).catch((err) => {
-        console.error("Error opening location link:", err);
-        Alert.alert(
-          "Cannot Open Link",
-          "Unable to open the location link. Please try again later."
-        );
+        showErrorAlert(err, "Error opening location link");
       });
     }
   };

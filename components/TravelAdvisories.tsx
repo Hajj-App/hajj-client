@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
-import { signInAnonymousUser } from "@/utils/firebase";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
 import LinearGradient from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTranslation } from "react-i18next";
 import { AntDesign } from "@expo/vector-icons";
+import { logger } from "@/utils/logger";
 
 const Shimmer = createShimmerPlaceholder(
   LinearGradient as unknown as React.ComponentClass<any>
@@ -56,7 +56,7 @@ const TravelAdvisories = React.memo(() => {
 
       return data;
     } catch (error) {
-      console.error("Error reading cache:", error);
+      logger.error("Error reading cache", error);
       return null;
     }
   };
@@ -69,7 +69,7 @@ const TravelAdvisories = React.memo(() => {
       };
       await AsyncStorage.setItem(key, JSON.stringify(cacheData));
     } catch (error) {
-      console.error("Error writing to cache:", error);
+      logger.error("Error writing to cache", error);
     }
   };
 
@@ -89,8 +89,7 @@ const TravelAdvisories = React.memo(() => {
         throw new Error("Firebase is not initialized");
       }
 
-      await signInAnonymousUser();
-
+      // Auth is handled globally in _layout.tsx
       const advisoriesRef = collection(firestore, "travel_advisories");
       const q = query(advisoriesRef, orderBy("order", "asc"));
       const querySnapshot = await getDocs(q);
@@ -104,7 +103,7 @@ const TravelAdvisories = React.memo(() => {
       await setCachedData(CACHE_KEY, loadedAdvisories);
       setAdvisories(loadedAdvisories);
     } catch (err) {
-      console.error("Error fetching advisories:", err);
+      logger.error("Error fetching advisories", err);
       setError(
         err instanceof Error ? err.message : "Failed to load travel advisories"
       );

@@ -1,9 +1,7 @@
 import { storage } from './firebase';
-import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { 
   ref, 
-  uploadBytes, 
   uploadBytesResumable, 
   getDownloadURL as getFirebaseDownloadURL, 
   listAll, 
@@ -11,6 +9,7 @@ import {
   deleteObject 
 } from 'firebase/storage';
 import { StorageFile, StorageFileMetadata, StorageListResult } from './storageTypes';
+import { logger } from './logger';
 
 /**
  * Upload a file to Firebase Storage
@@ -22,7 +21,7 @@ import { StorageFile, StorageFileMetadata, StorageListResult } from './storageTy
 export const uploadFile = async (
   uri: string, 
   path: string, 
-  metadata: Record<string, any> = {}
+  metadata: Record<string, unknown> = {}
 ): Promise<string> => {
   try {
     if (!storage) {
@@ -39,12 +38,11 @@ export const uploadFile = async (
     return new Promise<string>((resolve, reject) => {
       uploadTask.on('state_changed',
         (snapshot) => {
-
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log(`Upload is ${progress}% complete`);
+          logger.debug(`Upload is ${progress}% complete`);
         },
         (error) => {
-          console.error('Upload failed:', error);
+          logger.error('Upload failed', error);
           reject(error);
         },
         async () => {
@@ -54,7 +52,7 @@ export const uploadFile = async (
       );
     });
   } catch (error) {
-    console.error('Error uploading file:', error);
+    logger.error('Error uploading file', error);
     throw error;
   }
 };
@@ -73,9 +71,9 @@ export const deleteFile = async (path: string): Promise<void> => {
     
     const storageRef = ref(storage, path);
     await deleteObject(storageRef);
-    console.log('File deleted successfully');
+    logger.info('File deleted successfully');
   } catch (error) {
-    console.error('Error deleting file:', error);
+    logger.error('Error deleting file', error);
     throw error;
   }
 };
@@ -124,7 +122,7 @@ export const pickImageAndUpload = async (
     
     throw new Error('No image selected');
   } catch (error) {
-    console.error('Error picking and uploading image:', error);
+    logger.error('Error picking and uploading image', error);
     throw error;
   }
 };
@@ -145,7 +143,7 @@ export const getDownloadURL = async (path: string): Promise<string> => {
     const url = await getFirebaseDownloadURL(storageRef);
     return url;
   } catch (error) {
-    console.error('Error getting download URL:', error);
+    logger.error('Error getting download URL', error);
     throw error;
   }
 };
@@ -178,19 +176,19 @@ export const listFiles = async (path: string): Promise<StorageListResult> => {
         fullPath: prefix.fullPath
       }))
     };
-  } catch (error: any) {
-    console.error('Error listing files:', error);
+  } catch (error: unknown) {
+    const err = error as { code?: string };
+    logger.error('Error listing files', error);
     
     // Provide more helpful error messages
-    if (error.code === 'storage/unauthorized') {
-      console.warn('PERMISSION DENIED: Update your Firebase Storage rules to allow read access to this path.');
-      console.warn('Example rule: match /b/{bucket}/o { match /rituals/{ritualId}/{allFiles=**} { allow read: if true; } }');
-    } else if (error.code === 'storage/object-not-found') {
-      console.warn(`The path "${path}" does not exist in Firebase Storage.`);
-    } else if (error.code === 'storage/invalid-argument') {
-      console.warn('Invalid storage path provided.');
-    } else if (error.code === 'storage/unknown') {
-      console.warn('Unknown storage error. Check your Firebase configuration.');
+    if (err.code === 'storage/unauthorized') {
+      logger.warn('PERMISSION DENIED: Update your Firebase Storage rules to allow read access to this path.');
+    } else if (err.code === 'storage/object-not-found') {
+      logger.warn(`The path "${path}" does not exist in Firebase Storage.`);
+    } else if (err.code === 'storage/invalid-argument') {
+      logger.warn('Invalid storage path provided.');
+    } else if (err.code === 'storage/unknown') {
+      logger.warn('Unknown storage error. Check your Firebase configuration.');
     }
     
     throw error;
@@ -213,7 +211,7 @@ export const getFileMetadata = async (path: string): Promise<StorageFileMetadata
     const metadata = await getFirebaseMetadata(storageRef);
     return metadata as StorageFileMetadata;
   } catch (error) {
-    console.error('Error getting file metadata:', error);
+    logger.error('Error getting file metadata', error);
     throw error;
   }
 };
@@ -236,7 +234,7 @@ export const downloadFile = async (path: string): Promise<Blob> => {
     const blob = await response.blob();
     return blob;
   } catch (error) {
-    console.error('Error downloading file:', error);
+    logger.error('Error downloading file', error);
     throw error;
   }
 };
@@ -256,7 +254,7 @@ export const getFilesWithUrls = async (path: string): Promise<StorageFile[]> => 
     const result = await listFiles(path);
     
     if (result.items.length === 0) {
-      console.warn(`No files found at path "${path}"`);
+      logger.warn(`No files found at path "${path}"`);
       return [];
     }
     
@@ -265,7 +263,7 @@ export const getFilesWithUrls = async (path: string): Promise<StorageFile[]> => 
       try {
         const url = await item.getDownloadURL();
         const metadata = await item.getMetadata().catch(metaError => {
-          console.warn(`Could not fetch metadata for ${item.fullPath}:`, metaError);
+          logger.warn(`Could not fetch metadata for ${item.fullPath}`);
           return {} as StorageFileMetadata;
         });
         
@@ -279,7 +277,7 @@ export const getFilesWithUrls = async (path: string): Promise<StorageFile[]> => 
           updated: metadata.updated
         };
       } catch (itemError) {
-        console.warn(`Error processing file ${item.fullPath}:`, itemError);
+        logger.warn(`Error processing file ${item.fullPath}`);
         // Return file with basic information
         return {
           name: item.name,
@@ -292,12 +290,13 @@ export const getFilesWithUrls = async (path: string): Promise<StorageFile[]> => 
     });
     
     return Promise.all(filePromises);
-  } catch (error: any) {
-    console.error('Error getting files with URLs:', error);
+  } catch (error: unknown) {
+    const err = error as { code?: string; message?: string };
+    logger.error('Error getting files with URLs', error);
     
     // Add more context to the error for easier debugging
-    if (error.code === 'storage/unauthorized') {
-      error.message = `Access denied to path "${path}". Update your Firebase Storage rules to allow read access.`;
+    if (err.code === 'storage/unauthorized') {
+      throw new Error(`Access denied to path "${path}". Update your Firebase Storage rules to allow read access.`);
     }
     
     throw error;

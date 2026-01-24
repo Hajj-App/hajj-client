@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, Text, ScrollView, Pressable, TouchableOpacity } from "react-native";
 import * as Location from "expo-location";
 import PrayerTimeContainer from "./prayer-time-container";
-import ShimmerPlaceholder, { createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
+import { createShimmerPlaceholder } from 'react-native-shimmer-placeholder'
 import LinearGradient from 'expo-linear-gradient';
 import { locationPermission } from "@/hooks/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
+import { logger } from "@/utils/logger";
 
 const Shimmer = createShimmerPlaceholder(LinearGradient as unknown as React.ComponentClass<any>);
 
@@ -82,14 +83,15 @@ export default function PrayerList() {
         setTimings(data.data[date.getDate() - 1]?.timings || {});
       // Reset retry count on success
       setRetryCount(0);
-    } catch (error: any) {
-      console.error("Prayer times error:", error.message);
-      if (error.message.includes("Location request timed out")) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error("Prayer times error", error);
+      if (errorMessage.includes("Location request timed out")) {
         setError("Location services timed out. Please check your GPS settings and try again.");
-      } else if (error.message.includes("Network request failed")) {
+      } else if (errorMessage.includes("Network request failed")) {
         setError("Network error. Please check your internet connection and try again.");
       } else {
-        setError(`Error loading prayer times: ${error.message}`);
+        setError(`Error loading prayer times: ${errorMessage}`);
       }
       } finally {
         setLoading(false);

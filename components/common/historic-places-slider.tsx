@@ -2,19 +2,31 @@ import { View, Text, ScrollView, ImageBackground, Pressable, Image } from "react
 import React from "react";
 import { useRouter } from "expo-router";
 
+// Supports both old and new schema
 interface HistoricPlace {
   id: string;
   name: string;
   description: string;
-  image: string;
-  content_image: string;
+  image?: string;         // Old schema
+  imageUrl?: string;      // New schema
+  content_image?: string; // Old schema
 }
 
-const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: string }) => {
+type Props = {
+  data: HistoricPlace[];
+  route: string;
+};
+
+const HistoricPlacesSlider = ({ data, route }: Props) => {
   const router = useRouter();
   
   // Only show the first 10 items to avoid performance issues
   const displayData = data || [];
+
+  // Helper to get image URL (supports both schemas)
+  const getImageUrl = (place: HistoricPlace): string | undefined => {
+    return place.content_image || place.imageUrl || place.image;
+  };
   
   const handlePress = (id: string) => {
     if (route === "madina-historic-places") {
@@ -36,7 +48,7 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
             } ${displayData.length - 1 === i ? "mr-5" : ""}`}
           >
             <ImageBackground
-              source={item.content_image ? { uri: item.content_image } : require("@/assets/images/makkah/historical-place.png")}
+              source={getImageUrl(item) ? { uri: getImageUrl(item) } : require("@/assets/images/makkah/historical-place.png")}
               resizeMode="cover"
               className={`w-[180px] h-[110px]  items-start justify-end rounded-xl`}
             >
@@ -67,3 +79,4 @@ const HistoricPlacesSlider = ({ data, route }: { data: HistoricPlace[], route: s
 };
 
 export default HistoricPlacesSlider;
+

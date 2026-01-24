@@ -1,75 +1,181 @@
-import React, { useEffect, useState } from "react";
-import { ImageBackground, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
-import ritualData from "@/data/data.json";
-import { fetchWithCache } from "@/utils/cache";
+import React, { useEffect, useState, useCallback } from "react";
+import { 
+  ImageBackground, 
+  Platform, 
+  FlatList, // Changed from ScrollView
+  StyleSheet, 
+  Text, 
+  View, 
+  RefreshControl,
+  TouchableOpacity,
+  ActivityIndicator,
+  Pressable,
+  Image
+} from "react-native";
+import { DocumentSnapshot } from 'firebase/firestore';
+import { useRouter } from "expo-router";
+import { fetchWithCache, forceRefresh } from "@/utils/cache";
 import HajjRituals from "@/components/common/hajj-rituals";
 import HistoricPlacesSlider from "@/components/common/historic-places-slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
+import { logger } from "@/utils/logger";
+import { getRitualsByType, getHistoricPlaces } from "@/utils/firestoreService";
 
-interface Upload {
+// Unified interface that works with both old and new schema
+interface RitualDisplay {
   id: string;
   name: string;
-  description: string;
-  content_image: string;
-  date: string;
+  description: string | string[];
+  content_image?: string;
+  contentImageUrl?: string;
+  order?: number;
 }
 
 interface HistoricPlace {
   id: string;
   name: string;
   description: string;
-  image: string;
-  content_image: string;
+  image?: string;
+  imageUrl?: string;
+  content_image?: string;
 }
 
 const Madinah = () => {
   const { t } = useTranslation();
+  const routerInstance = useRouter(); // Initialize router
+  
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [uploads, setUploads] = useState<Upload[]>([]);
+  const [uploads, setUploads] = useState<RitualDisplay[]>([]);
+  const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  
   const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
   const [historicPlacesLoading, setHistoricPlacesLoading] = useState(false);
-  const [selected, setSelected] = useState(0);
-  const rituals = ritualData.rituals;
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Fetch rituals data with caching
-  useEffect(() => {
-    const fetchHajjUploads = async () => {
+  const fetchMadinaUploads = useCallback(async (forceNetwork = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Try new schema first
       try {
-        setLoading(true);
-        setError(null);
-
-        const uploadsData = await fetchWithCache('madina_uploads', 'madina_uploads_cache');
-        setUploads(uploadsData);
-      } catch (err) {
-        console.error("Error fetching hajj uploads:", err);
-        setError("Failed to fetch data from Firestore");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHajjUploads();
-  }, [selected]);
-
-  // Fetch historic places data with caching
-  useEffect(() => {
-    const fetchHistoricPlaces = async () => {
-      try {
-        setHistoricPlacesLoading(true);
+        const { rituals, lastVisible: nextCursor } = await getRitualsByType('madina', 10);
         
-        const placesData = await fetchWithCache('historic_places_madina', 'historic_places_madina_cache');
-        setHistoricPlaces(placesData);
-      } catch (err) {
-        console.error("Error fetching historic places:", err);
-      } finally {
-        setHistoricPlacesLoading(false);
+        if (rituals.length > 0) {
+          const mapped = rituals.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            content_image: r.contentImageUrl,
+            contentImageUrl: r.contentImageUrl,
+            order: r.order,
+          }));
+          setUploads(mapped);
+          setLastVisible(nextCursor);
+          setHasMore(!!nextCursor);
+          return;
+        } else {
+          setHasMore(false);
+        }
+      } catch (newSchemaError) {
+        logger.debug("New schema not available, falling back to legacy", newSchemaError);
       }
-    };
 
-    fetchHistoricPlaces();
+      // Fallback to legacy schema
+      const uploadsData = forceNetwork 
+        ? await forceRefresh('madina_uploads', 'madina_uploads_cache') as RitualDisplay[]
+        : await fetchWithCache<RitualDisplay>('madina_uploads', 'madina_uploads_cache');
+      setUploads(uploadsData);
+      setHasMore(false);
+    } catch (err) {
+      logger.error("Error fetching madina uploads", err);
+      setError("Failed to fetch data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  const fetchHistoricPlacesData = useCallback(async (forceNetwork = false) => {
+    try {
+      setHistoricPlacesLoading(true);
+
+      // Try new schema first
+      try {
+        const { places } = await getHistoricPlaces('madinah', 10); // Limit to 10 for slider
+        if (places.length > 0) {
+          const mapped = places.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            imageUrl: p.imageUrl,
+            content_image: p.imageUrl,
+          }));
+          setHistoricPlaces(mapped);
+          return;
+        }
+      } catch (newSchemaError) {
+        logger.debug("New schema not available for historic places", newSchemaError);
+      }
+      
+      // Fallback to legacy
+      const placesData = forceNetwork 
+        ? await forceRefresh('historic_places_madina', 'historic_places_madina_cache') as HistoricPlace[]
+        : await fetchWithCache<HistoricPlace>('historic_places_madina', 'historic_places_madina_cache');
+      setHistoricPlaces(placesData);
+    } catch (err) {
+      logger.error("Error fetching historic places", err);
+    } finally {
+      setHistoricPlacesLoading(false);
+    }
+  }, []);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore || !lastVisible) return;
+
+    try {
+      setLoadingMore(true);
+      const { rituals, lastVisible: nextCursor } = await getRitualsByType('madina', 10, lastVisible);
+      
+      if (rituals.length > 0) {
+        const mapped = rituals.map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          content_image: r.contentImageUrl,
+          contentImageUrl: r.contentImageUrl,
+          order: r.order,
+        }));
+        
+        setUploads(prev => [...prev, ...mapped]);
+        setLastVisible(nextCursor);
+        setHasMore(!!nextCursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      logger.error("Error loading more", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMadinaUploads();
+    fetchHistoricPlacesData();
+  }, [fetchMadinaUploads, fetchHistoricPlacesData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      fetchMadinaUploads(true),
+      fetchHistoricPlacesData(true)
+    ]);
+    setRefreshing(false);
+  }, [fetchMadinaUploads, fetchHistoricPlacesData]);
 
   // Skeleton loading component
   const renderSkeleton = () => (
@@ -82,6 +188,7 @@ const Madinah = () => {
       </View>
     </View>
   );
+  
   const renderVerticalSkeleton = () => (
     <View className="gap-5 pt-5">
       <Skeleton className="h-8 w-40 ml-5" />
@@ -107,32 +214,105 @@ const Madinah = () => {
       </ImageBackground>
 
       <View className="h-20 bg-white mt-[-50px] rounded-t-[50px] items-center justify-center pt-10 overflow-hidden" />
-      <ScrollView
+      <FlatList
+        data={uploads}
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         className="flex-1 bg-white"
         contentContainerStyle={styles.scrollContent}
-      >
-        {historicPlacesLoading ? (
-          renderSkeleton()
-        ) : historicPlaces.length > 0 ? (
-          <View className="gap-5 pt-5">
-            <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
-            <HistoricPlacesSlider 
-              route="madina-historic-places" 
-              data={historicPlaces} 
-            />
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#31C462"]}
+            tintColor="#31C462"
+          />
+        }
+        ListHeaderComponent={
+          <>
+            {/* Error UI */}
+            {error && (
+              <View className="mx-5 my-4 p-4 bg-red-50 rounded-lg">
+                <Text className="text-red-600 text-center mb-2">{error}</Text>
+                <TouchableOpacity
+                  onPress={() => fetchMadinaUploads(true)}
+                  className="bg-red-500 py-2 px-4 rounded-md self-center"
+                >
+                  <Text className="text-white font-semibold">Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {historicPlacesLoading ? (
+              renderSkeleton()
+            ) : historicPlaces.length > 0 ? (
+              <View className="gap-5 pt-5">
+                <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
+                <HistoricPlacesSlider 
+                  route="madina-historic-places" 
+                  data={historicPlaces} 
+                />
+              </View>
+            ) : null}
+            
+            {loading && uploads.length === 0 ? (
+              renderVerticalSkeleton()
+            ) : (
+              <View className="gap-5 mt-5 mb-2">
+                <Text className="text-2xl font-bold ml-5">{t("rituals")}</Text>
+              </View>
+            )}
+
+            {!loading && !error && uploads.length === 0 && (
+              <View className="items-center justify-center py-10">
+                <Text className="text-gray-500 text-center">
+                  {t("noContentAvailable") || "No content available"}
+                </Text>
+              </View>
+            )}
+          </>
+        }
+        renderItem={({ item }) => (
+          <View className="mx-5">
+            <Pressable
+              onPress={() => routerInstance.push({
+                pathname: `/madina-rituals/${item.id}` as any,
+              })}
+              className="w-full h-28 bg-gray-200 items-center justify-start my-2 rounded-xl flex-row p-5 gap-3"
+            >
+              {item.content_image || item.contentImageUrl ? (
+                <Image
+                  source={{ uri: item.content_image || item.contentImageUrl }}
+                  className="w-20 h-20 rounded-xl"
+                />
+              ) : (
+                <View className="w-20 h-20 rounded-xl bg-gray-300 items-center justify-center">
+                  <Text className="text-gray-500 text-xs">No Image</Text>
+                </View>
+              )}
+              <View className="flex-1">
+                <Text className="text-lg font-bold">{item.name}</Text>
+                <Text
+                  className="text-sm text-wrap mr-5 text-gray-500"
+                  numberOfLines={3}
+                  ellipsizeMode="tail"
+                >
+                  {Array.isArray(item.description) ? item.description[0] : item.description}
+                </Text>
+              </View>
+            </Pressable>
           </View>
-        ) : null}
-        
-        {loading ? (
-          renderVerticalSkeleton()
-        ) : uploads.length > 0 ? (
-          <View className="gap-5 mt-5">
-            <Text className="text-2xl font-bold ml-5">{t("rituals")}</Text>
-            <HajjRituals data={uploads} route="madina-rituals" />
-          </View>
-        ) : null}
-      </ScrollView>
+        )}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          loadingMore ? (
+            <View className="py-5 items-center">
+              <ActivityIndicator size="small" color="#31C462" />
+            </View>
+          ) : <View className="h-5" />
+        }
+      />
     </View>
   );
 };

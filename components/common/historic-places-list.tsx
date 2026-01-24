@@ -17,6 +17,19 @@ interface Props {
 }
 
 const HistoricPlacesList: React.FC<Props> = ({ data, route }) => {
+  if (!data || data.length === 0) {
+    return (
+      <View className="px-4 py-10 items-center justify-center">
+        <Text className="text-lg text-gray-500 text-center">
+          No historic places available yet.
+        </Text>
+        <Text className="text-sm text-gray-400 text-center mt-2">
+          Please check back later.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View className="px-4">
       {data.map((place) => (

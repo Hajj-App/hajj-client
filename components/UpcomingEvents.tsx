@@ -129,7 +129,7 @@ const UpcomingEvents = React.memo(() => {
   const [error, setError] = useState<string | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const carouselRef = useRef<FlatList>(null);
-  const scrollInterval = useRef<number | undefined>(undefined);
+  const scrollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 

@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
+import { getLocales } from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translations
@@ -8,31 +8,36 @@ import en from './locales/en.json';
 import ml from './locales/ml.json';
 
 const LANGUAGE_DETECTOR = {
-  type: 'languageDetector',
-  async: true,
-  detect: async (callback) => {
-    try {
-      const savedLanguage = await AsyncStorage.getItem('user-language');
-      if (savedLanguage) {
-        return callback(savedLanguage);
-      }
+  type: 'languageDetector' as const,
+  async: true as const,
+  detect: (callback: (lng: string | readonly string[] | undefined) => void) => {
+    (async () => {
+      try {
+        const savedLanguage = await AsyncStorage.getItem('user-language');
+        if (savedLanguage) {
+          callback(savedLanguage);
+          return;
+        }
 
-      // Safe fallback
-      const locale = Localization.locale || 'en';
-      const language = locale.split('-')[0];
-      return callback(language);
-    } catch (error) {
-      console.log('Error reading language', error);
-      return callback('en'); // fallback
-    }
+        // Get device locale using new API
+        const locales = getLocales();
+        const locale = locales[0]?.languageCode || 'en';
+        callback(locale);
+      } catch (error) {
+        console.log('Error reading language', error);
+        callback('en'); // fallback
+      }
+    })();
   },
   init: () => {},
-  cacheUserLanguage: async (lng) => {
-    try {
-      await AsyncStorage.setItem('user-language', lng);
-    } catch (error) {
-      console.log('Error saving language', error);
-    }
+  cacheUserLanguage: (lng: string) => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem('user-language', lng);
+      } catch (error) {
+        console.log('Error saving language', error);
+      }
+    })();
   },
 };
 

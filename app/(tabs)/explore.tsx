@@ -3,153 +3,99 @@ import {
   ScrollView,
   View,
   Text,
-  FlatList,
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import { useState, useEffect, useCallback } from "react";
 import TravelAdvisories from "@/components/TravelAdvisories";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import LatestUpdates from "@/components/LatestUpdates";
 import { useTranslation } from "react-i18next";
-import { getDocs, collection } from "firebase/firestore";
-import { firestore } from "@/utils/firebase";
 import { clearNewUpdatesFlag } from "@/utils/tabBadge";
-
-// Define types for our data
-type NewsItem = {
-  id: number;
-  title: string;
-  image: any;
-  date: string;
-  description: string;
-};
-
-// Sample data for news updates
-const newsUpdates: NewsItem[] = [
-  {
-    id: 1,
-    title: "Hajj 2024 Registration Opens",
-    image: require("@/assets/images/makkah/makkah-img.webp"),
-    date: "May 15, 2024",
-    description:
-      "The Ministry of Hajj and Umrah has announced the opening of registration for Hajj 2024.",
-  },
-  {
-    id: 2,
-    title: "New Facilities at Masjid Al Haram",
-    image: require("@/assets/images/madinah.png"),
-    date: "May 10, 2024",
-    description:
-      "New cooling systems and facilities have been installed at Masjid Al Haram for pilgrims.",
-  },
-  {
-    id: 3,
-    title: "Health Guidelines for Pilgrims",
-    image: require("@/assets/images/umrah.png"),
-    date: "May 5, 2024",
-    description:
-      "Health authorities have issued new guidelines for pilgrims traveling for Hajj and Umrah.",
-  },
-];
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { API } from "@/constants/api";
+import { FALLBACK_WEATHER } from "@/constants/fallbacks";
+import { logger } from "@/utils/logger";
+import { fetchWithRetry } from "@/utils/retry";
 
 export default function ExploreScreen() {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const newsCarouselRef = useRef<FlatList>(null);
   const [weather, setWeather] = useState<{
     [key: string]: { temp: number; description: string };
   }>({});
-
-  // Firestore data states
-  const [travelAdvisories, setTravelAdvisories] = useState<any[]>([]);
-  const [liveUpdates, setLiveUpdates] = useState<any[]>([]);
-  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
-
-  // Fetch Firestore data
-  useEffect(() => {
-    const fetchFirestoreData = async () => {
-      try {
-        if (!firestore) return;
-        const travelSnap = await getDocs(
-          collection(firestore, "travel_advisories")
-        );
-        setTravelAdvisories(
-          travelSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-
-        const liveSnap = await getDocs(collection(firestore, "live_updates"));
-        setLiveUpdates(
-          liveSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-
-        const eventsSnap = await getDocs(
-          collection(firestore, "upcoming_events")
-        );
-        setUpcomingEvents(
-          eventsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-        );
-      } catch (err) {
-        console.error("Error fetching Firestore data:", err);
-      }
-    };
-    fetchFirestoreData();
-  }, []);
-
-  // Weather Updates
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const { isConnected } = useNetworkStatus();
+  const { t } = useTranslation();
 
   const cities = ["Makka", "Madinah"];
   const apiKey = process.env.EXPO_PUBLIC_WEATHER_API_KEY;
 
-  useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const weatherData: {
-          [key: string]: { temp: number; description: string };
-        } = {};
+  const fetchWeather = useCallback(async () => {
+    // If offline, use fallback data
+    if (isConnected === false) {
+      setWeather(FALLBACK_WEATHER);
+      setWeatherError("Offline mode");
+      return;
+    }
 
-        for (const city of cities) {
-          const apiUrl = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
-          const response = await axios.get(apiUrl);
-          const data = response.data;
+    if (!apiKey) {
+      logger.warn("Weather API key not configured");
+      setWeather(FALLBACK_WEATHER);
+      return;
+    }
 
-          weatherData[city] = {
-            temp: Math.round(data.main.temp),
-            description: data.weather[0].description,
+    try {
+      setWeatherError(null);
+      const weatherData: {
+        [key: string]: { temp: number; description: string };
+      } = {};
+
+      for (const city of cities) {
+        try {
+          // Using HTTPS instead of HTTP
+          const response = await fetchWithRetry(
+            API.WEATHER.getUrl(city, apiKey),
+            { method: 'GET' },
+            { maxRetries: 2 }
+          );
+          
+          const data = await response.json();
+
+          if (data.main && data.weather) {
+            weatherData[city] = {
+              temp: Math.round(data.main.temp),
+              description: data.weather[0]?.description || 'Unknown',
+            };
+          }
+        } catch (cityError) {
+          logger.warn(`Failed to fetch weather for ${city}`, cityError);
+          // Use fallback for this city
+          weatherData[city] = FALLBACK_WEATHER[city as keyof typeof FALLBACK_WEATHER] || {
+            temp: 30,
+            description: 'Unable to load',
           };
         }
-
-        setWeather(weatherData);
-      } catch (err) {
-        console.error("Weather not fetching", err);
       }
-    };
 
-    fetchWeather();
-  }, []);
+      setWeather(weatherData);
+    } catch (err) {
+      logger.error("Weather fetch failed", err);
+      setWeather(FALLBACK_WEATHER);
+      setWeatherError("Failed to load weather");
+    }
+  }, [apiKey, isConnected]);
 
-  // Auto-scroll for news carousel
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (newsCarouselRef.current && newsUpdates.length > 0) {
-        const nextIndex = (activeSlide + 1) % newsUpdates.length;
-        newsCarouselRef.current.scrollToIndex({
-          index: nextIndex,
-          animated: true,
-        });
-        setActiveSlide(nextIndex);
-      }
-    }, 5000);
-
+    fetchWeather();
+    
+    // Refresh weather every 30 minutes
+    const interval = setInterval(fetchWeather, 30 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [activeSlide]);
+  }, [fetchWeather]);
 
   useEffect(() => {
     // Clear the new updates badge when the explore tab is visited
     clearNewUpdatesFlag();
   }, []);
-
-  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={styles.container}>

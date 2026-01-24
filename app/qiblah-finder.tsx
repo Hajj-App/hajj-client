@@ -13,6 +13,9 @@ import { Magnetometer, DeviceMotion } from "expo-sensors";
 import * as Location from "expo-location";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { logger } from "@/utils/logger";
+import { Subscription } from "expo-sensors/build/DeviceSensor";
+
 // Coordinates of the Kaaba in Mecca
 const KAABA_LAT = 21.4225;
 const KAABA_LNG = 39.8262;
@@ -23,8 +26,8 @@ const QiblahFinder = () => {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
-  const [subscription, setSubscription] = useState<any | null>(null);
-  const [motionSubscription, setMotionSubscription] = useState<any | null>(
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [motionSubscription, setMotionSubscription] = useState<Subscription | null>(
     null
   );
   const [deviceTilt, setDeviceTilt] = useState(0);
@@ -33,6 +36,7 @@ const QiblahFinder = () => {
   const [showCalibration, setShowCalibration] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
   const { t } = useTranslation();
+  
   // Calculate Qibla direction
   const calculateQiblaDirection = (latitude: number, longitude: number) => {
     // Convert all coordinates from degrees to radians
@@ -60,12 +64,12 @@ const QiblahFinder = () => {
   // Start device motion sensor for tilt compensation
   const startDeviceMotion = () => {
     DeviceMotion.setUpdateInterval(100);
-    const subscription = DeviceMotion.addListener((data) => {
+    const sub = DeviceMotion.addListener((data) => {
       // Use rotation data to determine device tilt
       const { gamma } = data.rotation;
       setDeviceTilt(gamma * (180 / Math.PI));
     });
-    setMotionSubscription(subscription);
+    setMotionSubscription(sub);
   };
 
   // Stop device motion subscription
@@ -77,9 +81,9 @@ const QiblahFinder = () => {
   // Start magnetometer subscription with improved accuracy
   const startMagnetometer = () => {
     Magnetometer.setUpdateInterval(100);
-    const subscription = Magnetometer.addListener((data) => {
+    const sub = Magnetometer.addListener((data) => {
       try {
-        const { x, y, z } = data;
+        const { x, y } = data;
 
         // Calculate heading based on magnetometer data
         // This formula is adjusted for better accuracy in various device positions
@@ -98,10 +102,10 @@ const QiblahFinder = () => {
           return heading;
         });
       } catch (error) {
-        console.error("Error processing magnetometer data:", error);
+        logger.error("Error processing magnetometer data", error);
       }
     });
-    setSubscription(subscription);
+    setSubscription(sub);
   };
 
   // Stop magnetometer subscription

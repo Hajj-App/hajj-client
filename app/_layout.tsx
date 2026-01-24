@@ -21,6 +21,10 @@ import { router } from "expo-router";
 import Entypo from "@expo/vector-icons/Entypo";
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../lib/i18n/i18n';
+import OfflineBanner from '../components/ui/OfflineBanner';
+import ErrorBoundary from '../components/ui/ErrorBoundary';
+import { signInAnonymousUser } from '../utils/firebase';
+import { logger } from '../utils/logger';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,6 +40,13 @@ export default function RootLayout() {
     Montserrat_800ExtraBold
   });
 
+  // Initialize Firebase auth on app start
+  useEffect(() => {
+    signInAnonymousUser().catch((err) => {
+      logger.error("Failed to sign in anonymously", err);
+    });
+  }, []);
+
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
@@ -48,8 +59,11 @@ export default function RootLayout() {
 
   return (
     <I18nextProvider i18n={i18n}>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack>
+      <ErrorBoundary>
+        <ThemeProvider value={DefaultTheme}>
+          <View style={{ flex: 1 }}>
+            <OfflineBanner />
+            <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="qiblah-finder"
@@ -88,7 +102,7 @@ export default function RootLayout() {
           <Stack.Screen
             name="historic-places"
             options={{
-              headerTitle: "Historic-Places",
+              headerTitle: "Historic Places",
               headerTitleStyle: {
                 fontWeight: "bold",
                 fontSize: 18,
@@ -210,9 +224,11 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="dark" />
+          </Stack>
+          <StatusBar style="dark" />
+        </View>
       </ThemeProvider>
+    </ErrorBoundary>
     </I18nextProvider>
   );
 }

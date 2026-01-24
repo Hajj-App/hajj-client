@@ -14,11 +14,12 @@ import {
   Linking,
   TouchableOpacity,
   Pressable,
+  Alert,
 } from "react-native";
 import { SafeAreaView, Text } from "react-native";
 import { useTranslation } from "react-i18next";
-
-
+import { API } from "@/constants/api";
+import { logger } from "@/utils/logger";
 
 export default function HomeScreen() {
   
@@ -26,8 +27,36 @@ export default function HomeScreen() {
 
   const { t } = useTranslation();
   useEffect(() => {
-    getCurrentCity().then(setCity);
+    getCurrentCity().then(setCity).catch(() => setCity("Unknown"));
   }, []);
+
+  const handleWhatsAppPress = () => {
+    const whatsappLink = API.LINKS.WHATSAPP_GROUP;
+    
+    if (!whatsappLink) {
+      // WhatsApp link not configured - show info message
+      Alert.alert(
+        t("comingSoon") || "Coming Soon",
+        t("whatsappGroupComingSoon") || "WhatsApp support group will be available soon.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    Linking.openURL(whatsappLink).catch((err) => {
+      logger.error("Failed to open WhatsApp link", err);
+      Alert.alert(
+        t("error") || "Error",
+        t("failedToOpenWhatsApp") || "Failed to open WhatsApp. Please try again."
+      );
+    });
+  };
+
+  const handleHajCommitteePress = () => {
+    Linking.openURL(API.LINKS.HAJ_COMMITTEE).catch((err) => {
+      logger.error("Failed to open Haj Committee link", err);
+    });
+  };
 
   return (
     <SafeAreaView className="flex-1">
@@ -140,26 +169,20 @@ export default function HomeScreen() {
               route="/dikr-counter"
             />
           </View>
-          {/* <QuickLinkBtn
-            title={t("dhikrsAndDuas")}
-            icon={require("@/assets/images/thasbeeh-brown.png")}
-            route="/dikrs-and-duas"
-            width="full"
-          /> */}
+          
           <TouchableOpacity
             className="my-4 bg-cyan-600 rounded-lg p-4 gap-2 flex-row items-center justify-center"
-            onPress={() => Linking.openURL("https://www.hajcommittee.gov.in/")}
+            onPress={handleHajCommitteePress}
           >
             <Ionicons name="search" size={24} color="white" />
             <Text className="text-white font-bold text-lg">
               {t("searchYourCoverNumber")}
             </Text>
           </TouchableOpacity>
+          
           <TouchableOpacity
             className="my-4 bg-green rounded-lg p-4 gap-2 flex-row items-center justify-center"
-            onPress={() =>
-              Linking.openURL("https://chat.whatsapp.com/yourGroupLink")
-            }
+            onPress={handleWhatsAppPress}
           >
             <Ionicons name="logo-whatsapp" size={24} color="white" />
             <Text className="text-white font-bold text-lg">

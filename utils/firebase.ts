@@ -1,14 +1,23 @@
-import { initializeApp } from "firebase/app";
-import { getStorage } from "firebase/storage";
-import { getFirestore } from "firebase/firestore";
+/**
+ * Firebase Configuration for React Native
+ * Centralized Firebase initialization with proper error handling
+ */
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getStorage, FirebaseStorage } from "firebase/storage";
+import { getFirestore, Firestore } from "firebase/firestore";
 import {
   initializeAuth,
-  getReactNativePersistence,
   signInAnonymously,
+  Auth,
+  User,
+  onAuthStateChanged,
+  // @ts-expect-error - React Native persistence is available in react-native env
+  getReactNativePersistence,
 } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logger } from "./logger";
 
-// Firebase config
+// Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "",
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "",
@@ -18,47 +27,116 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "",
 };
 
-// Initialize Firebase
-let app: ReturnType<typeof initializeApp> | null = null;
-let storage: ReturnType<typeof getStorage> | null = null;
-let firestore: ReturnType<typeof getFirestore> | null = null;
-let auth: ReturnType<typeof initializeAuth> | null = null;
+// Validate configuration
+const validateConfig = (): boolean => {
+  const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'appId'];
+  
+  for (const field of requiredFields) {
+    const value = firebaseConfig[field as keyof typeof firebaseConfig];
+    if (!value || value.includes('YOUR_') || value.includes('your_')) {
+      logger.warn(`Firebase ${field} is not properly configured`);
+      return false;
+    }
+  }
+  return true;
+};
+
+const hasValidConfig = validateConfig();
+
+// Initialize Firebase (singleton pattern)
+let app: FirebaseApp | null = null;
+let storage: FirebaseStorage | null = null;
+let firestore: Firestore | null = null;
+let auth: Auth | null = null;
 
 try {
-  app = initializeApp(firebaseConfig);
-
+  // Use existing app if already initialized
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  
   if (app) {
     storage = getStorage(app);
     firestore = getFirestore(app);
-
-    // Initialize auth with persistence
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
+    
+    // Initialize auth with React Native persistence
+    try {
+      auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+    } catch (authError) {
+      // Auth might already be initialized
+      logger.warn("Auth initialization warning", authError);
+    }
+    
+    logger.info("Firebase initialized successfully");
   }
 } catch (error) {
-  console.error("Error initializing Firebase:", error);
+  logger.error("Error initializing Firebase", error);
 }
 
-// Check if configuration has actual values
-const hasValidConfig = Object.values(firebaseConfig).every(
-  (value) => value && !value.includes("YOUR_")
-);
+// Authentication state
+let currentUser: User | null = null;
+let authInitialized = false;
 
-// Anonymous sign-in
-export const signInAnonymousUser = async (): Promise<void> => {
+/**
+ * Sign in anonymously to Firebase
+ * Required for storage and firestore operations
+ */
+export const signInAnonymousUser = async (): Promise<boolean> => {
   if (!hasValidConfig || !auth) {
-    console.warn("Firebase not properly configured. Skipping authentication.");
-    return;
+    logger.warn("Firebase not properly configured. Skipping authentication.");
+    return false;
   }
 
   try {
-    await signInAnonymously(auth);
-    console.log("Signed in anonymously to Firebase");
+    const userCredential = await signInAnonymously(auth);
+    currentUser = userCredential.user;
+    logger.info("Signed in anonymously");
+    return true;
   } catch (error) {
-    console.error("Error signing in anonymously:", error);
+    logger.error("Error signing in anonymously", error);
+    return false;
   }
 };
 
+/**
+ * Initialize auth state listener
+ */
+export const initAuthListener = (): Promise<User | null> => {
+  return new Promise((resolve) => {
+    if (!auth) {
+      resolve(null);
+      return;
+    }
+
+    if (authInitialized) {
+      resolve(currentUser);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      authInitialized = true;
+      unsubscribe();
+      resolve(user);
+    });
+  });
+};
+
+/**
+ * Get current authenticated user
+ */
+export const getCurrentUser = (): User | null => currentUser;
+
+/**
+ * Check if user is authenticated
+ */
+export const isAuthenticated = (): boolean => currentUser !== null;
+
+/**
+ * Check if Firebase is properly configured
+ */
+export const isFirebaseConfigured = (): boolean => hasValidConfig;
+
+// Export instances
 export { app, storage, firestore, auth };
 export default app;
