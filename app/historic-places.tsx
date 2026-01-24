@@ -27,6 +27,8 @@ interface HistoricPlace {
   content_image?: string;
 }
 
+import { fetchWithCache, forceRefresh } from "@/utils/cache";
+
 const HistoricPlacesScreen = () => {
   const routerInstance = useRouter();
   const [selectedTab, setSelectedTab] = useState(0); // 0 for Makka, 1 for Madina
@@ -47,36 +49,56 @@ const HistoricPlacesScreen = () => {
       }
 
       const location: PlaceLocation = selectedTab === 0 ? 'makkah' : 'madinah';
-      const currentLastVisible = isLoadMore && lastVisible ? lastVisible : undefined;
-
-      // Use the service which handles new schema + limit + cursor
-      // Note: getHistoricPlaces in service currently returns { places, lastVisible }
-      // We need to cast the result or update service types if needed.
-      // Assuming getHistoricPlaces returns { places, lastVisible } as updated previously.
       
-      const { places: newPlaces, lastVisible: nextCursor } = await getHistoricPlaces(
-        location,
-        10, 
-        currentLastVisible
-      );
+      // 1. Try New Schema (Pagination supported)
+      try {
+        const currentLastVisible = isLoadMore && lastVisible ? lastVisible : undefined;
+        
+        const { places: newPlaces, lastVisible: nextCursor } = await getHistoricPlaces(
+          location,
+          10, 
+          currentLastVisible
+        );
 
-      const mappedPlaces = newPlaces.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description,
-        image: p.imageUrl,
-        imageUrl: p.imageUrl,
-        content_image: p.imageUrl || p.content_image, // Fallback
-      }));
+        if (newPlaces.length > 0) {
+          const mappedPlaces = newPlaces.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            image: p.imageUrl,
+            imageUrl: p.imageUrl,
+            content_image: p.imageUrl || p.content_image,
+          }));
 
-      if (isLoadMore) {
-        setPlaces(prev => [...prev, ...mappedPlaces]);
-      } else {
-        setPlaces(mappedPlaces);
+          if (isLoadMore) {
+            setPlaces(prev => [...prev, ...mappedPlaces]);
+          } else {
+            setPlaces(mappedPlaces);
+          }
+          
+          setLastVisible(nextCursor);
+          setHasMore(!!nextCursor);
+          return;
+        }
+      } catch (newSchemaError) {
+        // Continue to fallback
       }
-      
-      setLastVisible(nextCursor);
-      setHasMore(!!nextCursor);
+
+      // 2. Fallback to Legacy Schema (Fetch All - No pagination in legacy for now)
+      // Only do this on initial load/refresh, not loadMore (legacy doesn't support pagination here)
+      if (!isLoadMore) {
+        const collectionName = selectedTab === 0 ? "historic_places_makkah" : "historic_places_madina";
+        const cacheKey = `${collectionName}_cache`;
+        
+        const placesData = isRefresh 
+          ? await forceRefresh(collectionName, cacheKey) as HistoricPlace[]
+          : await fetchWithCache<HistoricPlace>(collectionName, cacheKey);
+          
+        setPlaces(placesData || []);
+        setHasMore(false); // Legacy loads all at once
+      } else {
+        setHasMore(false);
+      }
 
     } catch (err) {
       console.error("Error fetching historic places:", err);
