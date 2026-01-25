@@ -17,6 +17,12 @@
         "enterpriseProvisioning": "universal"
       },
       "autoIncrement": true
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
     }
   },
   "cli": {
