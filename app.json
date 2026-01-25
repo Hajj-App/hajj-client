@@ -30,7 +30,8 @@
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "package": "com.anonymous.idc"
     },
@@ -67,7 +68,6 @@
       "expo-image-picker",
       "expo-localization",
       "expo-secure-store",
-      "expo-web-browser",
       "expo-audio",
       "expo-video"
     ],
@@ -79,13 +79,14 @@
         "origin": false
       },
       "eas": {
-        "projectId": "a9f9ab51-f419-4a63-9b88-4f5e0003f736"
+        "projectId": "11efd80f-704a-4c8e-975e-e7abcb077e85"
       }
     },
     "developmentClient": {
       "ios": {
         "simulator": true
       }
-    }
+    },
+    "owner": "mudassirmhd"
   }
 }

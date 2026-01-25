@@ -1,0 +1,21 @@
+# Ignore build artifacts
+android/.gradle/
+android/build/
+android/app/build/
+ios/Pods/
+ios/build/
+
+# Node modules are installed on EAS servers
+node_modules/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Expo cache
+.expo/
