@@ -114,7 +114,7 @@ const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
             <View className='flex items-center flex-row gap-8'>
 
             <TouchableOpacity onPress={handleShare} >
-                    <AntDesign name="sharealt" size={20} color="black" />
+                    <AntDesign name="share-alt" size={20} color="black" />
               </TouchableOpacity>
               {/* close button */}
             <TouchableOpacity onPress={onClose}>

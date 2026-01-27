@@ -41,6 +41,7 @@ const FilePreview: FC<FilePreviewProps> = ({ file }) => {
         const blob = await downloadFile(file.fullPath);
         
         // Convert blob to a local URI via FileSystem
+        // @ts-ignore
         const fileUri = FileSystem.documentDirectory + file.name;
         const fileString = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
@@ -56,10 +57,14 @@ const FilePreview: FC<FilePreviewProps> = ({ file }) => {
         });
         
         // Write the file to the local filesystem
+        // @ts-ignore
         await FileSystem.writeAsStringAsync(
           fileUri,
           fileString.split(',')[1],
-          { encoding: FileSystem.EncodingType.Base64 }
+          { 
+            // @ts-ignore
+            encoding: FileSystem.EncodingType.Base64 
+           }
         );
         
         setLocalUri(fileUri);
