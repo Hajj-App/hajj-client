@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { getLocales } from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import translations
@@ -19,13 +18,11 @@ const LANGUAGE_DETECTOR = {
           return;
         }
 
-        // Get device locale using new API
-        const locales = getLocales();
-        const locale = locales[0]?.languageCode || 'en';
-        callback(locale);
+        // Default to Malayalam if no previous preference is saved
+        callback('ml');
       } catch (error) {
         console.log('Error reading language', error);
-        callback('en'); // fallback
+        callback('ml'); // fallback
       }
     })();
   },
@@ -49,7 +46,7 @@ i18n
       en: { translation: en },
       ml: { translation: ml },
     },
-    fallbackLng: 'en',
+    fallbackLng: 'ml',
     interpolation: { escapeValue: false },
   });
 

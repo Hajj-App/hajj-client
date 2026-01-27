@@ -52,23 +52,34 @@ export default function PrayerList() {
       return;
     }
 
-      // Get current location with timeout
-      const locationPromise = Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced, // Don't need high accuracy
-      });
-      
-      // Set a timeout for location fetch
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error("Location request timed out")), 10000)
-      );
-      
-      // Race between location fetch and timeout
-      const location = await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject;
+      let latitude, longitude;
+
+      try {
+        // Get current location with timeout
+        const locationPromise = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
+        // Set a timeout for location fetch
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Location request timed out")), 5000)
+        );
+        
+        // Race between location fetch and timeout
+        const location = await Promise.race([locationPromise, timeoutPromise]) as Location.LocationObject;
+        latitude = location.coords.latitude;
+        longitude = location.coords.longitude;
+      } catch (locError) {
+        logger.warn("Could not get current location, using fallback (Makkah)", locError);
+        // Fallback to Makkah coordinates if location fails
+        latitude = 21.4225;
+        longitude = 39.8262;
+      }
       
       // Fetch prayer times data
-        const response = await fetch(
-          `${apiUrl}&latitude=${location.coords.latitude}&longitude=${location.coords.longitude}`
-        );
+      const response = await fetch(
+        `${apiUrl}&latitude=${latitude}&longitude=${longitude}`
+      );
       
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`);

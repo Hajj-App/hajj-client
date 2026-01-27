@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -26,6 +27,7 @@ type DikrItem = {
 };
 
 const DikrCounter = () => {
+  const router = useRouter(); // Standard naming
   const [count, setCount] = useState(0);
   const [showManage, setShowManage] = useState(false);
   const [showDikrDropdown, setShowDikrDropdown] = useState(false);
@@ -37,6 +39,7 @@ const DikrCounter = () => {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editingDikrId, setEditingDikrId] = useState("");
   const [buttonText, setButtonText] = useState("Manage Dikr");
+  
   const { t } = useTranslation();
 
   // Load saved data on component mount
@@ -227,6 +230,14 @@ const DikrCounter = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+           <AntDesign name="left" size={24} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{t("dikr")}</Text>
+        <View style={{ width: 24 }} /> 
+      </View>
+
       <TouchableWithoutFeedback onPress={() => setShowDikrDropdown(false)}>
         <View style={styles.content}>
           {/* Counter Display */}
@@ -378,6 +389,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  backButton: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "black",
   },
   content: {
     flex: 1,

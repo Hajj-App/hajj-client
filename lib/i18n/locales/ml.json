@@ -1,7 +1,7 @@
 {
   "hajj": "ഹജ്ജ്",
   "umrah": "ഉംറ",
-  "madinaZiyarah": "മദീന സിയാറഹ്",
+  "madinaZiyara": "മദീന സിയാറ",
   "historicPlaces": "ചരിത്രപരമായ സ്ഥലങ്ങൾ",
   "prayerTimeIn": "നിസ്കാര സമയം",
   "currentLocation": "നിലവിലെ സ്ഥാനം",
@@ -22,6 +22,8 @@
   "updateDetails": "അപ്ഡേറ്റ് വിവരങ്ങൾ",
   "noUpcomingEventsScheduled": "വരാനിരിക്കുന്ന പരിപാടികൾ ഷെഡ്യൂൾ ചെയ്തിട്ടില്ല",
   "upcomingEvents": "വരാനിരിക്കുന്ന ഇവൻറുകൾ",
+  "videoGuides": "വീഡിയോ ഗൈഡുകൾ",
+  "watchVideo": "വീഡിയോ കാണുക",
   "travelAdvisories": "യാത്രാ ഉപദേശങ്ങൾ",
   "noTravelAdvisoriesAvailable": "യാത്രാ ഉപദേശം ലഭ്യമല്ല",
   "lastUpdated": "അവസാനം അപ്ഡേറ്റ് ചെയ്തത്",
@@ -51,5 +53,9 @@
   "stayAwayFromMagneticObjects": "കാന്തിക വസ്തുക്കളിൽ നിന്ന് മാറി നിൽക്കുക",
   "calibrateIfDirectionSeemsWrong": "ദിശ തെറ്റാണെന്ന് തോന്നുകയാണെങ്കിൽ കാലിബ്രേറ്റ് ചെയ്യുക",
   "calibrateCompass": "കാലിബ്രേറ്റ് കോമ്പസ്",
-  "qiblaFinder": "ഖിബ്‌ല കണ്ടെത്തുക"
+  "qiblaFinder": "ഖിബ്‌ല കണ്ടെത്തുക",
+  "qnaSection": "ചോദ്യോത്തരങ്ങളും ഓഡിയോ പാഠങ്ങളും",
+  "audioLessons": "ഓഡിയോ പാഠങ്ങൾ (PDF)",
+  "textLessons": "പാഠങ്ങൾ (PDF)",
+  "noLessonsAvailable": "പാഠങ്ങൾ ഇപ്പോൾ ലഭ്യമല്ല"
 }

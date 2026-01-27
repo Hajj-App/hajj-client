@@ -16,7 +16,7 @@ import { DocumentSnapshot } from 'firebase/firestore';
 import { useRouter } from "expo-router";
 import { fetchWithCache, forceRefresh } from "@/utils/cache";
 import HajjRituals from "@/components/common/hajj-rituals";
-import HistoricPlacesSlider from "@/components/common/historic-places-slider";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { logger } from "@/utils/logger";
@@ -52,8 +52,6 @@ const Madinah = () => {
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   
-  const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
-  const [historicPlacesLoading, setHistoricPlacesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchMadinaUploads = useCallback(async (forceNetwork = false) => {
@@ -99,39 +97,7 @@ const Madinah = () => {
     }
   }, []);
 
-  const fetchHistoricPlacesData = useCallback(async (forceNetwork = false) => {
-    try {
-      setHistoricPlacesLoading(true);
 
-      // Try new schema first
-      try {
-        const { places } = await getHistoricPlaces('madinah', 10); // Limit to 10 for slider
-        if (places.length > 0) {
-          const mapped = places.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            imageUrl: p.imageUrl,
-            content_image: p.imageUrl,
-          }));
-          setHistoricPlaces(mapped);
-          return;
-        }
-      } catch (newSchemaError) {
-        logger.debug("New schema not available for historic places", newSchemaError);
-      }
-      
-      // Fallback to legacy
-      const placesData = forceNetwork 
-        ? await forceRefresh('historic_places_madina', 'historic_places_madina_cache') as HistoricPlace[]
-        : await fetchWithCache<HistoricPlace>('historic_places_madina', 'historic_places_madina_cache');
-      setHistoricPlaces(placesData);
-    } catch (err) {
-      logger.error("Error fetching historic places", err);
-    } finally {
-      setHistoricPlacesLoading(false);
-    }
-  }, []);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore || !lastVisible) return;
@@ -165,17 +131,15 @@ const Madinah = () => {
 
   useEffect(() => {
     fetchMadinaUploads();
-    fetchHistoricPlacesData();
-  }, [fetchMadinaUploads, fetchHistoricPlacesData]);
+  }, [fetchMadinaUploads]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
       fetchMadinaUploads(true),
-      fetchHistoricPlacesData(true)
     ]);
     setRefreshing(false);
-  }, [fetchMadinaUploads, fetchHistoricPlacesData]);
+  }, [fetchMadinaUploads]);
 
   // Skeleton loading component
   const renderSkeleton = () => (
@@ -243,17 +207,7 @@ const Madinah = () => {
               </View>
             )}
 
-            {historicPlacesLoading ? (
-              renderSkeleton()
-            ) : historicPlaces.length > 0 ? (
-              <View className="gap-5 pt-5">
-                <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
-                <HistoricPlacesSlider 
-                  route="madina-historic-places" 
-                  data={historicPlaces} 
-                />
-              </View>
-            ) : null}
+
             
             {loading && uploads.length === 0 ? (
               renderVerticalSkeleton()

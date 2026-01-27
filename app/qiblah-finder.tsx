@@ -9,32 +9,29 @@ import {
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
-import { Magnetometer, DeviceMotion } from "expo-sensors";
+import AntDesign from "@expo/vector-icons/AntDesign";
 import * as Location from "expo-location";
 import { useTranslation } from "react-i18next";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { logger } from "@/utils/logger";
 import { Subscription } from "expo-sensors/build/DeviceSensor";
+import { useRouter } from "expo-router";
 
 // Coordinates of the Kaaba in Mecca
 const KAABA_LAT = 21.4225;
 const KAABA_LNG = 39.8262;
 
 const QiblahFinder = () => {
+  const router = useRouter();
   const [magnetometer, setMagnetometer] = useState(0);
   const [qiblaAngle, setQiblaAngle] = useState(0);
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null
   );
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [motionSubscription, setMotionSubscription] = useState<Subscription | null>(
-    null
-  );
-  const [deviceTilt, setDeviceTilt] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showCalibration, setShowCalibration] = useState(false);
-  const [isCalibrating, setIsCalibrating] = useState(false);
+  
   const { t } = useTranslation();
   
   // Calculate Qibla direction
@@ -61,78 +58,33 @@ const QiblahFinder = () => {
     return angle;
   };
 
-  // Start device motion sensor for tilt compensation
-  const startDeviceMotion = () => {
-    DeviceMotion.setUpdateInterval(100);
-    const sub = DeviceMotion.addListener((data) => {
-      // Use rotation data to determine device tilt
-      const { gamma } = data.rotation;
-      setDeviceTilt(gamma * (180 / Math.PI));
-    });
-    setMotionSubscription(sub);
-  };
-
-  // Stop device motion subscription
-  const stopDeviceMotion = () => {
-    motionSubscription?.remove();
-    setMotionSubscription(null);
-  };
-
-  // Start magnetometer subscription with improved accuracy
-  const startMagnetometer = () => {
-    Magnetometer.setUpdateInterval(100);
-    const sub = Magnetometer.addListener((data) => {
-      try {
-        const { x, y } = data;
-
-        // Calculate heading based on magnetometer data
-        // This formula is adjusted for better accuracy in various device positions
-        let heading = Math.atan2(y, x) * (180 / Math.PI);
-
-        // Normalize heading to be between 0 and 360 degrees
-        heading = (heading + 360) % 360;
-
-        // Apply smoothing to reduce jitter
+  // Start compass subscription using Location.watchHeadingAsync
+  const startCompass = async () => {
+    try {
+      const sub = await Location.watchHeadingAsync((data) => {
+        let heading = data.trueHeading >= 0 ? data.trueHeading : data.magHeading;
+        
+        // Apply smoothing
         setMagnetometer((prevAngle) => {
           const diff = heading - prevAngle;
-          // Apply smoothing only for small changes to avoid lag in large movements
           if (Math.abs(diff) < 20) {
-            return prevAngle + diff * 0.2; // Smoother transitions
+            return prevAngle + diff * 0.2; 
           }
           return heading;
         });
-      } catch (error) {
-        logger.error("Error processing magnetometer data", error);
-      }
-    });
-    setSubscription(sub);
+      });
+      setSubscription(sub as any);
+    } catch (error) {
+      logger.error("Error starting compass", error);
+    }
   };
 
-  // Stop magnetometer subscription
-  const stopMagnetometer = () => {
-    subscription?.remove();
-    setSubscription(null);
-  };
-
-  // Calibrate magnetometer
-  const calibrateMagnetometer = () => {
-    setIsCalibrating(true);
-    Alert.alert(
-      "Calibrate Compass",
-      "Move your device in a figure-8 pattern for 10 seconds to calibrate the compass sensors.",
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            // After 10 seconds, end calibration
-            setTimeout(() => {
-              setIsCalibrating(false);
-              setShowCalibration(false);
-            }, 10000);
-          },
-        },
-      ]
-    );
+  // Stop compass subscription
+  const stopCompass = () => {
+    if (subscription) {
+      subscription.remove();
+      setSubscription(null);
+    }
   };
 
   // Get user's location
@@ -159,10 +111,9 @@ const QiblahFinder = () => {
       setQiblaAngle(qiblaDirection);
       setIsLoading(false);
 
-      // Show calibration suggestion
-      setTimeout(() => {
-        setShowCalibration(true);
-      }, 1000);
+      // Start compass after confirming permission
+      startCompass();
+
     } catch (error) {
       setErrorMsg("Could not get your location");
       setIsLoading(false);
@@ -176,19 +127,16 @@ const QiblahFinder = () => {
   // Initialize on component mount
   useEffect(() => {
     getLocationAsync();
-    startMagnetometer();
-    startDeviceMotion();
 
     return () => {
-      stopMagnetometer();
-      stopDeviceMotion();
+      stopCompass();
     };
   }, []);
 
-  // Calculate final compass rotation with tilt compensation
-  // The compass rotation based on magnetometer and qibla angle with tilt compensation
+  // Calculate final compass rotation
+  // The compass rotation based on magnetometer (true heading) and qibla angle
   const compassRotation = magnetometer - qiblaAngle;
-  // Apply tilt compensation to needle rotation
+  // Apply true heading to needle rotation
   const needleRotation = 360 - magnetometer;
 
   if (isLoading) {
@@ -210,63 +158,54 @@ const QiblahFinder = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>{t("qiblaFinder")}</Text>
-
-      {isCalibrating && (
-        <View style={styles.calibrationOverlay}>
-          <Text style={styles.calibrationText}>
-            {t("moveYourDeviceInAFigure8PatternToCalibrate")}
-          </Text>
-          <ActivityIndicator size="large" color="#34D399" />
-        </View>
-      )}
-
-      <View style={styles.compassContainer}>
-        <Image
-          source={require("@/assets/images/qibliah-direction.png")}
-          resizeMode="contain"
-          style={[
-            styles.compass,
-            { transform: [{ rotate: `${compassRotation}deg` }] },
-          ]}
-        />
-        <View
-          style={[
-            styles.needle,
-            { transform: [{ rotate: `${needleRotation}deg` }] },
-          ]}
-        >
-          {/* <FontAwesome name="location-arrow" size={60} color="green" /> */}
-          <Image
-            source={require("@/assets/images/compass.png")}
-            style={{ width: 100, height: 100 }}
-          />
-        </View>
-      </View>
-
-      {location && (
-        <View style={styles.locationBox}>
-          <Entypo name="location-pin" size={24} color="red" />
-          <Text>
-            {location.coords.latitude.toFixed(4)},{" "}
-            {location.coords.longitude.toFixed(4)}
-          </Text>
-        </View>
-      )}
-      {showCalibration && !isCalibrating && (
-        <TouchableOpacity
-          style={styles.calibrateButton}
-          onPress={calibrateMagnetometer}
-        >
-          <Text style={styles.calibrateButtonText}>{t("calibrateCompass")}</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+           <AntDesign name="left" size={24} color="black" />
         </TouchableOpacity>
-      )}
+        <Text style={styles.headerTitle}>{t("qiblaFinder")}</Text>
+        <View style={{ width: 24 }} /> 
+      </View>
+      
+      <View style={styles.contentContainer}>
+        <View style={styles.compassContainer}>
+          <Image
+            source={require("@/assets/images/qibliah-direction.png")}
+            resizeMode="contain"
+            style={[
+              styles.compass,
+              { transform: [{ rotate: `${compassRotation}deg` }] },
+            ]}
+          />
+          <View
+            style={[
+              styles.needle,
+              { transform: [{ rotate: `${needleRotation}deg` }] },
+            ]}
+          >
+            {/* <FontAwesome name="location-arrow" size={60} color="green" /> */}
+            <Image
+              source={require("@/assets/images/compass.png")}
+              style={{ width: 100, height: 100 }}
+            />
+          </View>
+        </View>
 
-      <View style={styles.tipsContainer}>
-        <Text style={styles.tipsTitle}>{t("forBestResults")}:</Text>
-        <Text style={styles.tipsText}>• {t("keepDeviceFlatAndLevel")}</Text>
-        <Text style={styles.tipsText}>• {t("stayAwayFromMagneticObjects")}</Text>
-        <Text style={styles.tipsText}>• {t("calibrateIfDirectionSeemsWrong")}</Text>
+        {location && (
+          <View style={styles.locationBox}>
+            <Entypo name="location-pin" size={24} color="red" />
+            <Text>
+              {location.coords.latitude.toFixed(4)},{" "}
+              {location.coords.longitude.toFixed(4)}
+            </Text>
+          </View>
+        )}
+
+        <View style={styles.tipsContainer}>
+          <Text style={styles.tipsTitle}>{t("forBestResults")}:</Text>
+          <Text style={styles.tipsText}>• {t("keepDeviceFlatAndLevel")}</Text>
+          <Text style={styles.tipsText}>• {t("stayAwayFromMagneticObjects")}</Text>
+          <Text style={styles.tipsText}>• {t("calibrateIfDirectionSeemsWrong")}</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -275,15 +214,31 @@ const QiblahFinder = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  backButton: {
+    padding: 5,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "black",
+  },
+  contentContainer: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
   },
   compassContainer: {
     position: "relative",

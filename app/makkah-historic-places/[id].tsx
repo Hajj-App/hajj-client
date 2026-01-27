@@ -39,7 +39,9 @@ interface RitualContent {
   paragraphs?: {
     title: string;
     description: string | string[];
+    video_link?: string;
   }[];
+  video_link?: string;
 }
 
 const MakkahHistoricPlaceDetail = (props: Props) => {
@@ -111,6 +113,7 @@ const MakkahHistoricPlaceDetail = (props: Props) => {
           description: data.description || "",
           paragraphs: data.paragraphs || [],
           content_image: data.content_image || "",
+          video_link: data.video_link,
         });
 
         await fetchRitualMedia();
@@ -346,15 +349,35 @@ const MakkahHistoricPlaceDetail = (props: Props) => {
                 )}
               </View>
             )}
+
+            {/* Video Section */}
+            {ritualContent?.video_link && (
+              <View className="my-4">
+                <Text className="text-xl font-bold mb-2">
+                  {t("videoGuides") || "Video Guides"}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(ritualContent.video_link!)}
+                  className="flex-row items-center p-4 bg-gray-100 rounded-lg mb-2"
+                >
+                  <View className="w-12 h-12 bg-red-600 rounded-full items-center justify-center mr-4">
+                    <FontAwesome5 name="youtube" size={20} color="white" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="font-bold text-gray-800">
+                      {t("watchVideo") || "Watch Video Guide"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
           </>
         )}
 
         {/* Ritual content sections from data.json */}
         {ritualContent && (
           <View className="gap-y-5 pt-5 pb-5">
-            <Text className="text-2xl font-bold">
-              {t("about")} {ritualContent.name}
-            </Text>
+            <Text className="text-2xl font-bold">{ritualContent.name}</Text>
             {typeof ritualContent.description === "string" ? (
               <Text className="text-lg leading-snug mb-2">
                 {ritualContent.description}

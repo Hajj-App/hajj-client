@@ -1,7 +1,7 @@
 {
   "hajj": "Hajj",
   "umrah": "Umrah",
-  "madinaZiyarah": "Madina Ziyarah",
+  "madinaZiyara": "Madina Ziyara",
   "historicPlaces": "Historic Places",
   "prayerTimeIn": "Prayer time in",
   "currentLocation": "Current Location",
@@ -51,5 +51,11 @@
   "calibrateIfDirectionSeemsWrong": "Calibrate if direction seems wrong",
   "calibrateCompass": "Calibrate Compass",
   "qiblaFinder": "Qibla Finder",
-  "upcomingEvents": "Upcoming Events"
+  "upcomingEvents": "Upcoming Events",
+  "videoGuides": "Video Guides",
+  "watchVideo": "Watch Video Guide",
+  "qnaSection": "Q&A & Audio Lessons",
+  "audioLessons": "Audio Lessons (PDF)",
+  "textLessons": "Text Lessons (PDF)",
+  "noLessonsAvailable": "No lessons available yet"
 }

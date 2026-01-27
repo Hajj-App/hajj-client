@@ -15,7 +15,7 @@ import {
   Image,
 } from "react-native";
 import { fetchWithCache, forceRefresh } from "@/utils/cache";
-import HistoricPlacesSlider from "@/components/common/historic-places-slider";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { logger } from "@/utils/logger";
@@ -55,8 +55,6 @@ const Makkah = () => {
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
   
-  const [historicPlaces, setHistoricPlaces] = useState<HistoricPlace[]>([]);
-  const [historicPlacesLoading, setHistoricPlacesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { t } = useTranslation();
 
@@ -132,57 +130,21 @@ const Makkah = () => {
     }
   }, [selected]);
 
-  const fetchPlaces = useCallback(async (forceNetwork = false) => {
-    try {
-      setHistoricPlacesLoading(true);
-      
-      // Try new schema first
-      try {
-        const { places } = await getHistoricPlaces('makkah', 10);
-        if (places.length > 0) {
-          const mapped = places.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            image: p.imageUrl,
-            imageUrl: p.imageUrl,
-            content_image: p.imageUrl,
-          }));
-          setHistoricPlaces(mapped);
-          return;
-        }
-      } catch (newSchemaError) {
-        logger.debug("New schema not available for historic places", newSchemaError);
-      }
 
-      // Fallback to legacy
-      const placesData = forceNetwork 
-        ? await forceRefresh('historic_places_makkah', 'historic_places_makkah_cache') as HistoricPlace[]
-        : await fetchWithCache<HistoricPlace>('historic_places_makkah', 'historic_places_makkah_cache');
-      setHistoricPlaces(placesData);
-    } catch (err) {
-      logger.error("Error fetching historic places", err);
-    } finally {
-      setHistoricPlacesLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     fetchUploads();
   }, [fetchUploads]);
 
-  useEffect(() => {
-    fetchPlaces();
-  }, [fetchPlaces]);
+
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
       fetchUploads(true),
-      fetchPlaces(true)
     ]);
     setRefreshing(false);
-  }, [fetchUploads, fetchPlaces]);
+  }, [fetchUploads]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore || !lastVisible) return;
@@ -299,18 +261,7 @@ const Makkah = () => {
               </View>
             )}
 
-            {/* Historic Places Slider */}
-            {historicPlacesLoading ? (
-              renderSkeleton()
-            ) : historicPlaces.length > 0 ? (
-              <View className="gap-5 mb-5">
-                <Text className="text-2xl font-bold ml-5">{t("historicPlaces")}</Text>
-                <HistoricPlacesSlider 
-                  route="makkah-historic-places" 
-                  data={historicPlaces} 
-                />
-              </View>
-            ) : null}
+
 
             {/* Rituals Title or Skeleton */}
             {loading && uploads.length === 0 ? (

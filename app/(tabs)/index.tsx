@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   Pressable,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView, Text } from "react-native";
 import { useTranslation } from "react-i18next";
@@ -24,11 +25,30 @@ import { logger } from "@/utils/logger";
 export default function HomeScreen() {
   
   const [city, setCity] = useState("Fetching...");
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const { t } = useTranslation();
+
+  const fetchCity = async () => {
+    try {
+      const cityName = await getCurrentCity();
+      setCity(cityName);
+    } catch (error) {
+      setCity("Unknown");
+    }
+  };
+
   useEffect(() => {
-    getCurrentCity().then(setCity).catch(() => setCity("Unknown"));
+    fetchCity();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCity();
+    setRefreshKey((prev) => prev + 1); // Force PrayerList refresh
+    setRefreshing(false);
+  };
 
   const handleWhatsAppPress = () => {
     const whatsappLink = API.LINKS.WHATSAPP_GROUP;
@@ -60,7 +80,12 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <HomeHeader />
         <View className="p-10 mb-8">
           <View className="flex-row gap-4 my-4">
@@ -114,7 +139,7 @@ export default function HomeScreen() {
                   className="w-28 h-28"
                 />
               </View>
-              <Text className="text-lg font-bold">{t("madinaZiyarah")}</Text>
+              <Text className="text-lg font-bold">{t("madinaZiyara")}</Text>
             </Pressable>
             <Pressable
               className="bg-white p-5 rounded-3xl w-1/2"
@@ -152,7 +177,7 @@ export default function HomeScreen() {
           <DateSlider />
 
           {/* <PrayerTimeContainer /> */}
-          <PrayerList />
+          <PrayerList key={refreshKey} />
 
           {/* Qibla, Dhikr Counter */}
           <View className="flex-row gap-4 my-6">
@@ -177,6 +202,16 @@ export default function HomeScreen() {
             <Ionicons name="search" size={24} color="white" />
             <Text className="text-white font-bold text-lg">
               {t("searchYourCoverNumber")}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            className="my-4 bg-cyan-600 rounded-lg p-4 gap-2 flex-row items-center justify-center"
+            onPress={() => router.navigate("/qna")}
+          >
+            <Ionicons name="library" size={24} color="white" />
+            <Text className="text-white font-bold text-lg">
+              {t("qnaSection")}
             </Text>
           </TouchableOpacity>
           

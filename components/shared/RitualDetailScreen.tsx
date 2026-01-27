@@ -16,6 +16,7 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  Linking,
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import { Entypo, FontAwesome5 } from "@expo/vector-icons";
@@ -55,6 +56,7 @@ interface RitualContent {
   }[];
   _legacyFolderId?: number;
   type?: string;
+  video_link?: string;
 }
 
 interface RitualDetailScreenProps {
@@ -169,6 +171,7 @@ const useRitualData = (
               paragraphs,
               _legacyFolderId: data._legacyFolderId,
               type: data.type,
+              video_link: data.video_link,
             });
 
             if (data._legacyFolderId) {
@@ -198,6 +201,7 @@ const useRitualData = (
             name: data.name || "Untitled",
             description: data.description || "",
             paragraphs: data.paragraphs || [],
+            video_link: data.video_link,
           });
           setStoragePath(`${ritualType}/${ritualId}`);
         }
@@ -388,51 +392,44 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             ))}
           </View>
         )}
+
+        {/* Video Section */}
+        {ritualContent?.video_link && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t("videoGuides") || "Video Guides"}</Text>
+            <TouchableOpacity
+              style={styles.videoItem}
+              onPress={() => Linking.openURL(ritualContent.video_link!)}
+            >
+              <FontAwesome5 name="youtube" size={24} color="#FF0000" />
+              <Text style={styles.videoText} numberOfLines={1}>
+                {t("watchVideo") || "Watch Video Guide"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
     );
   };
-  // Determine the best header image source
-  let headerSource = null;
-
-  if (loading) {
-    // While loading, keep headerSource null to show the theme color (Green)
-    // This prevents the "flash" of the fallback image before the real one loads
-    headerSource = null;
-  } else if (ritualContent?.content_image) {
-    // 1. Priority: Explicit content image from Firebase
-    headerSource = { uri: ritualContent.content_image };
-  } else if (media.images.length > 0) {
-    // 2. Priority: First image from the gallery
-    headerSource = { uri: media.images[0].downloadURL };
-  } else {
-    // 3. Priority: Default fallback based on ritual type
-    if (ritualType === 'madina') {
-      headerSource = require('@/assets/images/madinah-header.png');
-    } else {
-      // Default for Hajj/Umrah (Makkah context)
-      headerSource = require('@/assets/images/makkah-header.png');
-    }
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Header Image Section */}
-      <ImageBackground
-        source={headerSource}
-        style={[styles.background, { paddingTop: insets.top + 10 }]}
-        resizeMode="cover"
-      >
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Entypo name="chevron-small-left" size={40} color="black" />
-          </Pressable>
-        </View>
-      </ImageBackground>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header with Back Button */}
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <Entypo name="chevron-small-left" size={30} color="black" />
+        </Pressable>
+        {!loading && (
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {ritualContent?.name}
+          </Text>
+        )}
+        <View style={{ width: 30 }} /> 
+      </View>
 
-      {/* Content Section with Overlap */}
+      {/* Main Content Area */}
       <View style={styles.contentContainer}>
         {renderContent()}
       </View>
@@ -462,35 +459,46 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  background: {
-    width: '100%',
-    height: 350,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    // paddingTop removed - handled dynamically with insets
+    backgroundColor: "#f9f9f9",
   },
   header: {
     width: '100%',
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: 'space-between', // To separate back button
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: "#f9f9f9",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    flex: 1,
+    textAlign: "center",
   },
   backButton: {
-    backgroundColor: "rgba(255,255,255,0.5)",
+    backgroundColor: "white",
     borderRadius: 15,
-    padding: 2, // Adjusted padding
+    padding: 5,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   contentContainer: {
     flex: 1,
     backgroundColor: "white",
-    marginTop: -50,
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     paddingHorizontal: 20,
     paddingTop: 30,
-    overflow: 'hidden', // Ensure content respects the rounded corners
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 5,
   },
   scrollContent: {
     paddingBottom: 40,
@@ -581,6 +589,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     flex: 1,
+  },
+  videoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  videoText: {
+    marginLeft: 12,
+    fontSize: 14,
+    color: "#333",
+    flex: 1,
+    fontWeight: "600",
   },
 });
 

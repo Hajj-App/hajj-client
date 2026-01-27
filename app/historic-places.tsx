@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState, useCallback } from "react";
+import { Entypo } from "@expo/vector-icons";
 import {
   ImageBackground,
   Pressable,
@@ -149,9 +150,16 @@ const HistoricPlacesScreen = () => {
       <ImageBackground
         source={require("@/assets/images/historic-places.webp")}
         resizeMode="cover"
-        className="w-full h-[280px] items-center justify-start"
+        className="w-full h-[280px] items-center justify-start pt-12"
       >
-        {/* Header content can be added here */}
+        <View className="w-full px-5 flex-row items-center justify-start">
+           <Pressable 
+              onPress={() => routerInstance.back()}
+              className="bg-white/50 p-2 rounded-full"
+           >
+              <Entypo name="chevron-small-left" size={30} color="black" />
+           </Pressable>
+        </View>
       </ImageBackground>
 
       <View className="w-full h-24 bg-white mt-[-100px] rounded-t-[50px] items-center justify-center">

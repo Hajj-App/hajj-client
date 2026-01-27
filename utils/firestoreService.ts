@@ -111,6 +111,38 @@ export const getHistoricPlaces = async (
     throw error;
   }
 };
+
+/**
+ * Get Q&A / Lessons by type
+ */
+export const getQnAItems = async (
+  type: 'audio' | 'text'
+): Promise<any[]> => {
+  try {
+    if (!firestore) throw new Error('Firestore not initialized');
+    
+    const q = query(
+      collection(firestore, 'qna_uploads'),
+      where('fileType', '==', type)
+    );
+    
+    const snapshot = await getDocs(q);
+    const items = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    // Client side sort since we want to avoid index issues for simplicity
+    return items.sort((a: any, b: any) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return dateB - dateA;
+    });
+  } catch (error) {
+    logger.error(`Error getting Q&A items of type ${type}`, error);
+    throw error;
+  }
+};
 import { firestore } from './firebase';
 import { logger } from './logger';
 import {
@@ -503,6 +535,9 @@ export const firestoreService = {
   // Historic Places
   createHistoricPlace,
   getHistoricPlaces,
+  
+  // Q&A
+  getQnAItems,
 };
 
 export default firestoreService;

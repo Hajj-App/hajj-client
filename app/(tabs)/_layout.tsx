@@ -45,40 +45,52 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: "green", // Use green directly for active
         headerShown: false,
-        tabBarInactiveTintColor: Colors[colorScheme ?? "light"].icon,
+        tabBarInactiveTintColor: "#8e8e93", // Standard iOS inactive gray
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarShowLabel: false,
-        tabBarStyle: Platform.select({
-          ios: {
-            position: "absolute",
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          position: "absolute",
+          bottom: 30,
+          left: 50,
+          right: 50,
+          backgroundColor: "#ffffff",
+          borderRadius: 30, // Premium pill shape
+          height: 60,
+          borderTopWidth: 0, // Remove default border
+          elevation: 10, // Android shadow
+          shadowColor: "#000", // iOS shadow
+          shadowOffset: {
+            width: 0,
+            height: 10,
           },
-          default: {
-            height: 60,
-          },
-        }),
+          shadowOpacity: 0.15,
+          shadowRadius: 10,
+          paddingBottom: 0, // Ensure content is centered
+        },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
+            <View style={{ alignItems: "center", justifyContent: 'center', height: '100%', top: 8 }}>
               <Image
                 source={icons.homeIcon}
-                style={{ width: 25, height: 25 }}
+                style={{ width: 24, height: 24, tintColor: focused ? "green" : "#8e8e93" }}
                 resizeMode="contain"
               />
               {focused && (
                 <View
                   style={{
-                    width: 8,
+                    width: 6,
                     height: 6,
-                    borderRadius: 4,
+                    borderRadius: 3,
                     backgroundColor: "green",
-                    marginTop: 4,
+                    marginTop: 6,
                   }}
                 />
               )}
@@ -90,25 +102,25 @@ export default function TabLayout() {
         name="explore"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
+            <View style={{ alignItems: "center", justifyContent: 'center', height: '100%', top: 8 }}>
               <View>
                 <Image
                   source={icons.searchIcon}
-                  style={{ width: 28, height: 28 }}
+                  style={{ width: 26, height: 26, tintColor: focused ? "green" : "#8e8e93" }}
                   resizeMode="contain"
                 />
                 {hasNewUpdates && (
                   <View
                     style={{
                       position: 'absolute',
-                      top: -5,
-                      right: -5,
+                      top: -4,
+                      right: -4,
                       backgroundColor: 'red',
-                      borderRadius: 8,
-                      width: 16,
-                      height: 16,
-                      justifyContent: 'center',
-                      alignItems: 'center',
+                      borderRadius: 6,
+                      width: 12,
+                      height: 12,
+                      borderWidth: 2,
+                      borderColor: 'white',
                     }}
                   />
                 )}
@@ -116,11 +128,11 @@ export default function TabLayout() {
               {focused && (
                 <View
                   style={{
-                    width: 8,
+                    width: 6,
                     height: 6,
-                    borderRadius: 4,
+                    borderRadius: 3,
                     backgroundColor: "green",
-                    marginTop: 4,
+                    marginTop: 6,
                   }}
                 />
               )}
@@ -132,20 +144,20 @@ export default function TabLayout() {
         name="makkah"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
+            <View style={{ alignItems: "center", justifyContent: 'center', height: '100%', top: 8 }}>
               <Image
                 source={icons.kaabaIcon}
-                style={{ width: 24, height: 24 }}
+                style={{ width: 28, height: 28, tintColor: focused ? "green" : "#8e8e93" }}
                 resizeMode="contain"
               />
               {focused && (
                 <View
                   style={{
-                    width: 8,
+                    width: 6,
                     height: 6,
-                    borderRadius: 4,
+                    borderRadius: 3,
                     backgroundColor: "green",
-                    marginTop: 4,
+                    marginTop: 6,
                   }}
                 />
               )}
@@ -157,21 +169,21 @@ export default function TabLayout() {
         name="madinah"
         options={{
           tabBarIcon: ({ color, focused }) => (
-            <View style={{ alignItems: "center", marginTop: 20 }}>
+            <View style={{ alignItems: "center", justifyContent: 'center', height: '100%', top: 8 }}>
               <Image
                 source={icons.madinaIcon}
-                style={{ width: 32, height: 32 }}
+                style={{ width: 32, height: 32, tintColor: focused ? "green" : "#8e8e93" }}
                 resizeMode="contain"
               />
               {focused && (
                 <View
                  
                   style={{
-                    width: 8,
+                    width: 6,
                     height: 6,
-                    borderRadius: 4,
+                    borderRadius: 3,
                     backgroundColor: "green",
-                    marginTop: 4,
+                    marginTop: 6,
                   }}
                 />
               )}

@@ -67,71 +67,19 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="qiblah-finder"
-            options={{
-              headerTitle: "Qiblah Finder",
-              headerTitleStyle: {
-                fontWeight: "bold",
-                fontSize: 18,
-              },
-              headerLeft: () => {
-                return (
-                  <Pressable onPress={() => router.back()}>
-                    <Entypo name="chevron-small-left" size={40} color="black" />
-                  </Pressable>
-                );
-              },
-            }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="dikr-counter"
-            options={{
-              headerTitle: "Dikr Counter",
-              headerTitleStyle: {
-                fontWeight: "bold",
-                fontSize: 18,
-              },
-              headerLeft: () => {
-                return (
-                  <Pressable onPress={() => router.back()}>
-                    <Entypo name="chevron-small-left" size={40} color="black" />
-                  </Pressable>
-                );
-              },
-            }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="historic-places"
-            options={{
-              headerTitle: "Historic Places",
-              headerTitleStyle: {
-                fontWeight: "bold",
-                fontSize: 18,
-              },
-              headerLeft: () => {
-                return (
-                  <Pressable onPress={() => router.back()}>
-                    <Entypo name="chevron-small-left" size={40} color="black" />
-                  </Pressable>
-                );
-              },
-            }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="dikrs-and-duas"
-            options={{
-              headerTitle: "Dikrs & Duas",
-              headerTitleStyle: {
-                fontWeight: "bold",
-                fontSize: 18,
-              },
-              headerLeft: () => {
-                return (
-                  <Pressable onPress={() => router.back()}>
-                    <Entypo name="chevron-small-left" size={40} color="black" />
-                  </Pressable>
-                );
-              },
-            }}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="makkah-historic-places/[id]"
