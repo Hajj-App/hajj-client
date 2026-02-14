@@ -51,12 +51,19 @@ export interface Ritual extends BaseDocument {
   hasMedia: boolean;
   // Paragraphs stored inline for simplicity (unless very large)
   paragraphs: RitualParagraph[];
+  // Media references
+  video_link?: string;
+  files?: string[];
+  // Legacy reference for storage path resolution
+  _legacyFolderId?: number;
+  _legacyCollection?: string;
 }
 
 /** Ritual paragraph/section */
 export interface RitualParagraph {
   title: string;
   content: string[];
+  description?: string | string[]; // Legacy compat
   order: number;
 }
 
