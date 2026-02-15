@@ -21,6 +21,35 @@ interface BaseDocument {
   order?: number;
 }
 
+const getTimestampMs = (item: BaseDocument): number => {
+  const anyItem = item as BaseDocument & { timestamp?: string };
+  if (!anyItem.timestamp) return Number.NEGATIVE_INFINITY;
+  const parsed = Date.parse(anyItem.timestamp);
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed;
+};
+
+const dedupeByOrder = (items: BaseDocument[]): BaseDocument[] => {
+  const byOrder = new Map<number, BaseDocument>();
+  const noOrder: BaseDocument[] = [];
+
+  for (const item of items) {
+    if (item.order === undefined || item.order === null) {
+      noOrder.push(item);
+      continue;
+    }
+
+    const existing = byOrder.get(item.order);
+    if (!existing || getTimestampMs(item) >= getTimestampMs(existing)) {
+      byOrder.set(item.order, item);
+    }
+  }
+
+  return [
+    ...Array.from(byOrder.values()).sort((a, b) => (a.order || 0) - (b.order || 0)),
+    ...noOrder,
+  ];
+};
+
 // Cache version - increment when data structure changes
 const CACHE_VERSION = '1.0.0';
 
@@ -131,8 +160,8 @@ export const fetchWithCache = async <T extends BaseDocument = BaseDocument>(
       const { order: orderField, folderId, ...rest } = docData;
       return {
         id: doc.id,
-        // Use folderId as fallback when order is 0 or not present
-        order: orderField !== undefined && orderField !== 0 ? orderField : (folderId || 0),
+        // Keep 0 as a valid display order; only fallback when order is missing.
+        order: orderField !== undefined ? orderField : (folderId || 0),
         ...rest
       };
     });
@@ -153,10 +182,12 @@ export const fetchWithCache = async <T extends BaseDocument = BaseDocument>(
       return 0;
     });
 
+    const dedupedData = dedupeByOrder(sortedData);
+
     // Cache the new data
-    await setCachedData(cacheKey, sortedData);
+    await setCachedData(cacheKey, dedupedData);
     
-    return sortedData as T[];
+    return dedupedData as T[];
   } catch (error) {
     logger.error(`Error fetching ${collectionName}`, error);
     throw error;

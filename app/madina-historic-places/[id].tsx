@@ -38,11 +38,48 @@ interface RitualContent {
   content_image: string;
   paragraphs?: {
     title: string;
-    description: string | string[];
+    description?: string | string[];
+    content?: string[];
     video_link?: string;
   }[];
   video_link?: string;
 }
+
+const toTextBlocks = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => (typeof item === "string" ? [item] : []))
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  return [];
+};
+
+const normalizeParagraphs = (
+  value: unknown
+): { title: string; description: string[]; content: string[] }[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((paragraph) => {
+      const candidate = paragraph as {
+        title?: unknown;
+        content?: unknown;
+        description?: unknown;
+      };
+      const content = toTextBlocks(candidate?.content);
+      const description = content.length > 0 ? content : toTextBlocks(candidate?.description);
+      return {
+        title: typeof candidate?.title === "string" ? candidate.title : "",
+        description,
+        content: description,
+      };
+    })
+    .filter((paragraph) => paragraph.title.trim().length > 0 || paragraph.content.length > 0);
+};
 
 const MadinaHistoricPlaceDetail = (props: Props) => {
   const router = useRouter();
@@ -112,7 +149,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           id: ritualDoc.id,
           name: data.name || "Untitled",
           description: data.description || "",
-          paragraphs: data.paragraphs || [],
+          paragraphs: normalizeParagraphs(data.paragraphs),
           content_image: data.content_image || "",
           video_link: data.video_link,
         });
@@ -402,8 +439,8 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
                     {paragraph.description}
                   </Text>
                 ) : (
-                  Array.isArray(paragraph.description) &&
-                  paragraph.description.map(
+                  Array.isArray(paragraph.content || paragraph.description) &&
+                  (paragraph.content || paragraph.description)?.map(
                     (desc: string | string[], dIndex: number) => (
                       <Text key={dIndex} className="text-lg leading-snug mb-2">
                         {Array.isArray(desc) ? desc.join(" ") : desc}

@@ -59,6 +59,63 @@ interface RitualContent {
   video_link?: string;
 }
 
+interface NormalizedParagraph {
+  title: string;
+  description: string[];
+  content: string[];
+}
+
+const toTextBlocks = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => (typeof item === "string" ? [item] : []))
+      .map((line) => line.trim())
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  return [];
+};
+
+const toDescriptionValue = (value: unknown): string | string[] => {
+  if (Array.isArray(value)) {
+    return toTextBlocks(value);
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return "";
+};
+
+const hasDescriptionValue = (value: string | string[]): boolean => {
+  if (Array.isArray(value)) {
+    return value.some((line) => line.trim().length > 0);
+  }
+  return value.trim().length > 0;
+};
+
+const normalizeParagraphs = (value: unknown): NormalizedParagraph[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((paragraph) => {
+      const candidate = paragraph as {
+        title?: unknown;
+        content?: unknown;
+        description?: unknown;
+      };
+      const content = toTextBlocks(candidate?.content);
+      const description = content.length > 0 ? content : toTextBlocks(candidate?.description);
+      return {
+        title: typeof candidate?.title === "string" ? candidate.title : "",
+        content: description,
+        description,
+      };
+    })
+    .filter((paragraph) => paragraph.title.trim().length > 0 || paragraph.content.length > 0);
+};
+
 interface RitualDetailScreenProps {
   ritualId: string;
   ritualType: RitualType;
@@ -135,7 +192,7 @@ const useRitualData = (
         setError(formatErrorForDisplay(storageError));
       }
     }
-  }, [storagePath, ritualId]);
+  }, [storagePath]);
 
   useEffect(() => {
     const initializeAndFetch = async () => {
@@ -148,65 +205,95 @@ const useRitualData = (
           throw new Error("Firestore is not initialized");
         }
 
-        let foundRitual = false;
+        let newSchemaDocId: string | null = null;
+        let newSchemaData: Record<string, unknown> | null = null;
 
-        // Try new schema first
+        // Try new schema by route id first.
         try {
-          const ritualDoc = await getDoc(
-            doc(firestore, COLLECTIONS.RITUALS, ritualId)
-          );
-
+          const ritualDoc = await getDoc(doc(firestore, COLLECTIONS.RITUALS, ritualId));
           if (ritualDoc.exists()) {
-            const data = ritualDoc.data();
-            const paragraphs = (data.paragraphs || []).map((p: any) => ({
-              title: p.title || '',
-              description: p.content || p.description || [],
-              content: p.content || p.description || [],
-            }));
-            
-            setRitualContent({
-              id: ritualDoc.id,
-              name: data.name || "Untitled",
-              description: data.description || "",
-              paragraphs,
-              _legacyFolderId: data._legacyFolderId,
-              type: data.type,
-              video_link: data.video_link,
-            });
-
-            if (data._legacyFolderId) {
-              setStoragePath(`${ritualType}/${data._legacyFolderId}`);
-            } else {
-              setStoragePath(`rituals/${ritualType}/${ritualId}`);
+            const data = ritualDoc.data() as Record<string, unknown>;
+            if (!data.type || data.type === ritualType) {
+              newSchemaDocId = ritualDoc.id;
+              newSchemaData = data;
             }
-            foundRitual = true;
           }
         } catch (newSchemaError) {
           logger.debug("New schema lookup failed, trying legacy", newSchemaError);
         }
 
-        // Fallback to legacy schema
-        if (!foundRitual) {
-          const ritualDoc = await getDoc(
-            doc(firestore, legacyCollection, ritualId)
-          );
+        const legacyFolderIdFromNew = Number(newSchemaData?._legacyFolderId);
+        const legacyDocId =
+          Number.isFinite(legacyFolderIdFromNew) && legacyFolderIdFromNew > 0
+            ? String(legacyFolderIdFromNew)
+            : /^\d+$/.test(String(ritualId))
+            ? String(ritualId)
+            : null;
 
-          if (!ritualDoc.exists()) {
-            throw new Error("Ritual not found");
+        let legacyData: Record<string, unknown> | null = null;
+        if (legacyDocId) {
+          try {
+            const legacyDoc = await getDoc(doc(firestore, legacyCollection, legacyDocId));
+            if (legacyDoc.exists()) {
+              legacyData = legacyDoc.data() as Record<string, unknown>;
+            }
+          } catch (legacyError) {
+            logger.debug("Legacy lookup failed", legacyError);
           }
-
-          const data = ritualDoc.data();
-          setRitualContent({
-            id: ritualDoc.id,
-            name: data.name || "Untitled",
-            description: data.description || "",
-            paragraphs: data.paragraphs || [],
-            video_link: data.video_link,
-          });
-          setStoragePath(`${ritualType}/${ritualId}`);
         }
 
-        await fetchRitualMedia();
+        if (!newSchemaData && !legacyData) {
+          throw new Error("Ritual not found");
+        }
+
+        const newSchemaDescription = toDescriptionValue(newSchemaData?.description);
+        const legacyDescription = toDescriptionValue(legacyData?.description);
+        const mergedDescription = hasDescriptionValue(newSchemaDescription)
+          ? newSchemaDescription
+          : legacyDescription;
+
+        const newSchemaParagraphs = normalizeParagraphs(newSchemaData?.paragraphs);
+        const legacyParagraphs = normalizeParagraphs(legacyData?.paragraphs);
+        const mergedParagraphs =
+          newSchemaParagraphs.length > 0 ? newSchemaParagraphs : legacyParagraphs;
+
+        const legacyFolderIdFromLegacy = Number(legacyData?.folderId);
+        const resolvedLegacyFolderId =
+          Number.isFinite(legacyFolderIdFromNew) && legacyFolderIdFromNew > 0
+            ? legacyFolderIdFromNew
+            : Number.isFinite(legacyFolderIdFromLegacy) && legacyFolderIdFromLegacy > 0
+            ? legacyFolderIdFromLegacy
+            : /^\d+$/.test(String(ritualId))
+            ? Number(ritualId)
+            : undefined;
+
+        const contentImage =
+          (newSchemaData?.contentImageUrl as string | undefined) ||
+          (newSchemaData?.content_image as string | undefined) ||
+          (legacyData?.content_image as string | undefined);
+
+        const resolvedStoragePath = resolvedLegacyFolderId
+          ? `${ritualType}/${resolvedLegacyFolderId}`
+          : `rituals/${ritualType}/${ritualId}`;
+
+        setRitualContent({
+          id: newSchemaDocId || legacyDocId || ritualId,
+          name:
+            (newSchemaData?.name as string | undefined) ||
+            (legacyData?.name as string | undefined) ||
+            "Untitled",
+          description: mergedDescription,
+          paragraphs: mergedParagraphs,
+          content_image: contentImage,
+          _legacyFolderId: resolvedLegacyFolderId,
+          type: (newSchemaData?.type as string | undefined) || ritualType,
+          video_link:
+            (newSchemaData?.video_link as string | undefined) ||
+            (legacyData?.video_link as string | undefined),
+        });
+
+        setStoragePath(resolvedStoragePath);
+        await fetchRitualMedia(resolvedStoragePath);
       } catch (err) {
         logger.error("Error fetching ritual", err);
         setError("Failed to load ritual data");

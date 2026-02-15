@@ -30,6 +30,40 @@ import {
 
 // ... (rest of imports)
 
+const getFirestoreTimestampMs = (value?: Timestamp): number => {
+  if (!value) return Number.NEGATIVE_INFINITY;
+  return value.toMillis();
+};
+
+const dedupeByOrder = <T extends { order: number; createdAt?: Timestamp; updatedAt?: Timestamp }>(
+  items: T[]
+): T[] => {
+  const byOrder = new Map<number, T>();
+
+  for (const item of items) {
+    const existing = byOrder.get(item.order);
+    if (!existing) {
+      byOrder.set(item.order, item);
+      continue;
+    }
+
+    const existingTs = Math.max(
+      getFirestoreTimestampMs(existing.updatedAt),
+      getFirestoreTimestampMs(existing.createdAt)
+    );
+    const incomingTs = Math.max(
+      getFirestoreTimestampMs(item.updatedAt),
+      getFirestoreTimestampMs(item.createdAt)
+    );
+
+    if (incomingTs >= existingTs) {
+      byOrder.set(item.order, item);
+    }
+  }
+
+  return Array.from(byOrder.values()).sort((a, b) => a.order - b.order);
+};
+
 /**
  * Get rituals of a specific type with pagination
  */
@@ -58,9 +92,10 @@ export const getRitualsByType = async (
       id: doc.id,
       ...doc.data(),
     })) as Ritual[];
+    const dedupedRituals = dedupeByOrder(rituals);
 
     return {
-      rituals,
+      rituals: dedupedRituals,
       lastVisible: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null
     };
   } catch (error) {
@@ -101,9 +136,10 @@ export const getHistoricPlaces = async (
       id: doc.id,
       ...doc.data(),
     })) as HistoricPlace[];
+    const dedupedPlaces = dedupeByOrder(places);
 
     return {
-      places,
+      places: dedupedPlaces,
       lastVisible: snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1] : null
     };
   } catch (error) {
