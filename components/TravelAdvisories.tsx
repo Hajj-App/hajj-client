@@ -35,7 +35,7 @@ const CACHE_KEY = "travelAdvisoriesCache";
 const CACHE_EXPIRY = 1000 * 60 * 30; // 30 minutes cache
 
 const TravelAdvisories = React.memo(() => {
-  
+
   const { t } = useTranslation();
   const [advisories, setAdvisories] = useState<Advisory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -233,7 +233,7 @@ const TravelAdvisories = React.memo(() => {
             >
               <AntDesign name="close" size={24} color="#2c3e50" />
             </TouchableOpacity>
-            
+
             <ScrollView>
               {selectedAdvisory && (
                 <>
@@ -343,7 +343,6 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginVertical: 20,
   },
-  // Shimmer styles
   shimmerTitle: {
     width: "60%",
     height: 20,
@@ -373,7 +372,6 @@ const styles = StyleSheet.create({
     height: 14,
     marginTop: 8,
   },
-  // Modal styles
   modalContainer: {
     flex: 1,
     justifyContent: "center",

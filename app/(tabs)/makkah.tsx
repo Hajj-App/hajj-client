@@ -11,10 +11,8 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
   Image,
 } from "react-native";
-import { fetchWithCache, forceRefresh } from "@/utils/cache";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
@@ -50,7 +48,6 @@ const Makkah = () => {
   const [selected, setSelected] = useState(0);
   const [uploads, setUploads] = useState<RitualDisplay[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -78,50 +75,25 @@ const Makkah = () => {
     }
   };
 
-  const fetchUploads = useCallback(async (forceNetwork = false) => {
+  const fetchUploads = useCallback(async (_forceNetwork = false) => {
     try {
       setLoading(true);
       setError(null);
 
       const ritualType = selected === 0 ? 'hajj' : 'umrah';
-      
-      // Try new schema first
-      try {
-        const { rituals, lastVisible: nextCursor } = await getRitualsByType(ritualType, 10);
-        
-        if (rituals.length > 0) {
-          // Map new schema to display format
-          const mapped = rituals.map((r: Ritual) => ({ // Type explicit
-            id: r.id,
-            name: r.name,
-            description: r.description,
-            content_image: r.contentImageUrl, // Check if this field exists on Ritual
-            contentImageUrl: r.contentImageUrl,
-            order: r.order,
-          }));
-          
-          setUploads(mapped);
-          setLastVisible(nextCursor);
-          setHasMore(!!nextCursor);
-          return;
-        } else {
-           setHasMore(false);
-        }
-      } catch (newSchemaError) {
-        logger.debug("New schema not available, falling back to legacy", newSchemaError);
-      }
-      
-      // Fallback to legacy schema (No pagination support for legacy in this implementation?)
-      // We can implement it if needed, but assuming migration is priority.
-      const collectionName = selected === 0 ? "hajj_uploads" : "umrah_uploads";
-      const cacheKey = `${collectionName}_cache`;
-      
-      const uploadsData = forceNetwork 
-        ? await forceRefresh(collectionName, cacheKey) as RitualDisplay[]
-        : await fetchWithCache<RitualDisplay>(collectionName, cacheKey);
-      setUploads(uploadsData);
-      // Legacy doesn't support pagination here yet
+      const result = await getRitualsByType(ritualType, 100);
+      const items: RitualDisplay[] = result.rituals.map((r: Ritual) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        content_image: r.contentImageUrl,
+        contentImageUrl: r.contentImageUrl,
+        order: r.order,
+      })).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+      setUploads(items);
       setHasMore(false);
+      setLastVisible(null);
     } catch (err) {
       logger.error("Error fetching uploads", err);
       setError("Failed to fetch data. Please try again.");
@@ -146,37 +118,6 @@ const Makkah = () => {
     setRefreshing(false);
   }, [fetchUploads]);
 
-  const handleLoadMore = async () => {
-    if (loadingMore || !hasMore || !lastVisible) return;
-
-    try {
-      setLoadingMore(true);
-      const ritualType = selected === 0 ? 'hajj' : 'umrah';
-      
-      const { rituals, lastVisible: nextCursor } = await getRitualsByType(ritualType, 10, lastVisible);
-      
-      if (rituals.length > 0) {
-        const mapped = rituals.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description,
-          content_image: r.contentImageUrl,
-          contentImageUrl: r.contentImageUrl,
-          order: r.order,
-        }));
-        
-        setUploads(prev => [...prev, ...mapped]);
-        setLastVisible(nextCursor);
-        setHasMore(!!nextCursor);
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      logger.error("Error loading more", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
 
   const renderSkeleton = () => (
     <View className="gap-5 pt-5">
@@ -314,15 +255,7 @@ const Makkah = () => {
               </Pressable>
           </View>
         )}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loadingMore ? (
-            <View className="py-5 items-center">
-              <ActivityIndicator size="small" color="#31C462" />
-            </View>
-          ) : <View className="h-5" />
-        }
+        ListFooterComponent={<View className="h-5" />}
       />
     </View>
   );

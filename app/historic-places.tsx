@@ -9,7 +9,6 @@ import {
   Text,
   Platform,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Image,
 } from "react-native";
@@ -28,7 +27,6 @@ interface HistoricPlace {
   content_image?: string;
 }
 
-import { fetchWithCache, forceRefresh } from "@/utils/cache";
 
 const HistoricPlacesScreen = () => {
   const routerInstance = useRouter();
@@ -37,70 +35,27 @@ const HistoricPlacesScreen = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { t } = useTranslation();
 
-  const fetchPlaces = useCallback(async (isRefresh = false, isLoadMore = false) => {
+  const fetchPlaces = useCallback(async (_isRefresh = false) => {
     try {
-      if (isLoadMore) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
       const location: PlaceLocation = selectedTab === 0 ? 'makkah' : 'madinah';
-      
-      // 1. Try New Schema (Pagination supported)
-      try {
-        const currentLastVisible = isLoadMore && lastVisible ? lastVisible : undefined;
-        
-        const { places: newPlaces, lastVisible: nextCursor } = await getHistoricPlaces(
-          location,
-          10, 
-          currentLastVisible
-        );
-
-        if (newPlaces.length > 0) {
-          const mappedPlaces = newPlaces.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description,
-            image: p.imageUrl,
-            imageUrl: p.imageUrl,
-            content_image: p.imageUrl || p.content_image,
-          }));
-
-          if (isLoadMore) {
-            setPlaces(prev => [...prev, ...mappedPlaces]);
-          } else {
-            setPlaces(mappedPlaces);
-          }
-          
-          setLastVisible(nextCursor);
-          setHasMore(!!nextCursor);
-          return;
-        }
-      } catch (newSchemaError) {
-        // Continue to fallback
-      }
-
-      // 2. Fallback to Legacy Schema (Fetch All - No pagination in legacy for now)
-      // Only do this on initial load/refresh, not loadMore (legacy doesn't support pagination here)
-      if (!isLoadMore) {
-        const collectionName = selectedTab === 0 ? "historic_places_makkah" : "historic_places_madina";
-        const cacheKey = `${collectionName}_cache`;
-        
-        const placesData = isRefresh 
-          ? await forceRefresh(collectionName, cacheKey) as HistoricPlace[]
-          : await fetchWithCache<HistoricPlace>(collectionName, cacheKey);
-          
-        setPlaces(placesData || []);
-        setHasMore(false); // Legacy loads all at once
-      } else {
-        setHasMore(false);
-      }
-
+      const result = await getHistoricPlaces(location, 100);
+      const items: HistoricPlace[] = result.places.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        image: p.imageUrl ?? p.contentImageUrl ?? p.content_image,
+        imageUrl: p.imageUrl ?? p.contentImageUrl ?? p.content_image,
+        content_image: p.imageUrl ?? p.contentImageUrl ?? p.content_image,
+      }));
+      setPlaces(items);
+      setHasMore(false);
+      setLastVisible(null);
     } catch (err) {
       console.error("Error fetching historic places:", err);
     } finally {
@@ -108,7 +63,7 @@ const HistoricPlacesScreen = () => {
       setLoadingMore(false);
       setRefreshing(false);
     }
-  }, [selectedTab, lastVisible]);
+  }, [selectedTab]);
 
   useEffect(() => {
     // Initial fetch on tab change
@@ -117,22 +72,7 @@ const HistoricPlacesScreen = () => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    setLastVisible(null);
-    setHasMore(true);
-    // We need to reset state first, actually creating a separate function for clean fetch is better
-    // But fetchPlaces depends on state 'lastVisible' which is stale here?
-    // Pagination reset logic: passing undefined as lastVisible to fetchPlaces forces reset
-    // fetchPlaces(true) calls with isRefresh=true logic
-    // Actually, simply calling fetchPlaces(true, false) implies refresh logic? 
-    // My fetchPlaces implementation uses `lastVisible` from state if `isLoadMore` is true.
-    // If not `isLoadMore`, it uses undefined. So it works.
-    fetchPlaces(true); 
-  };
-
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMore && !loading) {
-      fetchPlaces(false, true);
-    }
+    fetchPlaces(true);
   };
 
   const handleTabSwitch = (index: number) => {
@@ -235,18 +175,8 @@ const HistoricPlacesScreen = () => {
             </Pressable>
           </View>
         )}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
         ListFooterComponent={
-          loadingMore ? (
-            <View className="py-5 items-center">
-              <ActivityIndicator size="small" color="#31C462" />
-            </View>
-          ) : loading && places.length === 0 ? (
-             <View className="py-10 items-center">
-                <Text>Loading...</Text>
-             </View>
-          ) : !loading && places.length === 0 ? (
+          !loading && places.length === 0 ? (
             <View className="items-center justify-center py-10">
               <Text className="text-gray-500 text-center">
                 No historic places available yet.

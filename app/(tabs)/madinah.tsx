@@ -2,19 +2,16 @@ import React, { useEffect, useState, useCallback } from "react";
 import { 
   ImageBackground, 
   Platform, 
-  FlatList, // Changed from ScrollView
-  StyleSheet, 
-  Text, 
-  View, 
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
   RefreshControl,
   TouchableOpacity,
-  ActivityIndicator,
   Pressable,
   Image
 } from "react-native";
-import { DocumentSnapshot } from 'firebase/firestore';
 import { useRouter } from "expo-router";
-import { fetchWithCache, forceRefresh } from "@/utils/cache";
 import HajjRituals from "@/components/common/hajj-rituals";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,49 +43,26 @@ const Madinah = () => {
   const routerInstance = useRouter(); // Initialize router
   
   const [loading, setLoading] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploads, setUploads] = useState<RitualDisplay[]>([]);
-  const [lastVisible, setLastVisible] = useState<DocumentSnapshot | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchMadinaUploads = useCallback(async (forceNetwork = false) => {
+  const fetchMadinaUploads = useCallback(async (_forceNetwork = false) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Try new schema first
-      try {
-        const { rituals, lastVisible: nextCursor } = await getRitualsByType('madina', 10);
-        
-        if (rituals.length > 0) {
-          const mapped = rituals.map((r: any) => ({
-            id: r.id,
-            name: r.name,
-            description: r.description,
-            content_image: r.contentImageUrl,
-            contentImageUrl: r.contentImageUrl,
-            order: r.order,
-          }));
-          setUploads(mapped);
-          setLastVisible(nextCursor);
-          setHasMore(!!nextCursor);
-          return;
-        } else {
-          setHasMore(false);
-        }
-      } catch (newSchemaError) {
-        logger.debug("New schema not available, falling back to legacy", newSchemaError);
-      }
+      const result = await getRitualsByType('madina', 100);
+      const items: RitualDisplay[] = result.rituals.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        content_image: r.contentImageUrl,
+        contentImageUrl: r.contentImageUrl,
+        order: r.order,
+      })).sort((a: RitualDisplay, b: RitualDisplay) => (a.order ?? 0) - (b.order ?? 0));
 
-      // Fallback to legacy schema
-      const uploadsData = forceNetwork 
-        ? await forceRefresh('madina_uploads', 'madina_uploads_cache') as RitualDisplay[]
-        : await fetchWithCache<RitualDisplay>('madina_uploads', 'madina_uploads_cache');
-      setUploads(uploadsData);
-      setHasMore(false);
+      setUploads(items);
     } catch (err) {
       logger.error("Error fetching madina uploads", err);
       setError("Failed to fetch data. Please try again.");
@@ -96,38 +70,6 @@ const Madinah = () => {
       setLoading(false);
     }
   }, []);
-
-
-
-  const handleLoadMore = async () => {
-    if (loadingMore || !hasMore || !lastVisible) return;
-
-    try {
-      setLoadingMore(true);
-      const { rituals, lastVisible: nextCursor } = await getRitualsByType('madina', 10, lastVisible);
-      
-      if (rituals.length > 0) {
-        const mapped = rituals.map((r: any) => ({
-          id: r.id,
-          name: r.name,
-          description: r.description,
-          content_image: r.contentImageUrl,
-          contentImageUrl: r.contentImageUrl,
-          order: r.order,
-        }));
-        
-        setUploads(prev => [...prev, ...mapped]);
-        setLastVisible(nextCursor);
-        setHasMore(!!nextCursor);
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      logger.error("Error loading more", err);
-    } finally {
-      setLoadingMore(false);
-    }
-  };
 
   useEffect(() => {
     fetchMadinaUploads();
@@ -257,15 +199,7 @@ const Madinah = () => {
             </Pressable>
           </View>
         )}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          loadingMore ? (
-            <View className="py-5 items-center">
-              <ActivityIndicator size="small" color="#31C462" />
-            </View>
-          ) : <View className="h-5" />
-        }
+        ListFooterComponent={<View className="h-5" />}
       />
     </View>
   );

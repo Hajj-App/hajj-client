@@ -7,12 +7,12 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
-  Linking,
   Platform,
   Modal,
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { safeOpenURL } from "@/utils/safeOpenURL";
 import type { ListRenderItem } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
 import { createShimmerPlaceholder } from "react-native-shimmer-placeholder";
@@ -109,7 +109,7 @@ const EventModal = ({
                 />
                 <Text 
                   style={[styles.modalText, { color: '#31C462' }]}
-                  onPress={() => Linking.openURL(event.url!)}
+                  onPress={() => safeOpenURL(event.url)}
                 >
                   {event.url}
                 </Text>

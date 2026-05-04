@@ -16,7 +16,6 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
-  Linking,
 } from "react-native";
 import React, { useState, useEffect, useCallback } from "react";
 import { Entypo, FontAwesome5 } from "@expo/vector-icons";
@@ -25,6 +24,7 @@ import { Audio } from "expo-av";
 import { getFilesWithUrls } from "../../utils/storageUtils";
 import { StorageFile } from "../../utils/storageTypes";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { safeOpenURL } from "../../utils/safeOpenURL";
 import { doc, getDoc } from "firebase/firestore";
 import { firestore } from "@/utils/firebase";
 import AudioPlayerModal from "@/components/AudioPlayerModal";
@@ -149,7 +149,7 @@ const useAudioSetup = () => {
 const useRitualData = (
   ritualId: string,
   ritualType: RitualType,
-  legacyCollection: string
+  _legacyCollection: string
 ) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,91 +205,37 @@ const useRitualData = (
           throw new Error("Firestore is not initialized");
         }
 
-        let newSchemaDocId: string | null = null;
-        let newSchemaData: Record<string, unknown> | null = null;
-
-        // Try new schema by route id first.
-        try {
-          const ritualDoc = await getDoc(doc(firestore, COLLECTIONS.RITUALS, ritualId));
-          if (ritualDoc.exists()) {
-            const data = ritualDoc.data() as Record<string, unknown>;
-            if (!data.type || data.type === ritualType) {
-              newSchemaDocId = ritualDoc.id;
-              newSchemaData = data;
-            }
-          }
-        } catch (newSchemaError) {
-          logger.debug("New schema lookup failed, trying legacy", newSchemaError);
-        }
-
-        const legacyFolderIdFromNew = Number(newSchemaData?._legacyFolderId);
-        const legacyDocId =
-          Number.isFinite(legacyFolderIdFromNew) && legacyFolderIdFromNew > 0
-            ? String(legacyFolderIdFromNew)
-            : /^\d+$/.test(String(ritualId))
-            ? String(ritualId)
-            : null;
-
-        let legacyData: Record<string, unknown> | null = null;
-        if (legacyDocId) {
-          try {
-            const legacyDoc = await getDoc(doc(firestore, legacyCollection, legacyDocId));
-            if (legacyDoc.exists()) {
-              legacyData = legacyDoc.data() as Record<string, unknown>;
-            }
-          } catch (legacyError) {
-            logger.debug("Legacy lookup failed", legacyError);
-          }
-        }
-
-        if (!newSchemaData && !legacyData) {
+        // Single source of truth: rituals collection
+        const ritualDoc = await getDoc(doc(firestore, COLLECTIONS.RITUALS, ritualId));
+        if (!ritualDoc.exists()) {
           throw new Error("Ritual not found");
         }
+        const data = ritualDoc.data() as Record<string, unknown>;
 
-        const newSchemaDescription = toDescriptionValue(newSchemaData?.description);
-        const legacyDescription = toDescriptionValue(legacyData?.description);
-        const mergedDescription = hasDescriptionValue(newSchemaDescription)
-          ? newSchemaDescription
-          : legacyDescription;
+        const description = toDescriptionValue(data.description);
+        const paragraphs = normalizeParagraphs(data.paragraphs);
 
-        const newSchemaParagraphs = normalizeParagraphs(newSchemaData?.paragraphs);
-        const legacyParagraphs = normalizeParagraphs(legacyData?.paragraphs);
-        const mergedParagraphs =
-          newSchemaParagraphs.length > 0 ? newSchemaParagraphs : legacyParagraphs;
-
-        const legacyFolderIdFromLegacy = Number(legacyData?.folderId);
+        const legacyFolderId = Number(data._legacyFolderId);
         const resolvedLegacyFolderId =
-          Number.isFinite(legacyFolderIdFromNew) && legacyFolderIdFromNew > 0
-            ? legacyFolderIdFromNew
-            : Number.isFinite(legacyFolderIdFromLegacy) && legacyFolderIdFromLegacy > 0
-            ? legacyFolderIdFromLegacy
-            : /^\d+$/.test(String(ritualId))
-            ? Number(ritualId)
-            : undefined;
+          Number.isFinite(legacyFolderId) && legacyFolderId > 0 ? legacyFolderId : undefined;
 
         const contentImage =
-          (newSchemaData?.contentImageUrl as string | undefined) ||
-          (newSchemaData?.content_image as string | undefined) ||
-          (legacyData?.content_image as string | undefined);
+          (data.contentImageUrl as string | undefined) ||
+          (data.content_image as string | undefined);
 
         const resolvedStoragePath = resolvedLegacyFolderId
           ? `${ritualType}/${resolvedLegacyFolderId}`
           : `rituals/${ritualType}/${ritualId}`;
 
         setRitualContent({
-          id: newSchemaDocId || legacyDocId || ritualId,
-          name:
-            (newSchemaData?.name as string | undefined) ||
-            (legacyData?.name as string | undefined) ||
-            "Untitled",
-          description: mergedDescription,
-          paragraphs: mergedParagraphs,
+          id: ritualDoc.id,
+          name: (data.name as string | undefined) || "Untitled",
+          description,
+          paragraphs,
           content_image: contentImage,
           _legacyFolderId: resolvedLegacyFolderId,
-          type: (newSchemaData?.type as string | undefined) || ritualType,
-          video_link:
-            (newSchemaData?.video_link as string | undefined) ||
-            (legacyData?.video_link as string | undefined),
+          type: (data.type as string | undefined) || ritualType,
+          video_link: data.video_link as string | undefined,
         });
 
         setStoragePath(resolvedStoragePath);
@@ -303,7 +249,7 @@ const useRitualData = (
     };
 
     initializeAndFetch();
-  }, [ritualId, ritualType, legacyCollection, fetchRitualMedia]);
+  }, [ritualId, ritualType, fetchRitualMedia]);
 
   return {
     loading,
@@ -486,7 +432,7 @@ export const RitualDetailScreen: React.FC<RitualDetailScreenProps> = ({
             <Text style={styles.sectionTitle}>{t("videoGuides") || "Video Guides"}</Text>
             <TouchableOpacity
               style={styles.videoItem}
-              onPress={() => Linking.openURL(ritualContent.video_link!)}
+              onPress={() => safeOpenURL(ritualContent.video_link)}
             >
               <FontAwesome5 name="youtube" size={24} color="#FF0000" />
               <Text style={styles.videoText} numberOfLines={1}>

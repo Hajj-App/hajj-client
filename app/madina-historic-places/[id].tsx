@@ -7,8 +7,8 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
-  Linking,
 } from "react-native";
+import { safeOpenURL } from "@/utils/safeOpenURL";
 import React, { useState, useEffect } from "react";
 import { Entypo, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -130,17 +130,13 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           throw new Error("Firestore is not initialized");
         }
 
-        const ritualDoc = await getDoc(
-          doc(firestore, "historic_places_madina", ritualId),
-        );
-
+        const ritualDoc = await getDoc(doc(firestore, "historic_places", ritualId));
         if (!ritualDoc.exists()) {
           throw new Error("Ritual not found");
         }
 
         const data = ritualDoc.data();
 
-        // Set the location link if available
         if (data.location_link) {
           setLocationLink(data.location_link);
         }
@@ -150,11 +146,12 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
           name: data.name || "Untitled",
           description: data.description || "",
           paragraphs: normalizeParagraphs(data.paragraphs),
-          content_image: data.content_image || "",
+          content_image: data.contentImageUrl || data.content_image || "",
           video_link: data.video_link,
         });
 
-        await fetchRitualMedia();
+        const folderToken = data._legacyFolderId != null ? String(data._legacyFolderId) : ritualId;
+        await fetchRitualMedia(folderToken);
       } catch (err) {
         logger.error("Error fetching ritual", err);
         setError("Failed to load ritual data");
@@ -166,12 +163,11 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
     initializeAndFetch();
   }, [ritualId]);
 
-  const fetchRitualMedia = async () => {
+  const fetchRitualMedia = async (folderToken: string = ritualId) => {
     try {
       setLoading(true);
       setError(null);
-      // Fetch media from the specific ritual folder in Firebase Storage
-      const storagePath = `historic_places_madina/${ritualId}`;
+      const storagePath = `historic_places_madina/${folderToken}`;
 
       try {
         const files = await getFilesWithUrls(storagePath);
@@ -216,13 +212,8 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
     }
   };
 
-  // Handle opening location link
   const openLocationLink = () => {
-    if (locationLink) {
-      Linking.openURL(locationLink).catch((err) => {
-        showErrorAlert(err, "Error opening location link");
-      });
-    }
+    safeOpenURL(locationLink);
   };
 
   const ritualImage = ritualContent?.content_image;
@@ -396,7 +387,7 @@ const MadinaHistoricPlaceDetail = (props: Props) => {
                   {t("videoGuides") || "Video Guides"}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(ritualContent.video_link!)}
+                  onPress={() => safeOpenURL(ritualContent.video_link)}
                   className="flex-row items-center p-4 bg-gray-100 rounded-lg mb-2"
                 >
                   <View className="w-12 h-12 bg-red-600 rounded-full items-center justify-center mr-4">

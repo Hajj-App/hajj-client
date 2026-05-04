@@ -86,7 +86,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
       // Load the new audio
       const { sound } = await Audio.Sound.createAsync(
         { uri: audioFile.downloadURL },
-        { 
+        {
           shouldPlay: false,
           isLooping: false,
           volume: 1.0,
@@ -114,7 +114,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
         durationMillis: status.durationMillis || 0,
         rate: status.rate,
       });
-      
+
       if (status.didJustFinish) {
         setPlaybackStatus(prev => ({
           ...prev,
@@ -174,7 +174,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
 
   const handleSeek = async (value: number) => {
     if (!soundRef.current) return;
-    
+
     try {
       const status = await soundRef.current.getStatusAsync();
       if (status.isLoaded) {
@@ -187,7 +187,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
 
   const changePlaybackRate = async (rate: number) => {
     if (!soundRef.current) return;
-    
+
     try {
       const status = await soundRef.current.getStatusAsync();
       if (status.isLoaded) {
@@ -201,7 +201,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
 
   const skipForward = async () => {
     if (!soundRef.current) return;
-    
+
     try {
       const status = await soundRef.current.getStatusAsync();
       if (status.isLoaded && status.durationMillis !== undefined) {
@@ -211,7 +211,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
         );
         await soundRef.current.setPositionAsync(newPosition);
       }
-      
+
     } catch (error) {
       console.error('Error skipping forward:', error);
     }
@@ -219,7 +219,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
 
   const skipBackward = async () => {
     if (!soundRef.current) return;
-    
+
     try {
       const status = await soundRef.current.getStatusAsync();
       if (status.isLoaded) {
@@ -257,7 +257,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
           {error ? (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setError(null)}
                 style={styles.retryButton}
               >
@@ -275,7 +275,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
                 {/* {audioFile?.name || 'Unknown Audio'} */}
                 {playbackStatus.isPlaying ? 'Playing' : 'Paused'}
               </Text>
-              
+
               {/* Progress Bar */}
               <View style={styles.progressContainer}>
                 <Text style={styles.timeText}>
@@ -296,7 +296,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
                   {formatTime(playbackStatus.durationMillis)}
                 </Text>
               </View>
-              
+
               {/* Playback Controls */}
               <View style={styles.controlsRow}>
                 <TouchableOpacity
@@ -329,7 +329,7 @@ const AudioPlayerModal: React.FC<AudioPlayerModalProps> = ({
                   <Text style={styles.skipText}>10s</Text>
                 </TouchableOpacity>
               </View>
-              
+
               {/* Speed Controls */}
               <View style={styles.speedControls}>
                 {[1.0, 1.5, 2.0].map((rate) => (

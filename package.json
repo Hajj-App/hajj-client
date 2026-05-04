@@ -41,7 +41,7 @@
     "expo-module-scripts": "^4.1.6",
     "expo-modules-autolinking": "~3.0.22",
     "expo-notifications": "~0.32.16",
-    "expo-router": "~6.0.21",
+    "expo-router": "~6.0.23",
     "expo-secure-store": "~15.0.8",
     "expo-sensors": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
@@ -68,6 +68,7 @@
     "react-native-web": "^0.21.0",
     "react-native-webview": "13.15.0",
     "react-native-worklets": "0.5.1",
+    "shebang-regex": "^4.0.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^3.4.15"
   },

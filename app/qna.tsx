@@ -5,10 +5,10 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  Linking,
   StyleSheet,
   Pressable,
 } from "react-native";
+import { safeOpenURL } from "@/utils/safeOpenURL";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslation } from "react-i18next";
 import { getQnAItems } from "@/utils/firestoreService";
@@ -54,9 +54,7 @@ const QnAScreen = () => {
   };
 
   const handleOpenPDF = (url: string) => {
-    Linking.openURL(url).catch((err) => {
-      logger.error("Failed to open PDF link", err);
-    });
+    safeOpenURL(url);
   };
 
   const renderItem = ({ item }: { item: QnAItem }) => (

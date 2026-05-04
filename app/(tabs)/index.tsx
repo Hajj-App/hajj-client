@@ -11,12 +11,12 @@ import {
   Image,
   ScrollView,
   View,
-  Linking,
   TouchableOpacity,
   Pressable,
   Alert,
   RefreshControl,
 } from "react-native";
+import { safeOpenURL } from "@/utils/safeOpenURL";
 import { SafeAreaView, Text } from "react-native";
 import { useTranslation } from "react-i18next";
 import { API } from "@/constants/api";
@@ -63,19 +63,11 @@ export default function HomeScreen() {
       return;
     }
 
-    Linking.openURL(whatsappLink).catch((err) => {
-      logger.error("Failed to open WhatsApp link", err);
-      Alert.alert(
-        t("error") || "Error",
-        t("failedToOpenWhatsApp") || "Failed to open WhatsApp. Please try again."
-      );
-    });
+    safeOpenURL(whatsappLink);
   };
 
   const handleHajCommitteePress = () => {
-    Linking.openURL(API.LINKS.HAJ_COMMITTEE).catch((err) => {
-      logger.error("Failed to open Haj Committee link", err);
-    });
+    safeOpenURL(API.LINKS.HAJ_COMMITTEE);
   };
 
   return (
